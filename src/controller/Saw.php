@@ -9,7 +9,8 @@
 namespace Saw;
 
 
-abstract class Saw
+class Saw
 {
+    use Net, Init;
 
 }
