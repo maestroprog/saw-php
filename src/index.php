@@ -11,6 +11,7 @@
 namespace Saw {
 
     require_once 'common/Net.php';
+    require_once 'common/Init.php';
 
     class SawInit
     {
