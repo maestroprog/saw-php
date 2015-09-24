@@ -8,6 +8,7 @@
  * Time: 0:22
  */
 
+
 ini_set('display_errors', false);
 error_reporting(E_ALL);
 ini_set('log_errors', true);
@@ -19,13 +20,17 @@ function out($message)
     error_log($message);
 }
 
+require_once 'config.php';
+require_once __DIR__ . '/../common/Net.php';
+require_once __DIR__ . '/../common/Init.php';
+require_once 'Saw.php';
+
 use Saw\Saw;
 
-require_once 'config.php';
 Saw::configure($config);
 out('configured. init...');
 
-Saw::socket_server() or Saw::start() or (out('Saw start failed') or exit);
+Saw::socket_server() and Saw::start() or (out('Saw start failed') or exit);
 out('init end');
 
 Saw::socket_close();
