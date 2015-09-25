@@ -19,13 +19,22 @@ namespace Saw {
 
         public static function start()
         {
+            $before_run = microtime(true);
             exec(self::$php_binary_path . ' -f ' . __DIR__ . '/Main/start.php > /dev/null &');
-            usleep(100000); // await for run Main Saw
+            $after_run = microtime(true);
+            #usleep(100000); // await for run Main Saw
             $try = 0;
             do {
-                usleep(100000);
-                if (self::socket_client()) return true;
-            } while ($try++ < 100);
+                $try_run = microtime(true);
+                #usleep(100000);
+                usleep(100);
+                if (self::socket_client()) {
+                    printf('run: %f, exec: %f, connected: %f', $before_run, $after_run - $before_run, $try_run - $after_run);
+                    error_log($before_run);
+                    return true;
+                }
+            } while ($try++ < 1000000000);
+            printf('false');
             return false;
         }
     }

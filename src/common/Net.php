@@ -57,6 +57,7 @@ trait Net
     {
         if (socket_accept(self::$_socket)) {
             error_log('accepted whois!?');
+            return true;
         }
     }
 
@@ -69,9 +70,9 @@ trait Net
             } else {
                 $error = socket_last_error(self::$_socket);
                 socket_clear_error(self::$_socket);
-                error_log('error: ' .$error);
-                error_log((int)file_exists(self::$socket_address));
-                file_exists(self::$socket_address)?exit:false;
+                #error_log('error: ' . $error);
+                #error_log((int)file_exists(self::$socket_address));
+                #file_exists(self::$socket_address) ? exit : false;
                 switch ($error) {
                     case SOCKET_ECONNREFUSED:
                     case SOCKET_ENOENT:

@@ -16,9 +16,13 @@ class Saw
     public static function start()
     {
         out('start');
-        for ($i = 0; $i < 10; $i++) {
-            self::socket_accept();
-            usleep(90000);
+        error_log(sprintf('start accepting am %f', microtime(true)));
+        for ($i = 0; $i < 1000000; $i++) {
+            if (self::socket_accept()){
+                sprintf('accepted am %f and try %d', microtime(true), $i);
+                return true;
+            }
+            usleep(100);
         }
         return true;
     }
