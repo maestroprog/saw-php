@@ -56,9 +56,15 @@ trait Net
     public static function socket_accept()
     {
         if (socket_accept(self::$_socket)) {
-            error_log('accepted whois!?');
+            out('accepted whois?');
             return true;
         }
+        return false;
+    }
+
+    public static function socket_send()
+    {
+        
     }
 
     public static function socket_client()
@@ -70,9 +76,6 @@ trait Net
             } else {
                 $error = socket_last_error(self::$_socket);
                 socket_clear_error(self::$_socket);
-                #error_log('error: ' . $error);
-                #error_log((int)file_exists(self::$socket_address));
-                #file_exists(self::$socket_address) ? exit : false;
                 switch ($error) {
                     case SOCKET_ECONNREFUSED:
                     case SOCKET_ENOENT:
@@ -90,7 +93,9 @@ trait Net
         return false;
     }
 
-    public static function socket_close()
+
+
+    protected static function socket_close()
     {
         if (self::$_socket) {
             socket_close(self::$_socket);

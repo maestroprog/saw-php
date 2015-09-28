@@ -28,7 +28,7 @@ namespace Saw {
                 $try_run = microtime(true);
                 #usleep(100000);
                 usleep(100);
-                if (self::socket_client()) {
+                if (@self::socket_client()) {
                     printf('run: %f, exec: %f, connected: %f', $before_run, $after_run - $before_run, $try_run - $after_run);
                     error_log($before_run);
                     return true;

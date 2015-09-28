@@ -17,6 +17,6 @@ function out($message)
 
 out('init start');
 
-require_once '../src/index.php';
+require_once '../src/saw.php';
 
 out('init end');
