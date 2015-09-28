@@ -33,5 +33,7 @@ out('configured. init...');
 Saw::socket_server() and Saw::start() or (out('Saw start failed') or exit);
 out('init end');
 
-Saw::socket_close();
-out('closed');
+register_shutdown_function(function(){
+    Saw::socket_close();
+    out('closed');
+});

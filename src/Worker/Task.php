@@ -9,7 +9,7 @@
 namespace Saw;
 
 
-abstract  class Task
+abstract class Task
 {
 
 }

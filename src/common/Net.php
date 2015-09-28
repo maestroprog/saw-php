@@ -23,6 +23,8 @@ trait Net
 
     private static $_socket_type;
 
+    protected static $_connections = array();
+
     public static function socket_server($recursive = false)
     {
         self::$_socket_type = 1;
@@ -92,8 +94,6 @@ trait Net
         trigger_error('CLIENT SOCKET CREATE FAILED!', E_USER_ERROR);
         return false;
     }
-
-
 
     protected static function socket_close()
     {
