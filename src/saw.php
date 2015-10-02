@@ -20,9 +20,9 @@ namespace Saw {
         public static function start()
         {
             $before_run = microtime(true);
-            exec(self::$php_binary_path . ' -f ' . __DIR__ . '/Main/start.php > /dev/null &');
+            exec(self::$php_binary_path . ' -f ' . __DIR__ . '/controller/start.php > /dev/null &');
             $after_run = microtime(true);
-            #usleep(100000); // await for run Main Saw
+            #usleep(100000); // await for run controller Saw
             $try = 0;
             do {
                 $try_run = microtime(true);
@@ -45,7 +45,7 @@ namespace {
     use Saw\SawInit;
 
     #require_once 'config.php';
-    require_once 'Main/config.php';
+    require_once 'controller/config.php';
     SawInit::configure($config);
     out('configured. init...');
 
