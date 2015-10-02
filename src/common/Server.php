@@ -17,17 +17,17 @@ class Server extends Net
 
     public function socket_server($recursive = false)
     {
-        if (self::$_socket = socket_create(self::$socket_domain, SOCK_STREAM, self::$socket_domain > 1 ? getprotobyname('tcp') : 0)) {
-            if (socket_bind(self::$_socket, self::$socket_address, self::$port)) {
-                if (socket_listen(self::$_socket)) {
-                    socket_set_nonblock(self::$_socket);
+        if ($this->_socket = socket_create($this->socket_domain, SOCK_STREAM, $this->socket_domain > 1 ? getprotobyname('tcp') : 0)) {
+            if (socket_bind($this->_socket, $this->socket_address, $this->port)) {
+                if (socket_listen($this->_socket)) {
+                    socket_set_nonblock($this->_socket);
                     return true;
                 } else {
-                    throw new \Exception(socket_strerror(socket_last_error(self::$_socket)));
+                    throw new \Exception(socket_strerror(socket_last_error($this->_socket)));
                 }
             } else {
-                $error = socket_last_error(self::$_socket);
-                socket_clear_error(self::$_socket);
+                $error = socket_last_error($this->_socket);
+                socket_clear_error($this->_socket);
                 error_log('error: ' . $error);
                 switch ($error) {
                     case SOCKET_EADDRINUSE:
@@ -46,7 +46,7 @@ class Server extends Net
 
     protected function socket_accept()
     {
-        if (socket_accept(self::$_socket)) {
+        if (socket_accept($this->_socket)) {
             out('accepted whois?');
             return true;
         }

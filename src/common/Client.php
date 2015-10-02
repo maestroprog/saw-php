@@ -12,14 +12,14 @@ namespace Saw\Net;
 class Client extends Net
 {
 
-    public static function socket_client()
+    public function socket_client()
     {
-        if (self::$_socket = socket_create(self::$socket_domain, SOCK_STREAM, self::$socket_domain > 1 ? getprotobyname('tcp') : 0)) {
-            if (socket_connect(self::$_socket, self::$socket_address, self::$port)) {
+        if ($this->_socket = socket_create($this->socket_domain, SOCK_STREAM, $this->socket_domain > 1 ? getprotobyname('tcp') : 0)) {
+            if (socket_connect($this->_socket, $this->socket_address, $this->port)) {
                 return true;
             } else {
-                $error = socket_last_error(self::$_socket);
-                socket_clear_error(self::$_socket);
+                $error = socket_last_error($this->_socket);
+                socket_clear_error($this->_socket);
                 switch ($error) {
                     case SOCKET_ECONNREFUSED:
                     case SOCKET_ENOENT:
@@ -37,13 +37,13 @@ class Client extends Net
         return false;
     }
 
-    protected static function socket_close()
+    protected function socket_close()
     {
-        if (self::$_socket) {
-            socket_close(self::$_socket);
-            error_log('is unix domain: ' . (self::$socket_domain == AF_UNIX ? 'true' : 'false'));
-            if (self::$socket_domain === AF_UNIX) {
-                unlink(self::$socket_address);
+        if ($this->_socket) {
+            socket_close($this->_socket);
+            error_log('is unix domain: ' . ($this->socket_domain == AF_UNIX ? 'true' : 'false'));
+            if ($this->socket_domain === AF_UNIX) {
+                unlink($this->socket_address);
             }
         }
     }
