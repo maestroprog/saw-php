@@ -15,7 +15,7 @@ namespace Saw {
 
     class SawInit
     {
-        use Net, Init;
+        use Init;
 
         public static function start()
         {

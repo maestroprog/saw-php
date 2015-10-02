@@ -6,15 +6,17 @@
  * Time: 19:48
  */
 
-namespace Saw;
+namespace Saw\Net;
 
 
 class Server extends Net
 {
+    private $_socket;
 
-    public static function socket_server($recursive = false)
+    protected static $_connections = array();
+
+    public function socket_server($recursive = false)
     {
-        self::$_socket_type = 1;
         if (self::$_socket = socket_create(self::$socket_domain, SOCK_STREAM, self::$socket_domain > 1 ? getprotobyname('tcp') : 0)) {
             if (socket_bind(self::$_socket, self::$socket_address, self::$port)) {
                 if (socket_listen(self::$_socket)) {
@@ -39,6 +41,15 @@ class Server extends Net
             }
         }
         trigger_error('LISTEN SOCKET CREATE FAILED!', E_USER_ERROR);
+        return false;
+    }
+
+    protected function socket_accept()
+    {
+        if (socket_accept(self::$_socket)) {
+            out('accepted whois?');
+            return true;
+        }
         return false;
     }
 }
