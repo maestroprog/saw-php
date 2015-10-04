@@ -11,14 +11,26 @@
 namespace Saw\Net;
 
 
-class Net
+abstract class Net
 {
+    /**
+     * @var int type of socket
+     */
     protected $socket_domain = AF_UNIX;
 
+    /**
+     * @var string address of socket connection
+     */
     protected $socket_address = '127.0.0.1';
 
-    protected $port = 0;
+    /**
+     * @var int port of socket connection
+     */
+    protected $socket_port = 0;
 
+    /**
+     * @var resource of socket connection
+     */
     protected $connection;
 
     public function __construct($config)
@@ -28,7 +40,10 @@ class Net
         }
     }
 
-    public static function socket_send()
+    /**
+     *
+     */
+    public function socket_send()
     {
 
     }
