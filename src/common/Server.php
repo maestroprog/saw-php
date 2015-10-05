@@ -1,5 +1,7 @@
 <?php
 /**
+ * Server Net code snippet
+ *
  * Created by PhpStorm.
  * User: Руслан
  * Date: 01.10.2015
@@ -9,47 +11,99 @@
 namespace Saw\Net;
 
 
-class Server extends Net
+abstract class Server extends Net
 {
-    private $_socket;
+    /* server variables */
 
-    protected static $_connections = array();
+    /**
+     * @var array
+     */
+    protected $connections = [];
 
-    public function socket_server($recursive = false)
+    /* event variables */
+
+    /**
+     * @var callable
+     */
+    private $event_disconnect;
+
+    /**
+     * @var callable
+     */
+    private $event_accept;
+
+
+    /* other variables */
+
+    /**
+     * for double use
+     * @var bool
+     */
+    private $_open_try = false;
+
+    public function open()
     {
-        if ($this->_socket = socket_create($this->socket_domain, SOCK_STREAM, $this->socket_domain > 1 ? getprotobyname('tcp') : 0)) {
-            if (socket_bind($this->_socket, $this->socket_address, $this->port)) {
-                if (socket_listen($this->_socket)) {
-                    socket_set_nonblock($this->_socket);
+        return $this->_open();
+    }
+
+    /**
+     * close server
+     */
+    public function close()
+    {
+        parent::close();
+        // /@TODO recheck this code
+        // socket_close($this->_socket);
+        error_log('is unix domain: ' . ($this->socket_domain == AF_UNIX ? 'true' : 'false'));
+        if ($this->socket_domain === AF_UNIX) {
+            if (file_exists($this->socket_address))
+                unlink($this->socket_address);
+            else
+                trigger_error(sprintf('Pipe file "%s" not found', $this->socket_address));
+        }
+    }
+
+    abstract public function doDisconnect($client);
+
+    abstract public function onDisconnect(callable $callback);
+
+    abstract public function doAccept();
+
+    abstract public function onAccept(callable $callback);
+
+    private function _open()
+    {
+        if ($this->connection = socket_create($this->socket_domain, SOCK_STREAM, $this->socket_domain > 1 ? getprotobyname('tcp') : 0)) {
+            if (socket_bind($this->connection, $this->socket_address, $this->socket_port)) {
+                if (socket_listen($this->connection)) {
+                    socket_set_nonblock($this->connection);
                     return true;
                 } else {
-                    throw new \Exception(socket_strerror(socket_last_error($this->_socket)));
+                    throw new \Exception(socket_strerror(socket_last_error($this->connection)));
                 }
             } else {
-                $error = socket_last_error($this->_socket);
-                socket_clear_error($this->_socket);
+                $error = socket_last_error($this->connection);
+                socket_clear_error($this->connection);
                 error_log('error: ' . $error);
                 switch ($error) {
                     case SOCKET_EADDRINUSE:
-                        self::socket_close(); // closing socket and try restart
-                        if (!$recursive)
-                            return self::socket_server(true);
+                        // если сокет уже открыт - пробуем его закрыть и снова открыть
+                        // @TODO socket close self::socket_close();
+                        // @todo recheck this code
+                        // closing socket and try restart
+                        $this->close();
+                        if (!$this->_open_try) {
+                            $this->_open_try = true;
+                            return $this->_open();
+                        }
                         break;
                     default:
                         throw new \Exception(socket_strerror($error));
                 }
             }
         }
-        trigger_error('LISTEN SOCKET CREATE FAILED!', E_USER_ERROR);
-        return false;
-    }
-
-    protected function socket_accept()
-    {
-        if (socket_accept($this->_socket)) {
-            out('accepted whois?');
-            return true;
-        }
+        // @TODO delete next line...
+        trigger_error('Server open failed', E_USER_ERROR);
         return false;
     }
 }

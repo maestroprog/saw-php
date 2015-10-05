@@ -15,8 +15,8 @@ function out($message)
     echo $message . PHP_EOL;
 }
 
-out('init start');
+out('input start');
 
-require_once '../src/saw.php';
+require_once '../src/input/saw.php';
 
-out('init end');
+out('input end');

@@ -1,6 +1,6 @@
 <?php
 /**
- ** Saw init script config file
+ ** Saw input script config file
  *
  * Created by PhpStorm.
  * User: Руслан

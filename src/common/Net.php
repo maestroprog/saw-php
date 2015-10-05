@@ -35,16 +35,22 @@ abstract class Net
 
     public function __construct($config)
     {
-        foreach ($config as $key => $val) {
+        foreach ($config as $key => $val)
             if (isset($this->{$key})) $this->{$key} = $val;
-        }
     }
 
-    /**
-     *
-     */
-    public function socket_send()
+    abstract public function doReceive();
+
+    abstract public function onReceive(callable $callback);
+
+    abstract public function send($data);
+
+    public function close()
     {
-
+        if ($this->connection)
+            socket_close($this->connection);
+        else
+            trigger_error('Server socket already closed');
     }
+
 }

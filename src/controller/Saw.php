@@ -11,14 +11,19 @@ namespace Saw;
 
 class Saw
 {
-    use Net, Init;
+    use Init;
+
+    /**
+     * @var Net\Server
+     */
+    protected $server;
 
     public static function start()
     {
         out('start');
         error_log(sprintf('start accepting am %f', microtime(true)));
         for ($i = 0; $i < 1000000; $i++) {
-            if (self::socket_accept()){
+            if (self::socket_accept()) {
                 sprintf('accepted am %f and try %d', microtime(true), $i);
                 return true;
             }

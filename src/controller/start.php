@@ -27,13 +27,13 @@ require_once 'Saw.php';
 
 use Saw\Saw;
 
-Saw::configure($config);
-out('configured. init...');
+Saw::init($config);
+out('configured. input...');
 
 Saw::socket_server() and Saw::start() or (out('Saw start failed') or exit);
-out('init end');
+out('input end');
 
-register_shutdown_function(function(){
+register_shutdown_function(function () {
     Saw::socket_close();
     out('closed');
 });

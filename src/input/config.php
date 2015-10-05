@@ -1,15 +1,14 @@
 <?php
 /**
- ** Saw init script config file
+ ** Saw input script config file
  *
  * Created by PhpStorm.
  * User: Руслан
  * Date: 22.09.2015
  * Time: 20:52
  */
-namespace Saw;
 
-$config = [
+return [
     'net' => [
         'socket_domain' => AF_UNIX,
         'socket_address' => __DIR__ . DIRECTORY_SEPARATOR . 'saw-controller.sock',

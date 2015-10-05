@@ -10,12 +10,22 @@
 
 namespace Saw {
 
-    require_once 'common/Net.php';
-    require_once 'common/Init.php';
+    $common_dir = realpath(__DIR__ . '/../common') . '/';
 
-    class SawInit
+    require_once $common_dir . 'Init.php';
+    require_once $common_dir . 'Net.php';
+    require_once $common_dir . 'Client.php';
+
+    unset($common_dir);
+
+    class SawInit implements InitBased
     {
         use Init;
+
+        /**
+         * @var Net\Client socket connection
+         */
+        private static $sc;
 
         public static function start()
         {
@@ -37,6 +47,18 @@ namespace Saw {
             printf('false');
             return false;
         }
+
+        public static function pre_init()
+        {
+            self::$sc = new Net\Client();
+            // TODO: Implement pre_init() method.
+        }
+
+        public static function post_init()
+        {
+            // TODO: Implement post_init() method.
+        }
+
     }
 }
 
@@ -44,15 +66,17 @@ namespace {
 
     use Saw\SawInit;
 
-    #require_once 'config.php';
-    require_once 'controller/config.php';
-    SawInit::configure($config);
-    out('configured. init...');
+    $config = require 'config.php';
+    #require_once 'controller/config.php';
+    if (SawInit::init($config)) {
 
-    SawInit::socket_client() or SawInit::start() or (out('Saw start failed') or exit);
-    out('init end');
+        out('configured. input...');
+        SawInit::socket_client() or SawInit::start() or (out('Saw start failed') or exit);
+        out('input end');
 
-    SawInit::socket_close();
-    out('closed');
+        SawInit::socket_close();
+        out('closed');
+    }
+
 
 }
