@@ -11,12 +11,10 @@ namespace Saw;
 
 class Saw
 {
-    use Init;
-
     /**
      * @var Net\Server
      */
-    protected $server;
+    protected static $server;
 
     public static function start()
     {

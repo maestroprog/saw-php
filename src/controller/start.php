@@ -22,7 +22,6 @@ function out($message)
 
 require_once 'config.php';
 require_once __DIR__ . '/../common/Net.php';
-require_once __DIR__ . '/../common/Init.php';
 require_once 'Saw.php';
 
 use Saw\Saw;

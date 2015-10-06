@@ -12,23 +12,25 @@ namespace Saw {
 
     $common_dir = realpath(__DIR__ . '/../common') . '/';
 
-    require_once $common_dir . 'Init.php';
     require_once $common_dir . 'Net.php';
     require_once $common_dir . 'Client.php';
 
     unset($common_dir);
 
-    class SawInit implements InitBased
+    class SawInit
     {
-        use Init;
-
         /**
          * @var Net\Client socket connection
          */
         private static $sc;
 
-        public static function start()
+        public static function init(&$config)
         {
+            foreach ($config as $category => &$values) {
+                switch ($category) {
+                    case '';
+                }
+            }
             $before_run = microtime(true);
             exec(self::$php_binary_path . ' -f ' . __DIR__ . '/controller/start.php > /dev/null &');
             $after_run = microtime(true);
@@ -77,6 +79,5 @@ namespace {
         SawInit::socket_close();
         out('closed');
     }
-
 
 }
