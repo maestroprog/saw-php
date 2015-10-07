@@ -8,13 +8,6 @@
  * Time: 0:22
  */
 
-
-ini_set('display_errors', false);
-error_reporting(E_ALL);
-ini_set('log_errors', true);
-ini_set('error_log', __DIR__ . '/messages.log');
-
-
 function out($message)
 {
     error_log($message);

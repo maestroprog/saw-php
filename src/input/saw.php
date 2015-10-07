@@ -20,19 +20,54 @@ namespace Saw {
     class SawInit
     {
         /**
+         * @var string path to php binaries
+         */
+        public static $php_binary_path = 'php';
+
+        public static $controller_path = '.';
+
+        /**
          * @var Net\Client socket connection
          */
         private static $sc;
 
-        public static function init(&$config)
+        /**
+         * Инициализация
+         *
+         * @param array $config
+         * @return bool
+         */
+        public static function init(array &$config)
         {
-            foreach ($config as $category => &$values) {
-                switch ($category) {
-                    case '';
+            // настройка сети
+            if (isset($config['net'])) {
+                self::$sc = new Net\Client($config['net']);
+            } else {
+                trigger_error('Net configuration not found', E_USER_NOTICE);
+                unset($config);
+                return false;
+            }
+            // настройка доп. параметров
+            if (isset($config['params'])) {
+                foreach ($config['params'] as $key => &$param) {
+                    if (isset(self::$$key)) self::$$key = $param;
+                    unset($param);
                 }
             }
+            unset($config);
+            return true;
+        }
+
+        public static function connect()
+        {
+            return self::$sc->connect();
+        }
+
+        public static function start()
+        {
             $before_run = microtime(true);
-            exec(self::$php_binary_path . ' -f ' . __DIR__ . '/controller/start.php > /dev/null &');
+            exec($e=self::$php_binary_path . ' -f ' . self::$controller_path . '/controller.php &');
+            out($e);
             $after_run = microtime(true);
             #usleep(100000); // await for run controller Saw
             $try = 0;
@@ -40,27 +75,14 @@ namespace Saw {
                 $try_run = microtime(true);
                 #usleep(100000);
                 usleep(100);
-                if (@self::socket_client()) {
+                if (self::connect()) {
                     printf('run: %f, exec: %f, connected: %f', $before_run, $after_run - $before_run, $try_run - $after_run);
                     error_log($before_run);
                     return true;
                 }
-            } while ($try++ < 1000000000);
-            printf('false');
+            } while ($try++ < 100);
             return false;
         }
-
-        public static function pre_init()
-        {
-            self::$sc = new Net\Client();
-            // TODO: Implement pre_init() method.
-        }
-
-        public static function post_init()
-        {
-            // TODO: Implement post_init() method.
-        }
-
     }
 }
 
@@ -71,9 +93,8 @@ namespace {
     $config = require 'config.php';
     #require_once 'controller/config.php';
     if (SawInit::init($config)) {
-
         out('configured. input...');
-        SawInit::socket_client() or SawInit::start() or (out('Saw start failed') or exit);
+        SawInit::connect() or SawInit::start() or (out('Saw start failed') or exit);
         out('input end');
 
         SawInit::socket_close();

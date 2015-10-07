@@ -7,9 +7,13 @@
  * Date: 22.09.2015
  * Time: 20:52
  */
-namespace Saw;
 
-$config = [
+ini_set('display_errors', false);
+error_reporting(E_ALL);
+ini_set('log_errors', true);
+ini_set('error_log', __DIR__ . '/messages.log');
+
+return [
     'net' => [
         'socket_domain' => AF_UNIX,
         'socket_address' => __DIR__ . DIRECTORY_SEPARATOR . 'saw-controller.sock',

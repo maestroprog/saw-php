@@ -16,6 +16,11 @@ namespace Saw\Net;
  */
 class Client extends Net
 {
+    /**
+     * @var bool connection state
+     */
+    private $connected = false;
+
     /* event variables */
 
     /**
@@ -23,9 +28,50 @@ class Client extends Net
      */
     private $event_disconnect;
 
-    abstract public function connect();
+    public function connect()
+    {
+        return $this->connected ?: $this->_connect();
+    }
 
-    abstract public function doDisconnect();
+    public function doDisconnect()
+    {
+        $this->close();
+    }
 
-    abstract public function onDisconnect(callable $callback);
+    public function onDisconnect(callable $callback)
+    {
+        //@TODO допилить!
+    }
+
+    private function _connect()
+    {
+        if ($this->connection = socket_create($this->socket_domain, SOCK_STREAM, $this->socket_domain > 1 ? getprotobyname('tcp') : 0)) {
+            if (socket_connect($this->connection, $this->socket_address, $this->socket_port)) {
+                return $this->connected = true;
+            } else {
+                $error = socket_last_error($this->connection);
+                socket_clear_error($this->connection);
+                switch ($error) {
+                    case SOCKET_ECONNREFUSED:
+                    case SOCKET_ENOENT:
+                        // если отсутствует файл сокета, либо соединиться со слушающим сокетом не удалось - возвращаем false
+                        $this->close();
+                        return false;
+                    default:
+                        // в иных случаях кидаем необрабатываемое исключение
+                        throw new \Exception(socket_strerror($error));
+
+                }
+            }
+        }
+        // @TODO delete next line...
+        trigger_error('Client connect failed', E_USER_ERROR);
+        return false;
+    }
+
+    public function close()
+    {
+        parent::close();
+        $this->connected = false;
+    }
 }

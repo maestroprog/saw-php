@@ -39,18 +39,26 @@ abstract class Net
             if (isset($this->{$key})) $this->{$key} = $val;
     }
 
-    abstract public function doReceive();
+    public function doReceive(){
+        // @TODO пилить
+    }
 
-    abstract public function onReceive(callable $callback);
+    public function onReceive(callable $callback){
 
-    abstract public function send($data);
+        // @TODO пилить
+    }
+
+    public function send($data){
+
+        // @TODO пилить
+    }
 
     public function close()
     {
         if ($this->connection)
             socket_close($this->connection);
         else
-            trigger_error('Server socket already closed');
+            trigger_error('Socket already closed');
     }
 
 }
