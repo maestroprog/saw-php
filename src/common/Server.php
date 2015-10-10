@@ -11,7 +11,7 @@
 namespace Saw\Net;
 
 
-abstract class Server extends Net
+class Server extends Net
 {
     /* server variables */
 
@@ -63,13 +63,44 @@ abstract class Server extends Net
         }
     }
 
-    abstract public function doDisconnect($client);
+    public function doDisconnect($client)
+    {
+        /**
+         * TODO
+         */
+    }
 
-    abstract public function onDisconnect(callable $callback);
+    public function onDisconnect(callable $callback)
+    {
+        /**
+         * TODO
+         */
+    }
 
-    abstract public function doAccept();
+    public function doAccept()
+    {
+        if ($connection = socket_accept($this->connection)) {
+            out('accepted whois?');
+            $this->_onAccept($connection);
+            //$this->connections[] = $connection;
+            //return true;
+        }
+        //return false;
+    }
 
-    abstract public function onAccept(callable $callback);
+    public function onAccept(callable $callback)
+    {
+        $this->event_accept = $callback;
+    }
+
+    protected function _onAccept(&$connection)
+    {
+        $addr= $addr2=null;
+        $pname = socket_getpeername($connection, $addr);
+        $sname = socket_getsockname($connection, $addr2);
+
+        out(sprintf('peer name: %s, socket name: %, %s, %s', $pname, $sname, $addr, $addr2));
+    }
 
     private function _open()
     {

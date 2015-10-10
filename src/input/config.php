@@ -16,7 +16,7 @@ ini_set('error_log', __DIR__ . '/messages.log');
 return [
     'net' => [
         'socket_domain' => AF_UNIX,
-        'socket_address' => __DIR__ . '/../' . 'saw-controller.sock',
+        'socket_address' => __DIR__ . '/../controller/' . 'saw-controller.sock',
     ],
     'params' => [
         'php_binary_path' => 'php',

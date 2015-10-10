@@ -17,6 +17,6 @@ function out($message)
 
 out('input start');
 
-require_once '../src/input/saw.php';
+require_once '../src/input/input.php';
 
 out('input end');

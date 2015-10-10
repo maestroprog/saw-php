@@ -65,16 +65,18 @@ namespace Saw {
 
         public static function start()
         {
+            out('starting');
             $before_run = microtime(true);
-            exec($e=self::$php_binary_path . ' -f ' . self::$controller_path . '/controller.php &');
+            exec($e=self::$php_binary_path . ' -f ' . self::$controller_path . '/controller.php > /dev/null &');
             out($e);
+            out('started');
             $after_run = microtime(true);
             #usleep(100000); // await for run controller Saw
             $try = 0;
             do {
                 $try_run = microtime(true);
                 #usleep(100000);
-                usleep(100);
+                usleep(1000);
                 if (self::connect()) {
                     printf('run: %f, exec: %f, connected: %f', $before_run, $after_run - $before_run, $try_run - $after_run);
                     error_log($before_run);

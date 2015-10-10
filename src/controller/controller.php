@@ -13,19 +13,21 @@ function out($message)
     error_log($message);
 }
 
-require_once 'config.php';
+
 require_once __DIR__ . '/../common/Net.php';
+require_once __DIR__ . '/../common/Server.php';
 require_once 'Saw.php';
 
 use Saw\Saw;
 
-Saw::init($config);
-out('configured. input...');
+$config = require 'config.php';
+if (Saw::init($config)) {
+    out('configured. start...');
+    Saw::open() and Saw::start() or (out('Saw start failed') or exit);
+    out('start end');
 
-Saw::socket_server() and Saw::start() or (out('Saw start failed') or exit);
-out('input end');
-
-register_shutdown_function(function () {
+}
+/*register_shutdown_function(function () {
     Saw::socket_close();
     out('closed');
-});
+});*/
