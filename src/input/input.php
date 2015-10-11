@@ -19,6 +19,7 @@ namespace Saw {
 
     class SawInit
     {
+        public static $work = true;
         /**
          * @var string path to php binaries
          */
@@ -67,23 +68,32 @@ namespace Saw {
         {
             out('starting');
             $before_run = microtime(true);
-            exec($e=self::$php_binary_path . ' -f ' . self::$controller_path . '/controller.php > /dev/null &');
+            exec($e = self::$php_binary_path . ' -f ' . self::$controller_path . '/controller.php > /dev/null &');
             out($e);
             out('started');
             $after_run = microtime(true);
-            #usleep(100000); // await for run controller Saw
+            usleep(10000); // await for run controller Saw
             $try = 0;
             do {
                 $try_run = microtime(true);
                 #usleep(100000);
-                usleep(1000);
+                usleep(10000);
                 if (self::connect()) {
                     printf('run: %f, exec: %f, connected: %f', $before_run, $after_run - $before_run, $try_run - $after_run);
                     error_log($before_run);
                     return true;
                 }
-            } while ($try++ < 100);
+            } while ($try++ < 10);
             return false;
+        }
+
+        public static function work()
+        {
+            //while (self::$work) {
+            usleep(1000);
+            self::$sc->doReceive();
+            //}
+            return true;
         }
     }
 }
@@ -96,7 +106,7 @@ namespace {
     #require_once 'controller/config.php';
     if (SawInit::init($config)) {
         out('configured. input...');
-        SawInit::connect() or SawInit::start() or (out('Saw start failed') or exit);
+        (SawInit::connect() or SawInit::start()) and SawInit::work() or (out('Saw start failed') or exit);
         out('input end');
 
         SawInit::socket_close();

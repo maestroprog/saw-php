@@ -16,6 +16,7 @@ function out($message)
 
 require_once __DIR__ . '/../common/Net.php';
 require_once __DIR__ . '/../common/Server.php';
+require_once __DIR__ . '/../common/Peer.php';
 require_once 'Saw.php';
 
 use Saw\Saw;

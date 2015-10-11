@@ -20,6 +20,11 @@ class Server extends Net
      */
     protected $connections = [];
 
+    /**
+     * @var bool server state
+     */
+    private $opened = false;
+
     /* event variables */
 
     /**
@@ -43,7 +48,7 @@ class Server extends Net
 
     public function open()
     {
-        return $this->_open();
+        return $this->opened ?: $this->_open();
     }
 
     /**
@@ -70,6 +75,9 @@ class Server extends Net
          */
     }
 
+    /**
+     * @param callable $callback
+     */
     public function onDisconnect(callable $callback)
     {
         /**
@@ -81,13 +89,15 @@ class Server extends Net
     {
         if ($connection = socket_accept($this->connection)) {
             out('accepted whois?');
-            $this->_onAccept($connection);
-            //$this->connections[] = $connection;
-            //return true;
+            return $this->_onAccept($connection);
         }
-        //return false;
+        return false;
     }
 
+    /**
+     * @param callable $callback
+     * Give callback function($client)
+     */
     public function onAccept(callable $callback)
     {
         $this->event_accept = $callback;
@@ -95,11 +105,16 @@ class Server extends Net
 
     protected function _onAccept(&$connection)
     {
-        $addr= $addr2=null;
-        $pname = socket_getpeername($connection, $addr);
-        $sname = socket_getsockname($connection, $addr2);
-
-        out(sprintf('peer name: %s, socket name: %, %s, %s', $pname, $sname, $addr, $addr2));
+        if ($peer = new Peer($connection)) {
+            $this->connections[] = &$peer;
+            if (is_callable($this->event_accept)) {
+                call_user_func_array($this->event_accept, [$peer]);
+            }
+            return true;
+        } else {
+            trigger_error('Peer connection error');
+            return false;
+        }
     }
 
     private function _open()
@@ -108,7 +123,8 @@ class Server extends Net
             if (socket_bind($this->connection, $this->socket_address, $this->socket_port)) {
                 if (socket_listen($this->connection)) {
                     socket_set_nonblock($this->connection);
-                    return true;
+                    $this->_open_try = false; // сбрасываем флаг попытки открыть сервер
+                    return $this->opened = true;
                 } else {
                     throw new \Exception(socket_strerror(socket_last_error($this->connection)));
                 }

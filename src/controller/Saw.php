@@ -11,6 +11,8 @@ namespace Saw;
 
 class Saw
 {
+    const STATE_ACCEPTED = 1;
+
     /**
      * @var Net\Server
      */
@@ -62,9 +64,16 @@ class Saw
     public static function start()
     {
         out('start');
+        Saw::$ss->onAccept(function (Net\Peer &$peer) {
+            $peer->set('state', self::STATE_ACCEPTED);
+            if ($peer->send('HELLO')) {
+                out('sended');
+            }
+        });
         register_shutdown_function(function () {
             Saw::stop();
         });
+
         error_log(sprintf('start accepting am %f', microtime(true)));
         for ($i = 0; $i < 1000; $i++) {
             if (self::$ss->doAccept()) {
