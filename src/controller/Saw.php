@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by PhpStorm.
- * User: Ğóñëàí
+ * User: Ğ ÑƒÑĞ»Ğ°Ğ½
  * Date: 20.09.2015
  * Time: 21:44
  */
@@ -30,14 +30,14 @@ class Saw
     private static $ss;
 
     /**
-     * Èíèöèàëèçàöèÿ
+     * Ğ˜Ğ½Ğ¸Ñ†Ğ¸Ğ°Ğ»Ğ¸Ğ·Ğ°Ñ†Ğ¸Ñ
      *
      * @param array $config
      * @return bool
      */
     public static function init(array &$config)
     {
-        // íàñòğîéêà ñåòè
+        // Ğ½Ğ°ÑÑ‚Ñ€Ğ¾Ğ¹ĞºĞ° ÑĞµÑ‚Ğ¸
         if (isset($config['net'])) {
             self::$ss = new Net\Server($config['net']);
         } else {
@@ -45,7 +45,7 @@ class Saw
             unset($config);
             return false;
         }
-        // íàñòğîéêà äîï. ïàğàìåòğîâ
+        // Ğ½Ğ°ÑÑ‚Ñ€Ğ¾Ğ¹ĞºĞ° Ğ´Ğ¾Ğ¿. Ğ¿Ğ°Ñ€Ğ°Ğ¼ĞµÑ‚Ñ€Ğ¾Ğ²
         if (isset($config['params'])) {
             foreach ($config['params'] as $key => &$param) {
                 if (isset(self::$$key)) self::$$key = $param;

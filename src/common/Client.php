@@ -40,7 +40,7 @@ class Client extends Net
 
     public function onDisconnect(callable $callback)
     {
-        //@TODO допилить!
+        //@TODO РґРѕРїРёР»РёС‚СЊ!
     }
 
     private function _connect()
@@ -54,11 +54,11 @@ class Client extends Net
                 switch ($error) {
                     case SOCKET_ECONNREFUSED:
                     case SOCKET_ENOENT:
-                        // если отсутствует файл сокета, либо соединиться со слушающим сокетом не удалось - возвращаем false
+                        // РµСЃР»Рё РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ С„Р°Р№Р» СЃРѕРєРµС‚Р°, Р»РёР±Рѕ СЃРѕРµРґРёРЅРёС‚СЊСЃСЏ СЃРѕ СЃР»СѓС€Р°СЋС‰РёРј СЃРѕРєРµС‚РѕРј РЅРµ СѓРґР°Р»РѕСЃСЊ - РІРѕР·РІСЂР°С‰Р°РµРј false
                         $this->close();
                         return false;
                     default:
-                        // в иных случаях кидаем необрабатываемое исключение
+                        // РІ РёРЅС‹С… СЃР»СѓС‡Р°СЏС… РєРёРґР°РµРј РЅРµРѕР±СЂР°Р±Р°С‚С‹РІР°РµРјРѕРµ РёСЃРєР»СЋС‡РµРЅРёРµ
                         throw new \Exception(socket_strerror($error));
 
                 }

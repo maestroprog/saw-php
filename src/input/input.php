@@ -3,7 +3,7 @@
  ** Saw entry gate file
  *
  * Created by PhpStorm.
- * User: Ðóñëàí
+ * User: Ð ÑƒÑÐ»Ð°Ð½
  * Date: 22.09.2015
  * Time: 19:01
  */
@@ -33,14 +33,14 @@ namespace Saw {
         private static $sc;
 
         /**
-         * Èíèöèàëèçàöèÿ
+         * Ð˜Ð½Ð¸Ñ†Ð¸Ð°Ð»Ð¸Ð·Ð°Ñ†Ð¸Ñ
          *
          * @param array $config
          * @return bool
          */
         public static function init(array &$config)
         {
-            // íàñòðîéêà ñåòè
+            // Ð½Ð°ÑÑ‚Ñ€Ð¾Ð¹ÐºÐ° ÑÐµÑ‚Ð¸
             if (isset($config['net'])) {
                 self::$sc = new Net\Client($config['net']);
             } else {
@@ -48,7 +48,7 @@ namespace Saw {
                 unset($config);
                 return false;
             }
-            // íàñòðîéêà äîï. ïàðàìåòðîâ
+            // Ð½Ð°ÑÑ‚Ñ€Ð¾Ð¹ÐºÐ° Ð´Ð¾Ð¿. Ð¿Ð°Ñ€Ð°Ð¼ÐµÑ‚Ñ€Ð¾Ð²
             if (isset($config['params'])) {
                 foreach ($config['params'] as $key => &$param) {
                     if (isset(self::$$key)) self::$$key = $param;
@@ -89,10 +89,10 @@ namespace Saw {
 
         public static function work()
         {
-            //while (self::$work) {
-            usleep(1000);
-            self::$sc->doReceive();
-            //}
+            while (self::$work) {
+                usleep(1000);
+                self::$sc->doReceive();
+            }
             return true;
         }
     }

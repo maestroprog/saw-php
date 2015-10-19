@@ -1,5 +1,5 @@
 # Saw-PHP
-Simple Async Workers — async php framework - for web
+Simple Async Workers â€” async php framework - for web
 ## What it is?
 Saw-PHP is simple and easy php framework for web.
 This framework provides an asynchronous execution of almost any php code.

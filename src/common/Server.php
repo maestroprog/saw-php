@@ -3,7 +3,7 @@
  * Server Net code snippet
  *
  * Created by PhpStorm.
- * User: Руслан
+ * User: Р СѓСЃР»Р°РЅ
  * Date: 01.10.2015
  * Time: 19:48
  */
@@ -123,7 +123,7 @@ class Server extends Net
             if (socket_bind($this->connection, $this->socket_address, $this->socket_port)) {
                 if (socket_listen($this->connection)) {
                     socket_set_nonblock($this->connection);
-                    $this->_open_try = false; // сбрасываем флаг попытки открыть сервер
+                    $this->_open_try = false; // СЃР±СЂР°СЃС‹РІР°РµРј С„Р»Р°Рі РїРѕРїС‹С‚РєРё РѕС‚РєСЂС‹С‚СЊ СЃРµСЂРІРµСЂ
                     return $this->opened = true;
                 } else {
                     throw new \Exception(socket_strerror(socket_last_error($this->connection)));
@@ -134,7 +134,7 @@ class Server extends Net
                 error_log('error: ' . $error);
                 switch ($error) {
                     case SOCKET_EADDRINUSE:
-                        // если сокет уже открыт - пробуем его закрыть и снова открыть
+                        // РµСЃР»Рё СЃРѕРєРµС‚ СѓР¶Рµ РѕС‚РєСЂС‹С‚ - РїСЂРѕР±СѓРµРј РµРіРѕ Р·Р°РєСЂС‹С‚СЊ Рё СЃРЅРѕРІР° РѕС‚РєСЂС‹С‚СЊ
                         // @TODO socket close self::socket_close();
                         // @todo recheck this code
                         // closing socket and try restart

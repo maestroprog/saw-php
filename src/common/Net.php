@@ -3,7 +3,7 @@
  ** Net code snippet
  *
  * Created by PhpStorm.
- * User: ������
+ * User: Руслан
  * Date: 22.09.2015
  * Time: 20:42
  */
@@ -111,6 +111,7 @@ abstract class Net
                 $length -= $len = strlen($chunk);
                 $this->_send($chunk, $len, $num++ << 8 | $type | self::DATA_CHUNK);
                 if ($num > 255) {
+                    // 255 фреймов должно хватит на 16M
                     trigger_error('Big chunk number!', E_USER_ERROR);
                 }
             } while ($length > 0);

@@ -45,7 +45,7 @@ class Peer extends Net
 
     public function onDisconnect(callable $callback)
     {
-        //@TODO допилить!
+        //@TODO РґРѕРїРёР»РёС‚СЊ!
     }
 
     public function close()
