@@ -79,8 +79,8 @@ namespace Saw {
                 #usleep(100000);
                 usleep(10000);
                 if (self::connect()) {
-                    printf('run: %f, exec: %f, connected: %f', $before_run, $after_run - $before_run, $try_run - $after_run);
-                    error_log($before_run);
+                    out(sprintf('run: %f, exec: %f, connected: %f', $before_run, $after_run - $before_run, $try_run - $after_run));
+                    out('before run time: ' . $before_run);
                     return true;
                 }
             } while ($try++ < 10);
@@ -89,11 +89,21 @@ namespace Saw {
 
         public static function work()
         {
+            self::$sc->onReceive(function (&$data) {
+                out('I RECEIVED ' . $data . ' :)');
+                self::$sc->send('HELLO!');
+            });
+
             while (self::$work) {
                 usleep(1000);
                 self::$sc->doReceive();
             }
             return true;
+        }
+
+        public static function stop()
+        {
+            self::$sc->doDisconnect();
         }
     }
 }
@@ -106,10 +116,12 @@ namespace {
     #require_once 'controller/config.php';
     if (SawInit::init($config)) {
         out('configured. input...');
-        (SawInit::connect() or SawInit::start()) and SawInit::work() or (out('Saw start failed') or exit);
+        (SawInit::connect() or SawInit::start()) or (out('Saw start failed') or exit);
+        out('work start');
+        SawInit::work();
         out('input end');
 
-        SawInit::socket_close();
+        SawInit::stop();
         out('closed');
     }
 

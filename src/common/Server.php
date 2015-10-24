@@ -16,7 +16,7 @@ class Server extends Net
     /* server variables */
 
     /**
-     * @var array
+     * @var array Peer
      */
     protected $connections = [];
 
@@ -101,6 +101,17 @@ class Server extends Net
     public function onAccept(callable $callback)
     {
         $this->event_accept = $callback;
+    }
+
+    public function doReceive()
+    {
+        foreach ($this->connections as &$peer) {
+            /**
+             * @var $peer Peer
+             */
+            $peer->doReceive();
+            unset($peer);
+        }
     }
 
     protected function _onAccept(&$connection)

@@ -26,9 +26,11 @@ if (Saw::init($config)) {
     out('configured. start...');
     Saw::open() and Saw::start() or (out('Saw start failed') or exit);
     out('start end');
+    out('work start');
+    Saw::work();
 
 }
-/*register_shutdown_function(function () {
-    Saw::socket_close();
-    out('closed');
-});*/
+register_shutdown_function(function () {
+    Saw::stop();
+    out('stopped');
+});

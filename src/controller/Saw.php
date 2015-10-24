@@ -14,6 +14,11 @@ class Saw
     const STATE_ACCEPTED = 1;
 
     /**
+     * @var bool
+     */
+    public static $work = true;
+
+    /**
      * @var Net\Server
      */
     protected static $server;
@@ -66,6 +71,10 @@ class Saw
         out('start');
         Saw::$ss->onAccept(function (Net\Peer &$peer) {
             $peer->set('state', self::STATE_ACCEPTED);
+            $peer->onReceive(function (&$data) {
+                out('i received! ' . $data);
+                out('this is ' . var_export($this));
+            });
             if ($peer->send('HELLO')) {
                 out('sended');
             }
@@ -73,16 +82,16 @@ class Saw
         register_shutdown_function(function () {
             Saw::stop();
         });
+        return true;
+    }
 
-        error_log(sprintf('start accepting am %f', microtime(true)));
-        for ($i = 0; $i < 1000; $i++) {
-            if (self::$ss->doAccept()) {
-                sprintf('accepted am %f and try %d', microtime(true), $i);
-                return true;
-            }
+    public static function work()
+    {
+        while (self::$work) {
+            self::$ss->doAccept();
+            self::$ss->doReceive();
             usleep(1000);
         }
-        return true;
     }
 
     public static function stop()

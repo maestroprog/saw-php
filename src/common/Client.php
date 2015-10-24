@@ -43,6 +43,12 @@ class Client extends Net
         //@TODO допилить!
     }
 
+    public function close()
+    {
+        parent::close();
+        $this->connected = false;
+    }
+
     private function _connect()
     {
         if ($this->connection = socket_create($this->socket_domain, SOCK_STREAM, $this->socket_domain > 1 ? getprotobyname('tcp') : 0)) {
@@ -67,11 +73,5 @@ class Client extends Net
         // @TODO delete next line...
         trigger_error('Client connect failed', E_USER_ERROR);
         return false;
-    }
-
-    public function close()
-    {
-        parent::close();
-        $this->connected = false;
     }
 }
