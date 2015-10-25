@@ -69,11 +69,10 @@ class Saw
     public static function start()
     {
         out('start');
-        Saw::$ss->onAccept(function (Net\Peer &$peer) {
+        self::$ss->onAccept(function (Net\Peer &$peer) {
             $peer->set('state', self::STATE_ACCEPTED);
             $peer->onReceive(function (&$data) {
                 out('i received! ' . $data);
-                out('this is ' . var_export($this));
             });
             if ($peer->send('HELLO')) {
                 out('sended');

@@ -21,7 +21,9 @@ require_once 'Saw.php';
 
 use Saw\Saw;
 
-$config = require 'config.php';
+define('SAW_ENVIRONMENT', 1+1);
+
+$config = require '../config.php';
 if (Saw::init($config)) {
     out('configured. start...');
     Saw::open() and Saw::start() or (out('Saw start failed') or exit);
