@@ -8,13 +8,26 @@
  * Date: 22.09.2015
  * Time: 20:52
  */
+defined('SAW_ENVIRONMENT') or define('SAW_ENVIRONMENT', 'Unknown');
+define('INTERVAL', 1000); // 1ms
 
 ini_set('display_errors', false);
 error_reporting(E_ALL);
 ini_set('log_errors', true);
 ini_set('error_log', __DIR__ . '/messages.log');
-file_put_contents(__DIR__ . '/messages.log', ''); // очищаем лог-файл
-!defined('SAW_ENVIRONMENT') or define('SAW_ENVIRONMENT', 'Unknown');
+
+function out($message)
+{
+    $message = sprintf('{%s}: %s', SAW_ENVIRONMENT, $message);
+    if (ini_get('log_errors'))
+        error_log($message);
+    else
+        echo $message;
+}
+
+set_exception_handler(function (Exception $e) {
+    out(sprintf('Вызвана ошибка %d: %s; %s', $e->getCode(), $e->getMessage(), $e->getTraceAsString()));
+});
 
 return [
     'net' => [

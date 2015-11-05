@@ -1,13 +1,10 @@
 <?php
 /**
- ** Saw entry gate file
- *
  * Created by PhpStorm.
- * User: Ğ ÑƒÑĞ»Ğ°Ğ½
- * Date: 22.09.2015
- * Time: 19:01
+ * User: Ğóñëàí
+ * Date: 05.11.2015
+ * Time: 17:02
  */
-
 namespace Saw {
 
     $common_dir = realpath(__DIR__ . '/../common') . '/';
@@ -33,14 +30,14 @@ namespace Saw {
         private static $sc;
 
         /**
-         * Ğ˜Ğ½Ğ¸Ñ†Ğ¸Ğ°Ğ»Ğ¸Ğ·Ğ°Ñ†Ğ¸Ñ
+         * Èíèöèàëèçàöèÿ
          *
          * @param array $config
          * @return bool
          */
         public static function init(array &$config)
         {
-            // Ğ½Ğ°ÑÑ‚Ñ€Ğ¾Ğ¹ĞºĞ° ÑĞµÑ‚Ğ¸
+            // íàñòğîéêà ñåòè
             if (isset($config['net'])) {
                 self::$sc = new Net\Client($config['net']);
             } else {
@@ -48,7 +45,7 @@ namespace Saw {
                 unset($config);
                 return false;
             }
-            // Ğ½Ğ°ÑÑ‚Ñ€Ğ¾Ğ¹ĞºĞ° Ğ´Ğ¾Ğ¿. Ğ¿Ğ°Ñ€Ğ°Ğ¼ĞµÑ‚Ñ€Ğ¾Ğ²
+            // íàñòğîéêà äîï. ïàğàìåòğîâ
             if (isset($config['params'])) {
                 foreach ($config['params'] as $key => &$param) {
                     if (isset(self::$$key)) self::$$key = $param;
@@ -94,16 +91,11 @@ namespace Saw {
                 self::$sc->send('HELLO!');
             });
 
-            self::$sc->onDisconnect(function () {
-                out('i disconnected!');
-                self::$work = false;
-            });
-
             while (self::$work) {
-                usleep(INTERVAL);
+                usleep(1000);
                 self::$sc->doReceive();
-                self::$sc->send('HELLO WORK!');
             }
+            return true;
         }
 
         public static function stop()
@@ -117,7 +109,7 @@ namespace {
 
     use Saw\SawInit;
 
-    define('SAW_ENVIRONMENT', 'Input');
+    define('SAW_ENVIRONMENT', 'DEBUG');
     $config = require __DIR__ . '/../config.php';
 
     try {
@@ -129,7 +121,7 @@ namespace {
             }
             out('work start');
             SawInit::work();
-            out('work end');
+            out('input end');
 
             SawInit::stop();
             out('closed');
@@ -137,8 +129,7 @@ namespace {
     } catch (Exception $e) {
         switch (PHP_SAPI) {
             case 'cli':
-                out('Controller temporarily unavailable');
-                out($e->getMessage());
+
                 break;
             default:
                 header('HTTP/1.1 503 Service Unavailable');

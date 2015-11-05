@@ -38,6 +38,12 @@ class Peer extends Net
         return false;
     }
 
+    public function close()
+    {
+        parent::close();
+        $this->connected = false;
+    }
+
     public function doDisconnect()
     {
         $this->close();
@@ -45,12 +51,14 @@ class Peer extends Net
 
     public function onDisconnect(callable $callback)
     {
-        //@TODO допилить!
+        $this->event_disconnect = $callback;
     }
 
-    public function close()
+    protected function _onDisconnect()
     {
-        parent::close();
-        $this->connected = false;
+        if (is_callable($this->event_disconnect)) {
+            call_user_func($this->event_disconnect);
+        }
     }
+
 }

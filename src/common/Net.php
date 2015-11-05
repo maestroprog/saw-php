@@ -22,6 +22,8 @@ abstract class Net
     const DATA_EXTENDED = 32; // reserved for objects
     const DATA_EXTENDED_2 = 64; // reserved
     const DATA_CONTROL = 128;
+
+    const SOCKET_WAIT = 1000; // 1 ms ожидание на повторные операции на сокете
     /**
      * @var int type of socket
      */
@@ -168,11 +170,16 @@ abstract class Net
 
     public function close()
     {
-        if ($this->connection)
+        if ($this->connection) {
+            socket_shutdown($this->connection);
             socket_close($this->connection);
-        else
+            $this->_onDisconnect();
+        } else {
             trigger_error('Socket already closed');
+        }
     }
+
+    abstract protected function _onDisconnect();
 
     public function setBlock()
     {
@@ -211,8 +218,27 @@ abstract class Net
         while ($length > 0) {
             $data = socket_read($this->connection, $length);
             if ($data === false) {
-                throw new \Exception('Socket read error: ' . socket_strerror(socket_last_error(socket_last_error($this->connection))), socket_last_error($this->connection));
+                switch (socket_last_error($this->connection)) {
+                    case SOCKET_EAGAIN:
+                        if (!strlen($buffer) && !$required) {
+                            return false;
+                        } else {
+                            out('Socket read error: SOCKET_EAGAIN at READING');
+                            usleep(self::SOCKET_WAIT);
+                        }
+                        break;
+                    default:
+                        out('SOCKET READ ERROR!!!' . socket_last_error($this->connection));
+                        throw new \Exception('Socket read error: ' . socket_strerror(socket_last_error($this->connection)), socket_last_error($this->connection));
+                }
             } elseif ($data === '') {
+                /**
+                 * В документации PHP написано, что socket_read выдает false, если сокет отсоединен.
+                 * Однако, как выяснилось, это не так. Если сокет отсоединен,
+                 * то socket_read возвращает пустую строку. Поэтому в данном блоке будем
+                 * обрабатывать ситуацию обрыва связи.
+                 * TODO запилить, что описал
+                 */
                 //trigger_error('Socket read 0 bytes', E_USER_WARNING);
                 if ($try++ > 100 && $required) {
                     trigger_error('Fail require read data', E_USER_ERROR);
@@ -237,7 +263,22 @@ abstract class Net
         do {
             $wrote = socket_write($this->connection, $data);
             if ($wrote === false) {
-                throw new \Exception('Socket write error: ' . socket_strerror(socket_last_error(socket_last_error($this->connection))), socket_last_error($this->connection));
+                /**
+                 * @TODO как и при чтении, необходимо протестировать работу socket_write
+                 * Промоделировать ситуацию, когда удаленный сокет отключился, и выяснить, что выдает socker_write
+                 * и как правильно определить отключение удаленного сокета в данной функции.
+                 */
+                switch (socket_last_error($this->connection)) {
+                    case SOCKET_EAGAIN:
+                        out('Socket write error: SOCKET_EAGAIN at writing');
+                        usleep(self::SOCKET_WAIT);
+                        break;
+                    default:
+                        out('SOCKET READ ERROR!!!' . socket_last_error($this->connection));
+                        throw new \Exception('Socket read error: ' . socket_strerror(socket_last_error($this->connection)), socket_last_error($this->connection));
+                }
+
+                throw new \Exception('Socket write error: ' . socket_strerror(socket_last_error($this->connection)), socket_last_error($this->connection));
                 //return false;
             } elseif ($wrote === 0) {
                 trigger_error('Socket written 0 bytes', E_USER_WARNING);

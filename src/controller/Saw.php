@@ -11,7 +11,18 @@ namespace Saw;
 
 class Saw
 {
-    const STATE_ACCEPTED = 1;
+    /**
+     * Константы возможных типов подключающихся клиентов
+     */
+    const CLIENT_INPUT = 1; // input-клиент, передающий запрос
+    const CLIENT_WS_INPUT = 2; // WS input-клиент, передающий запрос (зарезервировано)
+    const CLIENT_WORKER = 3; // воркер
+    const CLIENT_CONTROLLER = 4; // контроллер. (зарезервировано)
+    const CLIENT_DEBUG = 5; // отладчик
+    /**
+     * Константы возможных состояний подключения с клиентом
+     */
+    const STATE_ACCEPTED = 1; // соединение принято
 
     /**
      * @var bool
@@ -74,12 +85,16 @@ class Saw
             $peer->onReceive(function (&$data) {
                 out('i received! ' . $data);
             });
+            $peer->onDisconnect(function () use ($peer) {
+                out('peer %% disconnected');
+            });
             if ($peer->send('HELLO')) {
                 out('sended');
             }
         });
         register_shutdown_function(function () {
-            Saw::stop();
+            self::stop();
+            out('stopped');
         });
         return true;
     }
@@ -87,9 +102,12 @@ class Saw
     public static function work()
     {
         while (self::$work) {
+            usleep(INTERVAL);
             self::$ss->doAccept();
             self::$ss->doReceive();
-            usleep(1000);
+            if (rand(0, 1000) === 500) {
+                self::$work = false;
+            }
         }
     }
 

@@ -33,6 +33,12 @@ class Client extends Net
         return $this->connected ?: $this->_connect();
     }
 
+    public function close()
+    {
+        parent::close();
+        $this->connected = false;
+    }
+
     public function doDisconnect()
     {
         $this->close();
@@ -40,19 +46,21 @@ class Client extends Net
 
     public function onDisconnect(callable $callback)
     {
-        //@TODO допилить!
+        $this->event_disconnect = $callback;
     }
 
-    public function close()
+    protected function _onDisconnect()
     {
-        parent::close();
-        $this->connected = false;
+        if (is_callable($this->event_disconnect)) {
+            call_user_func($this->event_disconnect);
+        }
     }
 
     private function _connect()
     {
         if ($this->connection = socket_create($this->socket_domain, SOCK_STREAM, $this->socket_domain > 1 ? getprotobyname('tcp') : 0)) {
             if (socket_connect($this->connection, $this->socket_address, $this->socket_port)) {
+                $this->setNonBlock();// $this->connection); // устанавливаем неблокирующий режим работы сокета
                 return $this->connected = true;
             } else {
                 $error = socket_last_error($this->connection);
@@ -74,4 +82,5 @@ class Client extends Net
         trigger_error('Client connect failed', E_USER_ERROR);
         return false;
     }
+
 }

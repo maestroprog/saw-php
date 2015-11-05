@@ -56,10 +56,18 @@ class Server extends Net
      */
     public function close()
     {
+
         parent::close();
         // /@TODO recheck this code
+        foreach ($this->connections as $peer) {
+            /**
+             * @var $peer \Saw\Net\Peer
+             */
+            $peer->doDisconnect();
+        }
+
         // socket_close($this->_socket);
-        error_log('is unix domain: ' . ($this->socket_domain == AF_UNIX ? 'true' : 'false'));
+        out('is unix domain: ' . ($this->socket_domain == AF_UNIX ? 'true' : 'false'));
         if ($this->socket_domain === AF_UNIX) {
             if (file_exists($this->socket_address))
                 unlink($this->socket_address);
@@ -85,6 +93,11 @@ class Server extends Net
          */
     }
 
+    protected function _onDisconnect()
+    {
+        // TODO: Implement _onDisconnect() method.
+    }
+
     public function doAccept()
     {
         if ($connection = socket_accept($this->connection)) {
@@ -105,18 +118,18 @@ class Server extends Net
 
     public function doReceive()
     {
-        foreach ($this->connections as &$peer) {
+        foreach ($this->connections as $peer) {
             /**
              * @var $peer Peer
              */
             $peer->doReceive();
-            unset($peer);
         }
     }
 
     protected function _onAccept(&$connection)
     {
         if ($peer = new Peer($connection)) {
+            $peer->setNonBlock();
             $this->connections[] = &$peer;
             if (is_callable($this->event_accept)) {
                 call_user_func_array($this->event_accept, [$peer]);
