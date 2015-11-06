@@ -239,7 +239,9 @@ abstract class Net
                  * обрабатывать ситуацию обрыва связи.
                  * TODO запилить, что описал
                  */
-                //trigger_error('Socket read 0 bytes', E_USER_WARNING);
+                trigger_error('Socket read 0 bytes', E_USER_WARNING);
+                out('Пробуем получить код ошибки...');
+                throw new \Exception('Socket read error: ' . socket_strerror(socket_last_error($this->connection)), socket_last_error($this->connection));
                 if ($try++ > 100 && $required) {
                     trigger_error('Fail require read data', E_USER_ERROR);
                 }
