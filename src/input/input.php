@@ -10,10 +10,11 @@
 
 namespace Saw {
 
-    $common_dir = realpath(__DIR__ . '/../common') . '/';
+    //$common_dir = realpath(__DIR__ . '/../vendors/esockets-php') . '/';
+    use \Saw\Net\Client;
 
-    require_once $common_dir . 'Net.php';
-    require_once $common_dir . 'Client.php';
+    //require_once $common_dir . 'Net.php';
+    //require_once $common_dir . 'Client.php';
 
     unset($common_dir);
 
