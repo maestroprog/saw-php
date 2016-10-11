@@ -6,10 +6,13 @@
  * Time: 21:44
  */
 
-namespace Saw;
+namespace maestroprog\Saw;
 
 
-class Saw
+use Esockets\Peer;
+use Esockets\Server;
+
+class Controller
 {
     /**
      * Константы возможных типов подключающихся клиентов
@@ -30,7 +33,7 @@ class Saw
     public static $work = true;
 
     /**
-     * @var Net\Server
+     * @var Server
      */
     protected static $server;
 
@@ -41,7 +44,7 @@ class Saw
     public static $php_binary_path = 'php';
 
     /**
-     * @var Net\Server socket connection
+     * @var Server socket connection
      */
     private static $ss;
 
@@ -55,7 +58,7 @@ class Saw
     {
         // настройка сети
         if (isset($config['net'])) {
-            self::$ss = new Net\Server($config['net']);
+            self::$ss = new Server($config['net']);
         } else {
             trigger_error('Net configuration not found', E_USER_NOTICE);
             unset($config);
@@ -74,15 +77,15 @@ class Saw
 
     public static function open()
     {
-        return self::$ss->open();
+        return self::$ss->connect();
     }
 
     public static function start()
     {
         out('start');
-        self::$ss->onAccept(function (Net\Peer &$peer) {
+        self::$ss->onConnectPeer(function (Peer &$peer) {
             $peer->set('state', self::STATE_ACCEPTED);
-            $peer->onReceive(function (&$data) {
+            $peer->onRead(function (&$data) {
                 out('i received! ' . $data);
             });
             $peer->onDisconnect(function () use ($peer) {
@@ -103,8 +106,8 @@ class Saw
     {
         while (self::$work) {
             usleep(INTERVAL);
-            self::$ss->doAccept();
-            self::$ss->doReceive();
+            self::$ss->listen();
+            self::$ss->read();
             if (rand(0, 1000) === 500) {
                 self::$work = false;
             }
@@ -113,7 +116,7 @@ class Saw
 
     public static function stop()
     {
-        self::$ss->close();
+        self::$ss->disconnect();
         out('closed');
     }
 }

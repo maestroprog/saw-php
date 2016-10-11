@@ -5,10 +5,15 @@
  * Date: 20.09.2015
  * Time: 17:48
  */
+
 ini_set('display_errors', true);
 error_reporting(E_ALL);
 ini_set('error_log', 'e.log');
 ini_set('log_errors', true);
+
+
+require '../autoload.php';
+require '../vendors/esockets-php/autoload.php';
 
 //$c = file_get_contents('test.txt');
 //vaR_dump(unpack('Nv0/cv1', $c));

@@ -73,10 +73,10 @@ set_error_handler(function ($errno, $errstr, $errfile, $errline, array $errconte
 return [
     'net' => [
         'socket_domain' => AF_UNIX,
-        'socket_address' => __DIR__ . '/controller/saw-controller.sock',
+        'socket_address' => __DIR__ . '/workers/saw-controller.sock',
     ],
     'params' => [
         'php_binary_path' => 'php',
-        'controller_path' => __DIR__ . '/controller',
+        'controller_path' => __DIR__ . '/workers',
     ]
 ];

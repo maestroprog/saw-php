@@ -3,13 +3,13 @@
  * Created by PhpStorm.
  * User: Руслан
  * Date: 20.09.2015
- * Time: 21:56
+ * Time: 21:14
  */
 
-namespace Saw;
+namespace maestroprog\Saw;
 
 
-abstract class Worker
+abstract class Task
 {
 
 }
