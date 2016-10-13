@@ -16,6 +16,9 @@ error_reporting(E_ALL);
 ini_set('log_errors', true);
 ini_set('error_log', __DIR__ . '/messages.log');
 
+require __DIR__ . '/../autoload.php';
+require __DIR__ . '/../vendors/esockets-php/autoload.php';
+
 function out($message)
 {
     $message = sprintf('{%s}: %s', SAW_ENVIRONMENT, $message);
@@ -62,14 +65,32 @@ function error_type($type)
     return "";
 }
 
-set_exception_handler(function (Exception $e) {
-    out(sprintf('Вызвана ошибка %d: %s; %s', $e->getCode(), $e->getMessage(), $e->getTraceAsString()));
+set_exception_handler(function (Throwable $e) {
+    out(sprintf(
+        "Вызвана ошибка %d: %s\r\nВ файле %s:%d\r\n%s\r\n\r\n",
+        $e->getCode(),
+        $e->getMessage(),
+        $e->getFile(),
+        $e->getLine(),
+        $e->getTraceAsString()
+    ));
 });
 
 set_error_handler(function ($errno, $errstr, $errfile, $errline, array $errcontext) {
-    out(sprintf('[%s]: %s in %s at %d line', error_type($errno), $errstr, $errfile, $errline));
+    out(sprintf("[%s]: %s in %s at %d line\r\n%s\r\n", error_type($errno), $errstr, $errfile, $errline, print_r($errcontext, true)));
 });
 
+return [
+    'net' => [
+        'socket_domain' => AF_INET,
+        'socket_address' => '127.0.0.1',
+        'socket_port' => 9090,
+    ],
+    'params' => [
+        'php_binary_path' => 'php',
+        'controller_path' => __DIR__ . '/workers',
+    ]
+];/*
 return [
     'net' => [
         'socket_domain' => AF_UNIX,
@@ -79,4 +100,4 @@ return [
         'php_binary_path' => 'php',
         'controller_path' => __DIR__ . '/workers',
     ]
-];
+];*/

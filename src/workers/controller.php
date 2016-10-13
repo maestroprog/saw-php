@@ -12,7 +12,7 @@ use maestroprog\Saw\Controller;
 
 define('SAW_ENVIRONMENT', 'Controller');
 
-$config = require __DIR__ . '/config.php';
+$config = require __DIR__ . '/../config.php';
 if (Controller::init($config)) {
     out('configured. start...');
     Controller::open() and Controller::start() or (out('Saw start failed') or exit);
