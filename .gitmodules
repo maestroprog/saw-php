@@ -1,3 +1,6 @@
 [submodule "vendors/esockets-php"]
 	path = vendors/esockets-php
 	url = git://github.com/maestroprog/esockets-php.git
+[submodule "vendors/maestroprog/esockets"]
+	path = vendors/maestroprog/esockets
+	url = git@github.com:maestroprog/esockets-php.git
