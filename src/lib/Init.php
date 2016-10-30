@@ -8,7 +8,7 @@
 
 namespace maestroprog\Saw;
 
-use Esockets\Client;
+use maestroprog\esockets\TcpClient;
 
 
 class Init
@@ -22,7 +22,7 @@ class Init
     public static $controller_path = '.';
 
     /**
-     * @var Client socket connection
+     * @var TcpClient socket connection
      */
     private static $sc;
 
@@ -36,7 +36,7 @@ class Init
     {
         // настройка сети
         if (isset($config['net'])) {
-            self::$sc = new Client($config['net']);
+            self::$sc = new TcpClient($config['net']);
         } else {
             trigger_error('Net configuration not found', E_USER_NOTICE);
             unset($config);

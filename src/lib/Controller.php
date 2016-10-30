@@ -9,10 +9,10 @@
 namespace maestroprog\Saw;
 
 
-use Esockets\Peer;
-use Esockets\Server;
+use maestroprog\esockets\Peer;
+use maestroprog\esockets\TcpServer;
 
-class Controller
+class Controller extends Singleton
 {
     /**
      * Константы возможных типов подключающихся клиентов
@@ -33,7 +33,12 @@ class Controller
     public static $work = true;
 
     /**
-     * @var Server
+     * @var bool вызывать pcntl_dispatch_signals()
+     */
+    public static $dispatch_signals = false;
+
+    /**
+     * @var TcpServer
      */
     protected static $server;
 
@@ -44,7 +49,7 @@ class Controller
     public static $php_binary_path = 'php';
 
     /**
-     * @var Server socket connection
+     * @var TcpServer socket connection
      */
     private static $ss;
 
@@ -58,7 +63,7 @@ class Controller
     {
         // настройка сети
         if (isset($config['net'])) {
-            self::$ss = new Server($config['net']);
+            self::$ss = new TcpServer($config['net']);
         } else {
             trigger_error('Net configuration not found', E_USER_NOTICE);
             unset($config);
@@ -85,14 +90,19 @@ class Controller
         out('start');
         self::$ss->onConnectPeer(function (Peer &$peer) {
             $peer->set('state', self::STATE_ACCEPTED);
-            $peer->onRead(function (&$data) {
-                out('i received! ' . $data);
+            $peer->onRead(function (&$data) use ($peer) {
+                switch ($data['command']) {
+                    case 'wadd': // add worker
+                    case 'wdel': // del worker
+                    case 'tadd': // add new task
+
+                }
             });
             $peer->onDisconnect(function () use ($peer) {
                 out('peer %% disconnected');
             });
-            if ($peer->send('HELLO')) {
-                out('sended');
+            if (!$peer->send('HELLO')) {
+                out('HELLO FAIL SEND!');
             }
         });
         register_shutdown_function(function () {
@@ -102,20 +112,23 @@ class Controller
         return true;
     }
 
+    private $workers = [];
+
     public static function work()
     {
         while (self::$work) {
             usleep(INTERVAL);
             self::$ss->listen();
             self::$ss->read();
-            if (rand(0, 1000) === 500) {
-                self::$work = false;
+            if (self::$dispatch_signals) {
+                pcntl_signal_dispatch();
             }
         }
     }
 
     public static function stop()
     {
+        self::$work = false;
         self::$ss->disconnect();
         out('closed');
     }

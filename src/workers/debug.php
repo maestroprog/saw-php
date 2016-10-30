@@ -5,9 +5,10 @@
  * Date: 05.11.2015
  * Time: 17:02
  */
+
 use maestroprog\Saw\Init;
 
-define('SAW_ENVIRONMENT', 'DEBUG');
+define('SAW_ENVIRONMENT', 'Debug');
 $config = require __DIR__ . '/../config.php';
 
 try {

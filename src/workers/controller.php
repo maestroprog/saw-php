@@ -17,6 +17,12 @@ if (Controller::init($config)) {
     out('configured. start...');
     Controller::open() and Controller::start() or (out('Saw start failed') or exit);
     out('start end');
+    if (extension_loaded('pcntl')) {
+        pcntl_signal(SIGINT, function ($sig) {
+            Controller::$work = false;
+        });
+        Controller::$dispatch_signals = true;
+    }
     out('work start');
     Controller::work();
     out('work end');

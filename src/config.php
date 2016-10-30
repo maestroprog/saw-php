@@ -17,7 +17,7 @@ ini_set('log_errors', true);
 ini_set('error_log', __DIR__ . '/messages.log');
 
 require __DIR__ . '/../autoload.php';
-require __DIR__ . '/../vendors/esockets-php/autoload.php';
+require __DIR__ . '/../vendors/maestroprog/esockets/autoload.php';
 
 function out($message)
 {
@@ -90,7 +90,8 @@ return [
         'php_binary_path' => 'php',
         'controller_path' => __DIR__ . '/workers',
     ]
-];/*
+];
+/*
 return [
     'net' => [
         'socket_domain' => AF_UNIX,
@@ -100,4 +101,5 @@ return [
         'php_binary_path' => 'php',
         'controller_path' => __DIR__ . '/workers',
     ]
-];*/
+];
+*/
