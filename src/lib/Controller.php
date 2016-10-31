@@ -30,28 +30,28 @@ class Controller extends Singleton
     /**
      * @var bool
      */
-    public static $work = true;
+    public $work = true;
 
     /**
      * @var bool вызывать pcntl_dispatch_signals()
      */
-    public static $dispatch_signals = false;
+    public $dispatch_signals = false;
 
     /**
      * @var TcpServer
      */
-    protected static $server;
+    protected $server;
 
 
     /**
      * @var string path to php binaries
      */
-    public static $php_binary_path = 'php';
+    public $php_binary_path = 'php';
 
     /**
      * @var TcpServer socket connection
      */
-    private static $ss;
+    private $ss;
 
     /**
      * Инициализация
@@ -59,11 +59,11 @@ class Controller extends Singleton
      * @param array $config
      * @return bool
      */
-    public static function init(array &$config)
+    public function init(array &$config)
     {
         // настройка сети
         if (isset($config['net'])) {
-            self::$ss = new TcpServer($config['net']);
+            $this->ss = new TcpServer($config['net']);
         } else {
             trigger_error('Net configuration not found', E_USER_NOTICE);
             unset($config);
@@ -72,7 +72,7 @@ class Controller extends Singleton
         // настройка доп. параметров
         if (isset($config['params'])) {
             foreach ($config['params'] as $key => &$param) {
-                if (isset(self::$$key)) self::$$key = $param;
+                if (isset($this->$key)) $this->$key = $param;
                 unset($param);
             }
         }
@@ -80,22 +80,19 @@ class Controller extends Singleton
         return true;
     }
 
-    public static function open()
+    public function start()
     {
-        return self::$ss->connect();
-    }
-
-    public static function start()
-    {
+        if (!$this->ss->connect()) {
+            throw new \Exception('Cannot start: not connected');
+        }
         out('start');
-        self::$ss->onConnectPeer(function (Peer &$peer) {
+        $this->ss->onConnectPeer(function (Peer &$peer) {
             $peer->set('state', self::STATE_ACCEPTED);
             $peer->onRead(function (&$data) use ($peer) {
                 switch ($data['command']) {
                     case 'wadd': // add worker
                     case 'wdel': // del worker
                     case 'tadd': // add new task
-
                 }
             });
             $peer->onDisconnect(function () use ($peer) {
@@ -106,7 +103,7 @@ class Controller extends Singleton
             }
         });
         register_shutdown_function(function () {
-            self::stop();
+            $this->stop();
             out('stopped');
         });
         return true;
@@ -114,22 +111,22 @@ class Controller extends Singleton
 
     private $workers = [];
 
-    public static function work()
+    public function work()
     {
-        while (self::$work) {
+        while ($this->work) {
             usleep(INTERVAL);
-            self::$ss->listen();
-            self::$ss->read();
-            if (self::$dispatch_signals) {
+            $this->ss->listen();
+            $this->ss->read();
+            if ($this->dispatch_signals) {
                 pcntl_signal_dispatch();
             }
         }
     }
 
-    public static function stop()
+    public function stop()
     {
-        self::$work = false;
-        self::$ss->disconnect();
+        $this->work = false;
+        $this->ss->disconnect();
         out('closed');
     }
 }

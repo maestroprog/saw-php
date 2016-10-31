@@ -12,17 +12,18 @@ define('SAW_ENVIRONMENT', 'Debug');
 $config = require __DIR__ . '/../config.php';
 
 try {
-    if (Init::init($config)) {
+    $init = Init::getInstance();
+    if ($init->init($config)) {
         out('configured. input...');
-        if (!(Init::connect() or Init::start())) {
+        if (!($init->connect() or $init->start())) {
             out('Saw start failed');
             throw new \Exception('Framework starting fail');
         }
         out('work start');
-        Init::work();
+        $init->work();
         out('input end');
 
-        Init::stop();
+        $init->stop();
         out('closed');
     }
 } catch (Exception $e) {

@@ -11,8 +11,19 @@ namespace maestroprog\Saw;
 
 class Singleton
 {
+    private static $instance;
+
     private function __construct()
     {
+    }
+
+    /**
+     * @return static
+     */
+    public static function getInstance()
+    {
+        static::$instance or static::$instance = new static();
+        return static::$instance;
     }
 
     private function __clone()
