@@ -6,10 +6,13 @@
  * Time: 21:44
  */
 
-namespace Saw;
+namespace maestroprog\Saw;
 
 
-class Saw
+use maestroprog\esockets\Peer;
+use maestroprog\esockets\TcpServer;
+
+class Controller extends Singleton
 {
     /**
      * Константы возможных типов подключающихся клиентов
@@ -27,23 +30,28 @@ class Saw
     /**
      * @var bool
      */
-    public static $work = true;
+    public $work = true;
 
     /**
-     * @var Net\Server
+     * @var bool вызывать pcntl_dispatch_signals()
      */
-    protected static $server;
+    public $dispatch_signals = false;
+
+    /**
+     * @var TcpServer
+     */
+    protected $server;
 
 
     /**
      * @var string path to php binaries
      */
-    public static $php_binary_path = 'php';
+    public $php_binary_path = 'php';
 
     /**
-     * @var Net\Server socket connection
+     * @var TcpServer socket connection
      */
-    private static $ss;
+    private $ss;
 
     /**
      * Инициализация
@@ -51,11 +59,11 @@ class Saw
      * @param array $config
      * @return bool
      */
-    public static function init(array &$config)
+    public function init(array &$config)
     {
         // настройка сети
         if (isset($config['net'])) {
-            self::$ss = new Net\Server($config['net']);
+            $this->ss = new TcpServer($config['net']);
         } else {
             trigger_error('Net configuration not found', E_USER_NOTICE);
             unset($config);
@@ -64,7 +72,7 @@ class Saw
         // настройка доп. параметров
         if (isset($config['params'])) {
             foreach ($config['params'] as $key => &$param) {
-                if (isset(self::$$key)) self::$$key = $param;
+                if (isset($this->$key)) $this->$key = $param;
                 unset($param);
             }
         }
@@ -72,48 +80,53 @@ class Saw
         return true;
     }
 
-    public static function open()
+    public function start()
     {
-        return self::$ss->open();
-    }
-
-    public static function start()
-    {
+        if (!$this->ss->connect()) {
+            throw new \Exception('Cannot start: not connected');
+        }
         out('start');
-        self::$ss->onAccept(function (Net\Peer &$peer) {
+        $this->ss->onConnectPeer(function (Peer &$peer) {
             $peer->set('state', self::STATE_ACCEPTED);
-            $peer->onReceive(function (&$data) {
-                out('i received! ' . $data);
+            $peer->onRead(function (&$data) use ($peer) {
+                switch ($data['command']) {
+                    case 'wadd': // add worker
+                    case 'wdel': // del worker
+                    case 'tadd': // add new task
+                }
             });
             $peer->onDisconnect(function () use ($peer) {
                 out('peer %% disconnected');
             });
-            if ($peer->send('HELLO')) {
-                out('sended');
+            if (!$peer->send('HELLO')) {
+                out('HELLO FAIL SEND!');
             }
         });
         register_shutdown_function(function () {
-            self::stop();
+            $this->stop();
             out('stopped');
         });
         return true;
     }
 
-    public static function work()
+    private $workers = [];
+
+    public function work()
     {
-        while (self::$work) {
+        while ($this->work) {
             usleep(INTERVAL);
-            self::$ss->doAccept();
-            self::$ss->doReceive();
-            if (rand(0, 1000) === 500) {
-                self::$work = false;
+            $this->ss->listen();
+            $this->ss->read();
+            if ($this->dispatch_signals) {
+                pcntl_signal_dispatch();
             }
         }
     }
 
-    public static function stop()
+    public function stop()
     {
-        self::$ss->close();
+        $this->work = false;
+        $this->ss->disconnect();
         out('closed');
     }
 }
