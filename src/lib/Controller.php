@@ -13,6 +13,7 @@ use maestroprog\esockets\TcpServer;
 
 class Controller extends Singleton
 {
+    protected static $instance;
     /**
      * Константы возможных типов подключающихся клиентов
      */
@@ -86,7 +87,7 @@ class Controller extends Singleton
         }
         out('start');
         $this->ss->onConnectPeer(function (Peer $peer) {
-            out('peer connected' . $peer->getAddress());
+            out('peer connected ' . $peer->getAddress());
             $peer->set('state', self::STATE_ACCEPTED);
             $peer->onRead(function ($data) use ($peer) {
                 if (!is_array($data) || !isset($data['command'])) {
@@ -117,9 +118,10 @@ class Controller extends Singleton
             case 'wdel': // del worker
                 $this->wdel($peer->getDsc());
                 break;
-            case 'tadd': // add new task
-            case 'trun': // run task (name)
+            case 'tadd': // add new task (сообщает что воркеру стала известна новая задача)
+            case 'trun': // run task (name) (передает на запуск задачи в очередь)
         }
+        return null;
     }
 
     private $workers = [];

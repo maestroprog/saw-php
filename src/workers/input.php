@@ -24,15 +24,15 @@ try {
         }
         register_shutdown_function(function () use ($init) {
             out('work start');
-            $init->work();
+            //$init->work();
             out('work end');
 
             $init->stop();
             out('closed');
         });
-        return $init;
+        return \maestroprog\Saw\Task::getInstance()->setController($init);
     }
-} catch (Exception $e) {
+} catch (Throwable $e) {
     switch (PHP_SAPI) {
         case 'cli':
             out('Controller temporarily unavailable');

@@ -11,6 +11,7 @@ namespace maestroprog\Saw;
 
 class Task extends Singleton
 {
+    protected static $instance;
     /**
      * @var Worker|Init
      */
@@ -18,11 +19,11 @@ class Task extends Singleton
 
     public function setController($controller)
     {
-        if ($controller instanceof Init || $controller instanceof Worker) {
-            $this->controller = $controller;
-            return true;
+        if (!($controller instanceof Init || $controller instanceof Worker)) {
+            throw new \Exception('Cannot set controller');
         }
-        return false;
+        $this->controller = $controller;
+        return $this;
     }
 
     public static function run(callable $task, string $name, &$result = null)
