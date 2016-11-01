@@ -89,7 +89,7 @@ return [
         'socket_port' => 59090,
     ],
     'params' => [
-        'php_binary_path' => 'd:\OpenServer\modules\php\PHP-7-x64\php.exe',
+        'php_binary_path' => PHP_OS === 'WINNT' ? 'd:\OpenServer\modules\php\PHP-7-x64\php.exe' : 'php',
         'controller_path' => __DIR__ . DIRECTORY_SEPARATOR . 'workers',
         'worker_multiplier' => 4,
     ]

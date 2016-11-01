@@ -89,6 +89,9 @@ class Controller extends Singleton
             out('peer connected' . $peer->getAddress());
             $peer->set('state', self::STATE_ACCEPTED);
             $peer->onRead(function ($data) use ($peer) {
+                if (!isset($data['command'])) {
+                    return $peer->send('BYE');
+                }
                 switch ($data['command']) {
                     case 'wadd': // add worker
                     case 'wdel': // del worker
@@ -115,12 +118,12 @@ class Controller extends Singleton
     public function work()
     {
         while ($this->work) {
-            usleep(INTERVAL);
             $this->ss->listen();
             $this->ss->read();
             if ($this->dispatch_signals) {
                 pcntl_signal_dispatch();
             }
+            usleep(INTERVAL);
         }
     }
 

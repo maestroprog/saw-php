@@ -84,7 +84,11 @@ class Init extends Singleton
     {
         $this->sc->onRead(function ($data) {
             out('I RECEIVED ' . $data . ' :)');
-            $this->sc->send('HELLO!');
+            if ($data === 'HELLO') {
+                $this->sc->send('HELLO!');
+            } elseif ($data === 'BYE') {
+                $this->work = false;
+            }
         });
 
         $this->sc->onDisconnect(function () {
@@ -95,7 +99,6 @@ class Init extends Singleton
         while ($this->work) {
             usleep(INTERVAL);
             $this->sc->read();
-            $this->sc->send('HELLO WORK!');
         }
     }
 
