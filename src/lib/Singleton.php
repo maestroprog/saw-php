@@ -11,7 +11,7 @@ namespace maestroprog\Saw;
 
 class Singleton
 {
-    private static $instance;
+    protected static $instance;
 
     private function __construct()
     {

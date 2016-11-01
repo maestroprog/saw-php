@@ -62,8 +62,7 @@ class Init extends Singleton
     {
         out('starting');
         $before_run = microtime(true);
-        exec($e = $this->php_binary_path . ' -f ' . $this->controller_path . '/controller.php > /dev/null &');
-        out($e);
+        $this->exec($this->controller_path . DIRECTORY_SEPARATOR . 'controller.php');
         out('started');
         $after_run = microtime(true);
         usleep(10000); // await for run controller Saw
@@ -71,19 +70,19 @@ class Init extends Singleton
         do {
             $try_run = microtime(true);
             #usleep(100000);
-            usleep(10000);
             if ($this->connect()) {
                 out(sprintf('run: %f, exec: %f, connected: %f', $before_run, $after_run - $before_run, $try_run - $after_run));
                 out('before run time: ' . $before_run);
                 return true;
             }
+            usleep(10000);
         } while ($try++ < 10);
         return false;
     }
 
     public function work()
     {
-        $this->sc->onRead(function (&$data) {
+        $this->sc->onRead(function ($data) {
             out('I RECEIVED ' . $data . ' :)');
             $this->sc->send('HELLO!');
         });
@@ -103,5 +102,22 @@ class Init extends Singleton
     public function stop()
     {
         $this->sc->disconnect();
+    }
+
+    private function exec($cmd)
+    {
+        $cmd = sprintf('%s -f %s', $this->php_binary_path, $cmd);
+        if (PHP_OS === "WINNT") {
+            $cmd = str_replace('\\', '\\\\', $cmd);
+            pclose(popen($e = "start /B " . $cmd, "r"));
+        } else {
+            exec($e = $cmd . " > /dev/null 2>&1 &");
+        }
+        out($e);
+    }
+
+    private function kill()
+    {
+        // todo
     }
 }

@@ -8,7 +8,6 @@
 
 namespace maestroprog\Saw;
 
-
 use maestroprog\esockets\Peer;
 use maestroprog\esockets\TcpServer;
 
@@ -86,17 +85,19 @@ class Controller extends Singleton
             throw new \Exception('Cannot start: not connected');
         }
         out('start');
-        $this->ss->onConnectPeer(function (Peer &$peer) {
+        $this->ss->onConnectPeer(function (Peer $peer) {
+            out('peer connected' . $peer->getAddress());
             $peer->set('state', self::STATE_ACCEPTED);
-            $peer->onRead(function (&$data) use ($peer) {
+            $peer->onRead(function ($data) use ($peer) {
                 switch ($data['command']) {
                     case 'wadd': // add worker
                     case 'wdel': // del worker
                     case 'tadd': // add new task
+                    case 'trun': // run task (name)
                 }
             });
             $peer->onDisconnect(function () use ($peer) {
-                out('peer %% disconnected');
+                out('peer disconnected');
             });
             if (!$peer->send('HELLO')) {
                 out('HELLO FAIL SEND!');

@@ -13,26 +13,10 @@ ini_set('log_errors', true);
 
 
 require '../autoload.php';
-require '../vendors/esockets-php/autoload.php';
-
-//$c = file_get_contents('test.txt');
-//vaR_dump(unpack('Nv0/cv1', $c));
-//exit;
-/*
-
-$i = 0;
-while (true) {
-    $time = microtime(true);
-    usleep(10000);
-    if ($i % 100 == 0) {
-        echo $i . ' : ' . number_format((microtime(true) - $time) * 1000, 4, '.', ' ') . ' ms' . PHP_EOL;
-    }
-    $i++;
-}
-exit;*/
+require '../vendors/maestroprog/esockets/autoload.php';
 
 echo 'input start' . PHP_EOL;
 
-require_once '../src/input/input.php';
+require_once '../src/workers/input.php';
 
 echo 'input end' . PHP_EOL;
