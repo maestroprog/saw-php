@@ -11,7 +11,7 @@ namespace maestroprog\Saw;
 use maestroprog\esockets\TcpClient;
 
 
-class Init extends Singleton
+class Init extends Worker
 {
     public $work = true;
     /**

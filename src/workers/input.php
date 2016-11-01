@@ -22,12 +22,15 @@ try {
             out('Saw start failed');
             throw new \Exception('Framework starting fail');
         }
-        out('work start');
-        $init->work();
-        out('work end');
+        register_shutdown_function(function () use ($init) {
+            out('work start');
+            $init->work();
+            out('work end');
 
-        $init->stop();
-        out('closed');
+            $init->stop();
+            out('closed');
+        });
+        return $init;
     }
 } catch (Exception $e) {
     switch (PHP_SAPI) {
@@ -40,3 +43,4 @@ try {
             echo sprintf('<p style="color:red">%s</p>', $e->getMessage());
     }
 }
+return false;

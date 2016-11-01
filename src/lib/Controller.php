@@ -89,15 +89,10 @@ class Controller extends Singleton
             out('peer connected' . $peer->getAddress());
             $peer->set('state', self::STATE_ACCEPTED);
             $peer->onRead(function ($data) use ($peer) {
-                if (!isset($data['command'])) {
+                if (!is_array($data) || !isset($data['command'])) {
                     return $peer->send('BYE');
                 }
-                switch ($data['command']) {
-                    case 'wadd': // add worker
-                    case 'wdel': // del worker
-                    case 'tadd': // add new task
-                    case 'trun': // run task (name)
-                }
+                return $this->handle($data, $peer);
             });
             $peer->onDisconnect(function () use ($peer) {
                 out('peer disconnected');
@@ -113,7 +108,31 @@ class Controller extends Singleton
         return true;
     }
 
+    protected function handle(array $data, Peer $peer)
+    {
+        switch ($data['command']) {
+            case 'wadd': // add worker
+                $this->wadd($peer->getDsc(), $peer->getAddress());
+                break;
+            case 'wdel': // del worker
+                $this->wdel($peer->getDsc());
+                break;
+            case 'tadd': // add new task
+            case 'trun': // run task (name)
+        }
+    }
+
     private $workers = [];
+
+    private function wadd(int $dsc, string $address)
+    {
+        $this->workers[$dsc] = ['address' => $address, 'state' => 'ready', 'tasks' => []];
+    }
+
+    private function wdel(int $dsc)
+    {
+        unset($this->workers[$dsc]);
+    }
 
     public function work()
     {

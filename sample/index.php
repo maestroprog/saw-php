@@ -17,6 +17,30 @@ require '../vendors/maestroprog/esockets/autoload.php';
 
 echo 'input start' . PHP_EOL;
 
-require_once '../src/workers/input.php';
+/**
+ * @var $init \maestroprog\Saw\Init
+ */
+if (!($init = require_once '../src/workers/input.php')) {
+    throw new Exception('Cannot init!');
+}
 
 echo 'input end' . PHP_EOL;
+
+$init::run(function () {
+    for ($i = 0; $i < 10000; $i++) {
+
+    }
+}, 'MODULE_1_INIT');
+
+$init::run(function () {
+    for ($i = 0; $i < 10000; $i++) {
+
+    }
+}, 'MODULE_2_INIT');
+
+$init::run(function () {
+    for ($i = 0; $i < 10000; $i++) {
+
+    }
+}, 'MODULE_3_INIT');
+

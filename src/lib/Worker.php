@@ -9,7 +9,10 @@
 namespace maestroprog\Saw;
 
 
-abstract class Worker
+class Worker extends Singleton
 {
+    public function addTask(string $name, &$result)
+    {
 
+    }
 }
