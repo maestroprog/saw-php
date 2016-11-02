@@ -26,7 +26,7 @@ class Task extends Singleton
         return $this;
     }
 
-    public static function run(callable $task, string $name, &$result = null)
+    public function run(callable $task, string $name, &$result = null)
     {
         if (self::getInstance()->controller->addTask($name, $result)) {
             // можно спокойно выходить отсюда :)

@@ -65,10 +65,28 @@ class Worker extends Singleton
         $this->sc->disconnect();
     }
 
+    /**
+     * @var array
+     */
+    private $knowCommands = [];
+
     public function addTask(string $name, &$result)
     {
-        $this->sc->send([
-            'command' => 'tadd',
+        if (!isset($this->knowCommands[$name])) {
+            $this->knowCommands[$name] = &$result;
+            $this->sc->send([
+                'command' => 'tadd',
+                'name' => $name,
+            ]);
+        }
+        return $this->sc->send([
+            'command' => 'trun',
+            'name' => $name,
         ]);
+    }
+
+    public function syncTask(array $name)
+    {
+
     }
 }
