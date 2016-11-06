@@ -57,23 +57,49 @@ class Worker extends Singleton
 
     public function connect()
     {
+
+        $this->sc->onRead(function ($data) {
+            out('I RECEIVED ' . $data . ' :)');
+            if ($data === 'HELLO') {
+                $this->sc->send('HELLO!');
+            } elseif ($data === 'BYE') {
+                $this->work = false;
+            }
+        });
+
+        $this->sc->onDisconnect(function () {
+            out('i disconnected!');
+            $this->work = false;
+        });
+
         return $this->sc->connect();
     }
 
     public function stop()
     {
+        $this->work = false;
         $this->sc->disconnect();
     }
+
+    public function work()
+    {
+
+        while ($this->work) {
+            usleep(INTERVAL);
+            $this->sc->read();
+        }
+    }
+
 
     /**
      * @var array
      */
     private $knowCommands = [];
 
-    public function addTask(string $name, &$result)
+    public function addTask(callable &$callback, string $name, &$result)
     {
         if (!isset($this->knowCommands[$name])) {
-            $this->knowCommands[$name] = &$result;
+            $this->knowCommands[$name] = [$callback, &$result];
             $this->sc->send([
                 'command' => 'tadd',
                 'name' => $name,
@@ -85,7 +111,7 @@ class Worker extends Singleton
         ]);
     }
 
-    public function syncTask(array $name)
+    public function syncTask(array $names)
     {
 
     }

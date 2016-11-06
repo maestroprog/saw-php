@@ -30,23 +30,9 @@ echo 'input end' . PHP_EOL;
 
 $time2 = microtime(true);
 
-$task->run(function () {
-    for ($i = 0; $i < 10000; $i++) {
-        'nope';
-    }
-}, 'MODULE_1_INIT');
-
-$task->run(function () {
-    for ($i = 0; $i < 10000; $i++) {
-        'nope';
-    }
-}, 'MODULE_2_INIT');
-
-$task->run(function () {
-    for ($i = 0; $i < 10000; $i++) {
-        'nope';
-    }
-}, 'MODULE_3_INIT');
+require_once 'App.php';
+$app = new App();
+$app->run($task);
 
 $mtrue = microtime(true);
 $time22 = $mtrue - $time2;

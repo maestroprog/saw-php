@@ -12,28 +12,6 @@ class Init extends Worker
 {
     protected static $instance;
 
-    public function work()
-    {
-        $this->sc->onRead(function ($data) {
-            out('I RECEIVED ' . $data . ' :)');
-            if ($data === 'HELLO') {
-                $this->sc->send('HELLO!');
-            } elseif ($data === 'BYE') {
-                $this->work = false;
-            }
-        });
-
-        $this->sc->onDisconnect(function () {
-            out('i disconnected!');
-            $this->work = false;
-        });
-
-        while ($this->work) {
-            usleep(INTERVAL);
-            $this->sc->read();
-        }
-    }
-
     public function start()
     {
         out('starting');

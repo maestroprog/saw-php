@@ -10,6 +10,7 @@
  */
 defined('SAW_ENVIRONMENT') or define('SAW_ENVIRONMENT', 'Unknown');
 define('INTERVAL', 1000); // 1ms
+define('DS', DIRECTORY_SEPARATOR);
 
 ini_set('display_errors', false);
 error_reporting(E_ALL);
@@ -90,8 +91,9 @@ return [
     ],
     'params' => [
         'php_binary_path' => PHP_OS === 'WINNT' ? 'd:\OpenServer\modules\php\PHP-7-x64\php.exe' : 'php',
-        'controller_path' => __DIR__ . DIRECTORY_SEPARATOR . 'workers',
+        'controller_path' => __DIR__ . DS . implode(DS, ['..', 'sample', 'App.php']),
         'worker_multiplier' => 4,
+        'worker_app' => __DIR__ . ''
     ]
 ];
 /*
