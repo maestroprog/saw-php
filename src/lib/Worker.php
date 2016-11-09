@@ -23,6 +23,8 @@ class Worker extends Singleton
 
     public $controller_path = '.';
 
+    public $worker_app;
+
     /**
      * @var TcpClient socket connection
      */

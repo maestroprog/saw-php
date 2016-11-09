@@ -28,7 +28,8 @@ try {
             $init->stop();
             out('closed');
         });
-        return \maestroprog\Saw\Task::getInstance()->setController($init);
+        $task = \maestroprog\Saw\Task::getInstance()->setController($init);
+
     }
 } catch (Throwable $e) {
     switch (PHP_SAPI) {
@@ -41,4 +42,3 @@ try {
             echo sprintf('<p style="color:red">%s</p>', $e->getMessage());
     }
 }
-return false;
