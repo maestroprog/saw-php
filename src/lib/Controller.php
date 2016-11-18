@@ -8,12 +8,12 @@
 
 namespace maestroprog\Saw;
 
-
 use maestroprog\esockets\Peer;
 use maestroprog\esockets\TcpServer;
 
 class Controller extends Singleton
 {
+    protected static $instance;
     /**
      * Константы возможных типов подключающихся клиентов
      */
@@ -86,17 +86,17 @@ class Controller extends Singleton
             throw new \Exception('Cannot start: not connected');
         }
         out('start');
-        $this->ss->onConnectPeer(function (Peer &$peer) {
+        $this->ss->onConnectPeer(function (Peer $peer) {
+            out('peer connected ' . $peer->getAddress());
             $peer->set('state', self::STATE_ACCEPTED);
-            $peer->onRead(function (&$data) use ($peer) {
-                switch ($data['command']) {
-                    case 'wadd': // add worker
-                    case 'wdel': // del worker
-                    case 'tadd': // add new task
+            $peer->onRead(function ($data) use ($peer) {
+                if (!is_array($data) || !isset($data['command'])) {
+                    return $peer->send('BYE');
                 }
+                return $this->handle($data, $peer);
             });
             $peer->onDisconnect(function () use ($peer) {
-                out('peer %% disconnected');
+                out('peer disconnected');
             });
             if (!$peer->send('HELLO')) {
                 out('HELLO FAIL SEND!');
@@ -109,17 +109,42 @@ class Controller extends Singleton
         return true;
     }
 
+    protected function handle(array $data, Peer $peer)
+    {
+        switch ($data['command']) {
+            case 'wadd': // add worker
+                $this->wadd($peer->getDsc(), $peer->getAddress());
+                break;
+            case 'wdel': // del worker
+                $this->wdel($peer->getDsc());
+                break;
+            case 'tadd': // add new task (сообщает что воркеру стала известна новая задача)
+            case 'trun': // run task (name) (передает на запуск задачи в очередь)
+        }
+        return null;
+    }
+
     private $workers = [];
+
+    private function wadd(int $dsc, string $address)
+    {
+        $this->workers[$dsc] = ['address' => $address, 'state' => 'ready', 'tasks' => []];
+    }
+
+    private function wdel(int $dsc)
+    {
+        unset($this->workers[$dsc]);
+    }
 
     public function work()
     {
         while ($this->work) {
-            usleep(INTERVAL);
             $this->ss->listen();
             $this->ss->read();
             if ($this->dispatch_signals) {
                 pcntl_signal_dispatch();
             }
+            usleep(INTERVAL);
         }
     }
 

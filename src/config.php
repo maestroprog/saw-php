@@ -10,6 +10,7 @@
  */
 defined('SAW_ENVIRONMENT') or define('SAW_ENVIRONMENT', 'Unknown');
 define('INTERVAL', 1000); // 1ms
+define('DS', DIRECTORY_SEPARATOR);
 
 ini_set('display_errors', false);
 error_reporting(E_ALL);
@@ -18,6 +19,8 @@ ini_set('error_log', __DIR__ . '/messages.log');
 
 require __DIR__ . '/../autoload.php';
 require __DIR__ . '/../vendors/maestroprog/esockets/autoload.php';
+
+\maestroprog\esockets\debug\Log::setEnv(SAW_ENVIRONMENT);
 
 function out($message)
 {
@@ -72,23 +75,25 @@ set_exception_handler(function (Throwable $e) {
         $e->getMessage(),
         $e->getFile(),
         $e->getLine(),
-        $e->getTraceAsString()
+        print_r($e->getTrace(), true)
     ));
 });
 
 set_error_handler(function ($errno, $errstr, $errfile, $errline, array $errcontext) {
-    out(sprintf("[%s]: %s in %s at %d line\r\n%s\r\n", error_type($errno), $errstr, $errfile, $errline, print_r($errcontext, true)));
+    out(sprintf("[%s]: %s in %s at %d line %s\r\n", error_type($errno), $errstr, $errfile, $errline, ''/*, print_r($errcontext, true)*/));
 });
 
 return [
     'net' => [
         'socket_domain' => AF_INET,
         'socket_address' => '127.0.0.1',
-        'socket_port' => 9090,
+        'socket_port' => 59090,
     ],
     'params' => [
-        'php_binary_path' => 'php',
-        'controller_path' => __DIR__ . '/workers',
+        'php_binary_path' => PHP_OS === 'WINNT' ? 'd:\OpenServer\modules\php\PHP-7-x64\php.exe' : 'php',
+        'controller_path' => __DIR__ . DS . implode(DS, ['..', 'sample', 'App.php']),
+        'worker_multiplier' => 4,
+        'worker_app' => __DIR__ . ''
     ]
 ];
 /*

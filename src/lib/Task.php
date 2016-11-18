@@ -9,7 +9,29 @@
 namespace maestroprog\Saw;
 
 
-abstract class Task
+class Task extends Singleton
 {
+    protected static $instance;
+    /**
+     * @var Worker|Init
+     */
+    protected $controller;
 
+    public function setController($controller)
+    {
+        if (!($controller instanceof Init || $controller instanceof Worker)) {
+            throw new \Exception('Cannot set controller');
+        }
+        $this->controller = $controller;
+        return $this;
+    }
+
+    public function run(callable $task, string $name, &$result = null)
+    {
+        if (self::getInstance()->controller->addTask($task, $name, $result)) {
+            // можно спокойно выходить отсюда :)
+        } else {
+            $result = $task();
+        }
+    }
 }
