@@ -12,25 +12,9 @@ use maestroprog\Saw\Worker;
 define('SAW_ENVIRONMENT', 'Input');
 $config = require __DIR__ . '/../config.php';
 
+\maestroprog\Saw\Factory::getInstance()->configure($config)->createWorker();
 try {
-    $init = Worker::getInstance();
-    if ($init->init($config)) {
-        out('configured. input...');
-        if (!($init->connect())) {
-            out('Worker start failed');
-            throw new \Exception('Worker starting fail');
-        }
-        register_shutdown_function(function () use ($init) {
-            out('work start');
-            //$init->work();
-            out('work end');
 
-            $init->stop();
-            out('closed');
-        });
-        $task = \maestroprog\Saw\Task::getInstance()->setController($init);
-
-    }
 } catch (Throwable $e) {
     switch (PHP_SAPI) {
         case 'cli':

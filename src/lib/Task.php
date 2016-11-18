@@ -8,7 +8,13 @@
 
 namespace maestroprog\Saw;
 
-
+/**
+ * Задача для воркера.
+ * Представляет из себя изолированный от внешнего окружения объект.
+ * @version 0.1-dev
+ * Описание относится именно к данной версии.
+ * @todo Нужно окружение.
+ */
 class Task extends Singleton
 {
     protected static $instance;
@@ -17,9 +23,10 @@ class Task extends Singleton
      */
     protected $controller;
 
-    public function setController($controller)
+    public function setController(Worker $controller)
     {
-        if (!($controller instanceof Init || $controller instanceof Worker)) {
+        if (!($controller instanceof Worker)) {
+            // todo выпилить
             throw new \Exception('Cannot set controller');
         }
         $this->controller = $controller;

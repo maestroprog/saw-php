@@ -8,7 +8,6 @@
 
 namespace maestroprog\Saw;
 
-
 class Singleton
 {
     protected static $instance;

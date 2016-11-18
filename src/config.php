@@ -91,9 +91,9 @@ return [
     ],
     'params' => [
         'php_binary_path' => PHP_OS === 'WINNT' ? 'd:\OpenServer\modules\php\PHP-7-x64\php.exe' : 'php',
-        'controller_path' => __DIR__ . DS . implode(DS, ['..', 'sample', 'App.php']),
+        'controller_path' => __DIR__ . DS . 'workers',
         'worker_multiplier' => 4,
-        'worker_app' => __DIR__ . ''
+        'worker_app' => __DIR__ . DS . implode(DS, ['..', 'sample', 'App.php']),
     ]
 ];
 /*

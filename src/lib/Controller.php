@@ -11,6 +11,10 @@ namespace maestroprog\Saw;
 use maestroprog\esockets\Peer;
 use maestroprog\esockets\TcpServer;
 
+/**
+ * Связующее звено между входным скриптом,
+ * обеспечивающее контроль за работой Worker-ов.
+ */
 class Controller extends Singleton
 {
     protected static $instance;
@@ -82,6 +86,13 @@ class Controller extends Singleton
 
     public function start()
     {
+        if (extension_loaded('pcntl')) {
+            pcntl_signal(SIGINT, function ($sig) {
+                $this->work = false;
+            });
+            $this->dispatch_signals = true;
+        }
+
         if (!$this->ss->connect()) {
             throw new \Exception('Cannot start: not connected');
         }
@@ -119,12 +130,26 @@ class Controller extends Singleton
                 $this->wdel($peer->getDsc());
                 break;
             case 'tadd': // add new task (сообщает что воркеру стала известна новая задача)
+                $this->tadd($peer->getDsc(), $data['name']);
+                break;
             case 'trun': // run task (name) (передает на запуск задачи в очередь)
         }
         return null;
     }
 
+    /**
+     * Известные воркеры.
+     *
+     * @var array
+     */
     private $workers = [];
+
+    /**
+     * Известные известным воркерам задачи.
+     *
+     * @var array
+     */
+    private $tasks = [];
 
     private function wadd(int $dsc, string $address)
     {
@@ -134,6 +159,11 @@ class Controller extends Singleton
     private function wdel(int $dsc)
     {
         unset($this->workers[$dsc]);
+    }
+
+    private function tadd(int $dsc, string $name)
+    {
+        $this->workers[$dsc]['tasks'][$name] = true;
     }
 
     public function work()

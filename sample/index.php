@@ -18,14 +18,21 @@ require __DIR__ . DIRECTORY_SEPARATOR . '../autoload.php';
 require __DIR__ . DIRECTORY_SEPARATOR . '../vendors/maestroprog/esockets/autoload.php';
 
 echo 'input start' . PHP_EOL;
-
-/**
- * @var $task \maestroprog\Saw\Task
- */
-if (!($task = require_once __DIR__ . DIRECTORY_SEPARATOR . '../src/workers/input.php')) {
-    throw new Exception('Cannot init!');
+try {
+    $config = require __DIR__ . '/../src/config.php';
+    $task = \maestroprog\Saw\Factory::getInstance()->configure($config)->createInput();
+} catch (Throwable $e) {
+    switch (PHP_SAPI) {
+        case 'cli':
+            out('Controller temporarily unavailable');
+            out($e->getMessage());
+            break;
+        default:
+            header('HTTP/1.1 503 Service Unavailable');
+            echo sprintf('<p style="color:red">%s</p>', $e->getMessage());
+    }
+    exit;
 }
-
 echo 'input end' . PHP_EOL;
 
 $time2 = microtime(true);

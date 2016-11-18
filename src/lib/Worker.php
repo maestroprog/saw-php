@@ -11,11 +11,17 @@ namespace maestroprog\Saw;
 
 use maestroprog\esockets\TcpClient;
 
+/**
+ * Воркер, использующийся воркер-скриптом.
+ * Используется для выполнения отдельных задач.
+ * Работает в качестве демона в нескольких экземплярах.
+ */
 class Worker extends Singleton
 {
     protected static $instance;
 
     public $work = true;
+
     /**
      * @var string path to php binaries
      */
@@ -91,7 +97,6 @@ class Worker extends Singleton
             $this->sc->read();
         }
     }
-
 
     /**
      * @var array

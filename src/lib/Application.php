@@ -8,7 +8,10 @@
 
 namespace maestroprog\Saw;
 
-
+/**
+ * Абстрактный класс приложения.
+ * Необходимо наследоваться от него, и запускать приложение.
+ */
 abstract class Application
 {
     abstract public function run(Task $task);

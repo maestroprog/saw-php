@@ -8,6 +8,9 @@
 
 namespace maestroprog\Saw;
 
+/**
+ * Воркер, использующийся входным скриптом.
+ */
 class Init extends Worker
 {
     protected static $instance;
