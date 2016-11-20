@@ -9,22 +9,22 @@
 use maestroprog\Saw\Init;
 
 define('SAW_ENVIRONMENT', 'Debug');
-$config = require __DIR__ . '/../config.php';
+$config = require __DIR__ . '/config.php';
 
 try {
     $init = Init::getInstance();
     if ($init->init($config)) {
-        out('configured. input...');
+        fputs(STDERR, 'configured. input...');
         if (!($init->connect() or $init->start())) {
-            out('Saw start failed');
+            fputs(STDERR, 'Saw start failed');
             throw new \Exception('Framework starting fail');
         }
-        out('work start');
+        fputs(STDERR, 'work start');
         $init->work();
-        out('input end');
+        fputs(STDERR, 'input end');
 
         $init->stop();
-        out('closed');
+        fputs(STDERR, 'closed');
     }
 } catch (Exception $e) {
     switch (PHP_SAPI) {

@@ -23,63 +23,63 @@ class Factory extends Singleton
 
     /**
      * @return Controller
+     * @throws \Exception
      */
     public function createController() : Controller
     {
-        define('SAW_ENVIRONMENT', 'Controller');
-
         $controller = Controller::getInstance();
         if ($controller->init($config)) {
-            out('configured. start...');
-            $controller->start() or (out('Saw start failed') or exit);
-            out('start end');
+            fputs(STDERR, 'configured. start...');
+            if (!$controller->start()) {
+                fputs(STDERR, 'Saw start failed');
+                throw new \Exception('Saw start failed');
+            }
+            fputs(STDERR, 'start end');
         }
         return $controller;
     }
 
-    public function createWorker() : Task
+    /**
+     * @return Worker
+     * @throws \Exception
+     */
+    public function createWorker() : Worker
     {
         $init = Worker::getInstance();
-        if ($init->init($config)) {
-            out('configured. input...');
+        if ($init->init($this->config)) {
+            fputs(STDERR, 'configured. input...');
             if (!($init->connect())) {
-                out('Worker start failed');
+                fputs(STDERR, 'Worker start failed');
                 throw new \Exception('Worker starting fail');
             }
             register_shutdown_function(function () use ($init) {
-                out('work start');
-                //$init->work();
-                out('work end');
-
                 $init->stop();
-                out('closed');
+                fputs(STDERR, 'closed');
             });
-            return $this->createTask($init);
+            return $init->setTask($this->createTask($init));
         } else {
             throw new \Exception('Cannot initialize Worker');
         }
     }
 
-    public function createInput() : Task
+    public function createInput() : Init
     {
-        define('SAW_ENVIRONMENT', 'Input');
-
         $init = Init::getInstance();
-        if ($init->init($config)) {
-            out('configured. input...');
+        if ($init->init($this->config)) {
+            fputs(STDERR, 'configured. input...');
             if (!($init->connect() or $init->start())) {
-                out('Saw start failed');
+                fputs(STDERR, 'Saw start failed');
                 throw new \Exception('Framework starting fail');
             }
             register_shutdown_function(function () use ($init) {
-                out('work start');
+                fputs(STDERR, 'work start');
                 //$init->work();
-                out('work end');
+                fputs(STDERR, 'work end');
 
                 $init->stop();
-                out('closed');
+                fputs(STDERR, 'closed');
             });
-            return $this->createTask($init);
+            return $init->setTask($this->createTask($init));
         } else {
             throw new \Exception('Cannot initialize Init worker');
         }

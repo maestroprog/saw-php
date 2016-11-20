@@ -17,10 +17,10 @@ class Init extends Worker
 
     public function start()
     {
-        out('starting');
+        fputs(STDERR, 'starting');
         $before_run = microtime(true);
         $this->exec($this->controller_path . DIRECTORY_SEPARATOR . 'controller.php');
-        out('started');
+        fputs(STDERR, 'started');
         $after_run = microtime(true);
         usleep(10000); // await for run controller Saw
         $try = 0;
@@ -28,8 +28,8 @@ class Init extends Worker
             $try_run = microtime(true);
             #usleep(100000);
             if ($this->connect()) {
-                out(sprintf('run: %f, exec: %f, connected: %f', $before_run, $after_run - $before_run, $try_run - $after_run));
-                out('before run time: ' . $before_run);
+                fputs(STDERR, sprintf('run: %f, exec: %f, connected: %f', $before_run, $after_run - $before_run, $try_run - $after_run));
+                fputs(STDERR, 'before run time: ' . $before_run);
                 return true;
             }
             usleep(10000);
@@ -47,7 +47,7 @@ class Init extends Worker
         } else {
             exec($e = $cmd . " > /dev/null 2>&1 &");
         }
-        out($e);
+        fputs(STDERR, $e);
     }
 
     private function kill()

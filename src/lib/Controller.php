@@ -96,9 +96,9 @@ class Controller extends Singleton
         if (!$this->ss->connect()) {
             throw new \Exception('Cannot start: not connected');
         }
-        out('start');
+        fputs(STDERR, 'start');
         $this->ss->onConnectPeer(function (Peer $peer) {
-            out('peer connected ' . $peer->getAddress());
+            fputs(STDERR, 'peer connected ' . $peer->getAddress());
             $peer->set('state', self::STATE_ACCEPTED);
             $peer->onRead(function ($data) use ($peer) {
                 if (!is_array($data) || !isset($data['command'])) {
@@ -107,15 +107,15 @@ class Controller extends Singleton
                 return $this->handle($data, $peer);
             });
             $peer->onDisconnect(function () use ($peer) {
-                out('peer disconnected');
+                fputs(STDERR, 'peer disconnected');
             });
             if (!$peer->send('HELLO')) {
-                out('HELLO FAIL SEND!');
+                fputs(STDERR, 'HELLO FAIL SEND!');
             }
         });
         register_shutdown_function(function () {
             $this->stop();
-            out('stopped');
+            fputs(STDERR, 'stopped');
         });
         return true;
     }
@@ -182,6 +182,6 @@ class Controller extends Singleton
     {
         $this->work = false;
         $this->ss->disconnect();
-        out('closed');
+        fputs(STDERR, 'closed');
     }
 }

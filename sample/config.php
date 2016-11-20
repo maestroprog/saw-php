@@ -25,10 +25,15 @@ require __DIR__ . '/../vendors/maestroprog/esockets/autoload.php';
 function out($message)
 {
     $message = sprintf('{%s}: %s', SAW_ENVIRONMENT, $message);
-    if (ini_get('log_errors'))
-        error_log($message);
-    else
-        echo $message;
+    if (PHP_SAPI === 'cli') {
+        fputs(STDOUT, $message);
+    } else {
+        if (ini_get('log_errors')) {
+            error_log($message);
+        } else {
+            echo $message;
+        }
+    }
 }
 
 function error_type($type)
@@ -94,17 +99,6 @@ return [
         'controller_path' => __DIR__ . DS . 'workers',
         'worker_multiplier' => 4,
         'worker_app' => __DIR__ . DS . implode(DS, ['..', 'sample', 'App.php']),
+        'worker_app_class' => App::class,
     ]
 ];
-/*
-return [
-    'net' => [
-        'socket_domain' => AF_UNIX,
-        'socket_address' => __DIR__ . '/workers/saw-controller.sock',
-    ],
-    'params' => [
-        'php_binary_path' => 'php',
-        'controller_path' => __DIR__ . '/workers',
-    ]
-];
-*/

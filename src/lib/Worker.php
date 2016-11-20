@@ -31,10 +31,22 @@ class Worker extends Singleton
 
     public $worker_app;
 
+    public $worker_app_class;
+
     /**
      * @var TcpClient socket connection
      */
     protected $sc;
+
+    /**
+     * @var Application
+     */
+    private $app;
+
+    /**
+     * @var Task
+     */
+    private $task;
 
     /**
      * Инициализация
@@ -49,7 +61,6 @@ class Worker extends Singleton
             $this->sc = new TcpClient($config['net']);
         } else {
             trigger_error('Net configuration not found', E_USER_NOTICE);
-            unset($config);
             return false;
         }
         // настройка доп. параметров
@@ -60,14 +71,23 @@ class Worker extends Singleton
             }
         }
         unset($config);
+        if (empty($this->worker_app) || !file_exists($this->worker_app)) {
+            trigger_error('Worker application configuration not found', E_USER_ERROR);
+            return false;
+        }
+        require_once $this->worker_app;
+        $this->app = new $this->worker_app_class();
+        if (!$this->app instanceof Application) {
+            trigger_error('Worker application must be instance of maestroprog\saw\Application', E_USER_ERROR);
+            return false;
+        }
         return true;
     }
 
     public function connect()
     {
-
         $this->sc->onRead(function ($data) {
-            out('I RECEIVED ' . $data . ' :)');
+            fputs(STDERR, 'I RECEIVED ' . $data . ' :)');
             if ($data === 'HELLO') {
                 $this->sc->send('HELLO!');
             } elseif ($data === 'BYE') {
@@ -76,7 +96,7 @@ class Worker extends Singleton
         });
 
         $this->sc->onDisconnect(function () {
-            out('i disconnected!');
+            fputs(STDERR, 'i disconnected!');
             $this->work = false;
         });
 
@@ -91,7 +111,6 @@ class Worker extends Singleton
 
     public function work()
     {
-
         while ($this->work) {
             usleep(INTERVAL);
             $this->sc->read();
@@ -121,5 +140,20 @@ class Worker extends Singleton
     public function syncTask(array $names)
     {
 
+    }
+
+    /**
+     * @param Task $task
+     * @return $this
+     */
+    public function setTask(Task $task)
+    {
+        $this->task = $task;
+        return $this;
+    }
+
+    public function run()
+    {
+        $this->app->run($this->task);
     }
 }
