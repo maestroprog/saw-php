@@ -8,19 +8,23 @@
 
 namespace maestroprog\Saw;
 
+use maestroprog\esockets\debug\Log;
+
 /**
  * Воркер, использующийся входным скриптом.
  */
 class Init extends Worker
 {
+    use Executer;
+
     protected static $instance;
 
     public function start()
     {
-        fputs(STDERR, 'starting');
+        Log::log('starting');
         $before_run = microtime(true);
         $this->exec($this->controller_path . DIRECTORY_SEPARATOR . 'controller.php');
-        fputs(STDERR, 'started');
+        Log::log('started');
         $after_run = microtime(true);
         usleep(10000); // await for run controller Saw
         $try = 0;
@@ -28,8 +32,8 @@ class Init extends Worker
             $try_run = microtime(true);
             #usleep(100000);
             if ($this->connect()) {
-                fputs(STDERR, sprintf('run: %f, exec: %f, connected: %f', $before_run, $after_run - $before_run, $try_run - $after_run));
-                fputs(STDERR, 'before run time: ' . $before_run);
+                Log::log(sprintf('run: %f, exec: %f, connected: %f', $before_run, $after_run - $before_run, $try_run - $after_run));
+                Log::log('before run time: ' . $before_run);
                 return true;
             }
             usleep(10000);
@@ -37,21 +41,17 @@ class Init extends Worker
         return false;
     }
 
-
-    private function exec($cmd)
-    {
-        $cmd = sprintf('%s -f %s', $this->php_binary_path, $cmd);
-        if (PHP_OS === "WINNT") {
-            $cmd = str_replace('\\', '\\\\', $cmd);
-            pclose(popen($e = "start " . $cmd, "r"));
-        } else {
-            exec($e = $cmd . " > /dev/null 2>&1 &");
-        }
-        fputs(STDERR, $e);
-    }
-
     private function kill()
     {
         // todo
+    }
+
+    public function addTask(callable &$callback, string $name, &$result)
+    {
+        parent::addTask($callback, $name, $result);
+        return $this->sc->send([
+            'command' => 'trun',
+            'name' => $name,
+        ]);
     }
 }

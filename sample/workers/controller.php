@@ -15,11 +15,11 @@ if (PHP_SAPI !== 'cli') {
 
 define('SAW_ENVIRONMENT', 'Controller');
 
-$config = require __DIR__ . '/config.php';
+$config = require __DIR__ . '/../config.php';
 $controller = \maestroprog\Saw\Factory::getInstance()->configure($config)->createController();
 
-fputs(STDERR, 'work start');
+\maestroprog\esockets\debug\Log::log('work start');
 $controller->work();
-fputs(STDERR, 'work end');
+\maestroprog\esockets\debug\Log::log('work end');
 
 exit(0);

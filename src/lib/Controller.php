@@ -10,6 +10,7 @@ namespace maestroprog\Saw;
 
 use maestroprog\esockets\Peer;
 use maestroprog\esockets\TcpServer;
+use maestroprog\esockets\debug\Log;
 
 /**
  * Связующее звено между входным скриптом,
@@ -17,6 +18,8 @@ use maestroprog\esockets\TcpServer;
  */
 class Controller extends Singleton
 {
+    use Executor;
+
     protected static $instance;
     /**
      * Константы возможных типов подключающихся клиентов
@@ -96,9 +99,9 @@ class Controller extends Singleton
         if (!$this->ss->connect()) {
             throw new \Exception('Cannot start: not connected');
         }
-        fputs(STDERR, 'start');
+        Log::log('start');
         $this->ss->onConnectPeer(function (Peer $peer) {
-            fputs(STDERR, 'peer connected ' . $peer->getAddress());
+            Log::log('peer connected ' . $peer->getAddress());
             $peer->set('state', self::STATE_ACCEPTED);
             $peer->onRead(function ($data) use ($peer) {
                 if (!is_array($data) || !isset($data['command'])) {
@@ -107,15 +110,15 @@ class Controller extends Singleton
                 return $this->handle($data, $peer);
             });
             $peer->onDisconnect(function () use ($peer) {
-                fputs(STDERR, 'peer disconnected');
+                Log::log('peer disconnected');
             });
             if (!$peer->send('HELLO')) {
-                fputs(STDERR, 'HELLO FAIL SEND!');
+                Log::log('HELLO FAIL SEND!');
             }
         });
         register_shutdown_function(function () {
             $this->stop();
-            fputs(STDERR, 'stopped');
+            Log::log('stopped');
         });
         return true;
     }
@@ -159,11 +162,29 @@ class Controller extends Singleton
     private function wdel(int $dsc)
     {
         unset($this->workers[$dsc]);
+        foreach ($this->tasks as $name => $workers) {
+            if (isset($workers[$dsc])) {
+                unset($this->tasks[$name][$dsc]);
+            }
+        }
     }
 
     private function tadd(int $dsc, string $name)
     {
-        $this->workers[$dsc]['tasks'][$name] = true;
+        if (!isset($this->workers[$dsc]['tasks'][$name])) {
+            $this->workers[$dsc]['tasks'][$name] = true;
+            $this->tasks[$name][$dsc] = true;
+        }
+    }
+
+    private function wbalance()
+    {
+
+    }
+
+    private function tbalance()
+    {
+
     }
 
     public function work()
@@ -171,6 +192,8 @@ class Controller extends Singleton
         while ($this->work) {
             $this->ss->listen();
             $this->ss->read();
+            $this->wbalance();
+            $this->tbalance();
             if ($this->dispatch_signals) {
                 pcntl_signal_dispatch();
             }
@@ -182,6 +205,6 @@ class Controller extends Singleton
     {
         $this->work = false;
         $this->ss->disconnect();
-        fputs(STDERR, 'closed');
+        Log::log('closed');
     }
 }

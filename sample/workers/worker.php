@@ -14,17 +14,17 @@ if (PHP_SAPI !== 'cli') {
 
 define('SAW_ENVIRONMENT', 'Input');
 
-$config = require __DIR__ . '/config.php';
+$config = require __DIR__ . '/../config.php';
 
 try {
     $worker = \maestroprog\Saw\Factory::getInstance()->configure($config)->createWorker();
 } catch (Throwable $e) {
-    fputs(STDERR, $e->getMessage());
+    \maestroprog\esockets\debug\Log::log($e->getMessage());
     exit(1);
 }
 
-fputs(STDERR, 'work start');
+\maestroprog\esockets\debug\Log::log('work start');
 $worker->work();
-fputs(STDERR, 'work end');
+\maestroprog\esockets\debug\Log::log('work end');
 
 exit(0);

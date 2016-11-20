@@ -8,11 +8,6 @@
 
 $time = microtime(true);
 
-ini_set('display_errors', true);
-error_reporting(E_ALL);
-ini_set('error_log', 'e.log');
-ini_set('log_errors', true);
-
 $config = require __DIR__ . '/config.php';
 
 out('input start');

@@ -8,6 +8,8 @@
 
 namespace maestroprog\Saw;
 
+use maestroprog\esockets\debug\Log;
+
 /**
  * Фабрика воркеров.
  */
@@ -28,13 +30,13 @@ class Factory extends Singleton
     public function createController() : Controller
     {
         $controller = Controller::getInstance();
-        if ($controller->init($config)) {
-            fputs(STDERR, 'configured. start...');
+        if ($controller->init($this->config)) {
+            Log::log('configured. start...');
             if (!$controller->start()) {
-                fputs(STDERR, 'Saw start failed');
+                Log::log('Saw start failed');
                 throw new \Exception('Saw start failed');
             }
-            fputs(STDERR, 'start end');
+            Log::log('start end');
         }
         return $controller;
     }
@@ -47,14 +49,14 @@ class Factory extends Singleton
     {
         $init = Worker::getInstance();
         if ($init->init($this->config)) {
-            fputs(STDERR, 'configured. input...');
+            Log::log('configured. input...');
             if (!($init->connect())) {
-                fputs(STDERR, 'Worker start failed');
+                Log::log('Worker start failed');
                 throw new \Exception('Worker starting fail');
             }
             register_shutdown_function(function () use ($init) {
                 $init->stop();
-                fputs(STDERR, 'closed');
+                Log::log('closed');
             });
             return $init->setTask($this->createTask($init));
         } else {
@@ -66,18 +68,18 @@ class Factory extends Singleton
     {
         $init = Init::getInstance();
         if ($init->init($this->config)) {
-            fputs(STDERR, 'configured. input...');
+            Log::log('configured. input...');
             if (!($init->connect() or $init->start())) {
-                fputs(STDERR, 'Saw start failed');
+                Log::log('Saw start failed');
                 throw new \Exception('Framework starting fail');
             }
             register_shutdown_function(function () use ($init) {
-                fputs(STDERR, 'work start');
+                Log::log('work start');
                 //$init->work();
-                fputs(STDERR, 'work end');
+                Log::log('work end');
 
                 $init->stop();
-                fputs(STDERR, 'closed');
+                Log::log('closed');
             });
             return $init->setTask($this->createTask($init));
         } else {

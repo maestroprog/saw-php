@@ -10,6 +10,7 @@ namespace maestroprog\Saw;
 
 
 use maestroprog\esockets\TcpClient;
+use maestroprog\esockets\debug\Log;
 
 /**
  * Воркер, использующийся воркер-скриптом.
@@ -66,11 +67,12 @@ class Worker extends Singleton
         // настройка доп. параметров
         if (isset($config['params'])) {
             foreach ($config['params'] as $key => &$param) {
-                if (isset($this->$key)) $this->$key = $param;
+                if (property_exists($this, $key)) {
+                    $this->$key = $param;
+                }
                 unset($param);
             }
         }
-        unset($config);
         if (empty($this->worker_app) || !file_exists($this->worker_app)) {
             trigger_error('Worker application configuration not found', E_USER_ERROR);
             return false;
@@ -87,7 +89,7 @@ class Worker extends Singleton
     public function connect()
     {
         $this->sc->onRead(function ($data) {
-            fputs(STDERR, 'I RECEIVED ' . $data . ' :)');
+            Log::log('I RECEIVED ' . $data . ' :)');
             if ($data === 'HELLO') {
                 $this->sc->send('HELLO!');
             } elseif ($data === 'BYE') {
@@ -96,7 +98,7 @@ class Worker extends Singleton
         });
 
         $this->sc->onDisconnect(function () {
-            fputs(STDERR, 'i disconnected!');
+            Log::log('i disconnected!');
             $this->work = false;
         });
 
@@ -131,10 +133,6 @@ class Worker extends Singleton
                 'name' => $name,
             ]);
         }
-        return $this->sc->send([
-            'command' => 'trun',
-            'name' => $name,
-        ]);
     }
 
     public function syncTask(array $names)
