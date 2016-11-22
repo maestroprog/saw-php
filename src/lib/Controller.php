@@ -136,16 +136,17 @@ class Controller extends Singleton
     {
         switch ($data['command']) {
             case 'wadd': // add worker
-                $this->wadd($peer->getDsc(), $peer->getAddress());
+                $this->wAdd($peer->getDsc(), $peer->getAddress());
                 break;
             case 'wdel': // del worker
-                $this->wdel($peer->getDsc());
+                $this->wDel($peer->getDsc());
                 break;
             case 'tadd': // add new task (сообщает что воркеру стала известна новая задача)
-                $this->tadd($peer->getDsc(), $data['name']);
+                $this->tAdd($peer->getDsc(), $data['name']);
                 break;
             case 'trun': // run task (name) (передает на запуск задачи в очередь)
-                $this->trun();
+                $this->tRun($peer->getDsc(), $data['name']);
+                break;
         }
         return null;
     }
@@ -179,12 +180,12 @@ class Controller extends Singleton
     const KSTATE = 'state';
     const KTASKS = 'tasks';
 
-    private function wadd(int $dsc, string $address)
+    private function wAdd(int $dsc, string $address)
     {
         $this->workers[$dsc] = [self::KADDR => $address, self::KSTATE => 'ready', self::KTASKS => []];
     }
 
-    private function wdel(int $dsc)
+    private function wDel(int $dsc)
     {
         unset($this->workers[$dsc]);
         foreach ($this->tasks as $name => $workers) {
@@ -194,7 +195,7 @@ class Controller extends Singleton
         }
     }
 
-    private function tadd(int $dsc, string $name)
+    private function tAdd(int $dsc, string $name)
     {
         if (!isset($this->workers[$dsc][self::KTASKS][$name])) {
             $this->workers[$dsc][self::KTASKS][$name] = true;
@@ -221,13 +222,13 @@ class Controller extends Singleton
      * @param int $dsc
      * @param string $name
      */
-    private function trun(int $dsc, string $name)
+    private function tRun(int $dsc, string $name)
     {
         static $tid = 0;
         $this->tnew[$tid] = [self::KTID => $tid, self::KNAME => $name, self::KDSC => $dsc, self::KSTATE => self::TNEW];
     }
 
-    private function wbalance()
+    private function wBalance()
     {
 
     }
@@ -235,12 +236,16 @@ class Controller extends Singleton
     /**
      * Функция разгребает очередь задач, раскидывая их по воркерам.
      */
-    private function tbalance()
+    private function tBalance()
     {
         foreach ($this->tnew as $tid => $data) {
             $worker = $this->wMinT(function ($data) {
                 return $data[self::KSTATE] != self::WSTOP;
             });
+            if ($worker >= 0) {
+                $this->workers[$worker][self::KTASKS][$tid] = $tid;
+                //$this->trun
+            }
         }
     }
 
@@ -267,8 +272,8 @@ class Controller extends Singleton
         while ($this->work) {
             $this->ss->listen();
             $this->ss->read();
-            $this->wbalance();
-            $this->tbalance();
+            $this->wBalance();
+            $this->tBalance();
             if ($this->dispatch_signals) {
                 pcntl_signal_dispatch();
             }
