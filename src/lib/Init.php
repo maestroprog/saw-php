@@ -15,7 +15,9 @@ use maestroprog\esockets\debug\Log;
  */
 class Init extends Worker
 {
-    use Executer;
+    use Executor;
+
+    public $controller_path = '.';
 
     protected static $instance;
 
@@ -23,7 +25,7 @@ class Init extends Worker
     {
         Log::log('starting');
         $before_run = microtime(true);
-        $this->exec($this->controller_path . DIRECTORY_SEPARATOR . 'controller.php');
+        $this->exec($this->controller_path);
         Log::log('started');
         $after_run = microtime(true);
         usleep(10000); // await for run controller Saw

@@ -96,7 +96,8 @@ return [
     ],
     'params' => [
         'php_binary_path' => PHP_OS === 'WINNT' ? 'd:\OpenServer\modules\php\PHP-7-x64\php.exe' : 'php',
-        'controller_path' => __DIR__ . DS . 'workers',
+        'controller_path' => __DIR__ . DS . 'workers' . DS . 'controller.php',
+        'worker_path' => __DIR__ . DS . 'workers' . DS . 'worker.php',
         'worker_multiplier' => 4,
         'worker_max' => 8,
         'worker_app' => __DIR__ . DS . 'App.php',

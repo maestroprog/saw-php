@@ -8,12 +8,14 @@
 
 namespace maestroprog\Saw;
 
-
 use maestroprog\esockets\debug\Log;
 
 trait Executor
 {
-    public $php_binary_path;
+    /**
+     * @var string path to php binaries
+     */
+    public $php_binary_path = 'php';
 
     private function exec($cmd)
     {

@@ -44,10 +44,7 @@ class Controller extends Singleton
      */
     public $dispatch_signals = false;
 
-    /**
-     * @var string path to php binaries
-     */
-    public $php_binary_path = 'php';
+    public $worker_path = 'worker.php';
 
     /**
      * @var int множитель задач
@@ -172,17 +169,24 @@ class Controller extends Singleton
      */
     private $trun = [];
 
-    const WREADY = 0;
-    const WRUN = 1;
-    const WSTOP = 2;
+    const WNEW = 0;
+    const WREADY = 1;
+    const WRUN = 2;
+    const WSTOP = 3;
 
+    const KDSC = 'dsc';
     const KADDR = 'address';
     const KSTATE = 'state';
     const KTASKS = 'tasks';
 
     private function wAdd(int $dsc, string $address)
     {
-        $this->workers[$dsc] = [self::KADDR => $address, self::KSTATE => 'ready', self::KTASKS => []];
+        $this->workers[$dsc] = [
+            self::KDSC => $dsc,
+            self::KADDR => $address,
+            self::KSTATE => self::WREADY,
+            self::KTASKS => []
+        ];
     }
 
     private function wDel(int $dsc)
@@ -225,12 +229,27 @@ class Controller extends Singleton
     private function tRun(int $dsc, string $name)
     {
         static $tid = 0;
-        $this->tnew[$tid] = [self::KTID => $tid, self::KNAME => $name, self::KDSC => $dsc, self::KSTATE => self::TNEW];
+        $this->tnew[$tid] = [
+            self::KTID => $tid,
+            self::KNAME => $name,
+            self::KDSC => $dsc,
+            self::KSTATE => self::TNEW
+        ];
     }
+
+    /**
+     * @var int Состояние запуска нового воркера.
+     */
+    private $running = 0;
 
     private function wBalance()
     {
-
+        if (count($this->workers) < $this->worker_max && !$this->running) {
+            // run new worker
+            $this->exec($this->worker_path);
+        } elseif ($this->running < time() - 10) {
+            // timeout 10 sec
+        }
     }
 
     /**
@@ -245,6 +264,7 @@ class Controller extends Singleton
             if ($worker >= 0) {
                 $this->workers[$worker][self::KTASKS][$tid] = $tid;
                 //$this->trun
+
             }
         }
     }

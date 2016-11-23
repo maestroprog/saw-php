@@ -23,13 +23,6 @@ class Worker extends Singleton
 
     public $work = true;
 
-    /**
-     * @var string path to php binaries
-     */
-    public $php_binary_path = 'php';
-
-    public $controller_path = '.';
-
     public $worker_app;
 
     public $worker_app_class;
