@@ -6,9 +6,11 @@
  * Time: 21:56
  */
 
-namespace maestroprog\Saw;
+namespace maestroprog\saw\services;
 
-
+use maestroprog\saw\library\Singleton;
+use maestroprog\saw\library\Application;
+use maestroprog\saw\library\Task;
 use maestroprog\esockets\TcpClient;
 use maestroprog\esockets\debug\Log;
 

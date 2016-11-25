@@ -6,7 +6,9 @@
  * Time: 21:14
  */
 
-namespace maestroprog\Saw;
+namespace maestroprog\saw\library;
+
+use maestroprog\saw\services\Worker;
 
 /**
  * Задача для воркера.

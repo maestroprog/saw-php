@@ -12,7 +12,7 @@ $config = require __DIR__ . '/config.php';
 
 out('input start');
 try {
-    $init = \maestroprog\Saw\Factory::getInstance()->configure($config)->createInput();
+    $init = \maestroprog\saw\library\Factory::getInstance()->configure($config)->createInput();
 } catch (Throwable $e) {
     header('HTTP/1.1 503 Service Unavailable');
     echo sprintf('<p style="color:red">%s</p>', $e->getMessage());

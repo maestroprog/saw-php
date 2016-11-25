@@ -1,14 +1,14 @@
 <?php
-
 /**
  * Created by PhpStorm.
  * User: Руслан
  * Date: 05.11.2016
  * Time: 16:22
  */
-use \maestroprog\Saw\Task;
 
-class App extends \maestroprog\Saw\Application
+use \maestroprog\saw\library\Task;
+
+class App extends \maestroprog\saw\library\Application
 {
     public function run(Task $task)
     {

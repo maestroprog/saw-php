@@ -6,7 +6,7 @@
  * Time: 19:51
  */
 
-namespace maestroprog\Saw;
+namespace maestroprog\saw\library;
 
 class Singleton
 {

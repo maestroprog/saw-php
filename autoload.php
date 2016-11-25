@@ -13,10 +13,10 @@
  */
 spl_autoload_register(function ($class) {
     // project-specific namespace prefix
-    $prefix = 'maestroprog\\Saw\\';
+    $prefix = 'maestroprog\\saw\\';
 
     // base directory for the namespace prefix
-    $base_dir = __DIR__ . '/src/lib/';
+    $base_dir = __DIR__ . '/src/';
 
     // does the class use the namespace prefix?
     $len = strlen($prefix);

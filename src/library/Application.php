@@ -6,7 +6,7 @@
  * Time: 14:50
  */
 
-namespace maestroprog\Saw;
+namespace maestroprog\saw\library;
 
 /**
  * Абстрактный класс приложения.

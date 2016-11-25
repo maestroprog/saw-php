@@ -6,8 +6,10 @@
  * Time: 21:44
  */
 
-namespace maestroprog\Saw;
+namespace maestroprog\saw\services;
 
+use maestroprog\saw\library\Singleton;
+use maestroprog\saw\library\Executor;
 use maestroprog\esockets\Peer;
 use maestroprog\esockets\TcpServer;
 use maestroprog\esockets\debug\Log;
@@ -133,7 +135,11 @@ class Controller extends Singleton
     {
         switch ($data['command']) {
             case 'wadd': // add worker
-                $this->wAdd($peer->getDsc(), $peer->getAddress());
+                if ($this->wAdd($peer->getDsc(), $peer->getAddress())) {
+                    $peer->send(['command' => 'wadd']);
+                } else {
+                    $peer->send(['command' => 'wdel']);
+                }
                 break;
             case 'wdel': // del worker
                 $this->wDel($peer->getDsc());
@@ -147,6 +153,23 @@ class Controller extends Singleton
         }
         return null;
     }
+
+    const WNEW = 0;
+    const WREADY = 1;
+    const WRUN = 2;
+    const WSTOP = 3;
+
+    const KDSC = 'dsc';
+    const KADDR = 'address';
+    const KSTATE = 'state';
+    const KTASKS = 'tasks';
+
+    const TNEW = 0;
+    const TRUN = 1;
+    const TERR = 2;
+
+    const KTID = 'tid';
+    const KNAME = 'name';
 
     /**
      * Известные воркеры.
@@ -169,28 +192,34 @@ class Controller extends Singleton
      */
     private $trun = [];
 
-    const WNEW = 0;
-    const WREADY = 1;
-    const WRUN = 2;
-    const WSTOP = 3;
+    /**
+     * @var array[][] $name => $tid => []
+     */
+    private $tnew = [];
 
-    const KDSC = 'dsc';
-    const KADDR = 'address';
-    const KSTATE = 'state';
-    const KTASKS = 'tasks';
+    /**
+     * @var int Состояние запуска нового воркера.
+     */
+    private $running = 0;
 
-    private function wAdd(int $dsc, string $address)
+    private function wAdd(int $dsc, string $address) : bool
     {
+        if (!$this->running) {
+            return false;
+        }
+        $this->running = 0;
         $this->workers[$dsc] = [
             self::KDSC => $dsc,
             self::KADDR => $address,
             self::KSTATE => self::WREADY,
             self::KTASKS => []
         ];
+        return true;
     }
 
     private function wDel(int $dsc)
     {
+        $this->server->getPeerByDsc($dsc)->send(['command' => 'wdel']);
         unset($this->workers[$dsc]);
         foreach ($this->tasks as $name => $workers) {
             if (isset($workers[$dsc])) {
@@ -207,19 +236,6 @@ class Controller extends Singleton
         }
     }
 
-    const TNEW = 0;
-    const TRUN = 1;
-    const TERR = 2;
-
-    const KTID = 'tid';
-    const KNAME = 'name';
-    const KDSC = 'dsc';
-
-    /**
-     * @var array[][] $name => $tid => []
-     */
-    private $tnew = [];
-
     /**
      * Функция добавляет задачу в очередь на выполнение.
      *
@@ -235,20 +251,21 @@ class Controller extends Singleton
             self::KDSC => $dsc,
             self::KSTATE => self::TNEW
         ];
+        $this->running = 0;
     }
-
-    /**
-     * @var int Состояние запуска нового воркера.
-     */
-    private $running = 0;
 
     private function wBalance()
     {
         if (count($this->workers) < $this->worker_max && !$this->running) {
             // run new worker
             $this->exec($this->worker_path);
-        } elseif ($this->running < time() - 10) {
+            $this->running = time();
+        } elseif ($this->running && $this->running < time() - 10) {
             // timeout 10 sec
+            $this->running = 0;
+            Log::log('Can not run worker!');
+        } else {
+            // so good; всё ок
         }
     }
 
