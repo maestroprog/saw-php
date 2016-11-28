@@ -8,6 +8,7 @@
 
 namespace maestroprog\saw\library;
 
+use maestroprog\saw\services\Init;
 use maestroprog\saw\services\Worker;
 
 /**
@@ -42,5 +43,10 @@ class Task extends Singleton
         } else {
             $result = $task();
         }
+    }
+
+    public function sync(array $names)
+    {
+        return $this->controller->syncTask($names);
     }
 }

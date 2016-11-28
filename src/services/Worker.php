@@ -86,9 +86,15 @@ class Worker extends Singleton
         $this->sc->onRead(function ($data) {
             Log::log('I RECEIVED ' . $data . ' :)');
             if ($data === 'HELLO') {
-                $this->sc->send('HELLO!');
+                $this->sc->send('HELLO');
+            } elseif ($data === 'ACCEPT') {
+                $this->sc->send(['command' => 'wadd']);
+            } elseif ($data === 'INVALID') {
+                // todo
             } elseif ($data === 'BYE') {
                 $this->work = false;
+            } elseif (is_array($data) && isset($data['command'])) {
+                $this->handle($data);
             }
         });
 
@@ -109,8 +115,8 @@ class Worker extends Singleton
     public function work()
     {
         while ($this->work) {
-            usleep(INTERVAL);
             $this->sc->read();
+            usleep(INTERVAL);
         }
     }
 
@@ -119,6 +125,14 @@ class Worker extends Singleton
      */
     private $knowCommands = [];
 
+    /**
+     * Оповещает контроллер о том, что данный воркер узнал новую задачу.
+     * Контроллер запоминает это.
+     *
+     * @param callable $callback
+     * @param string $name
+     * @param $result
+     */
     public function addTask(callable &$callback, string $name, &$result)
     {
         if (!isset($this->knowCommands[$name])) {
@@ -130,12 +144,19 @@ class Worker extends Singleton
         }
     }
 
+    /**
+     * Метод под нужды таскера - запускает ожидание завершения выполнения указанных в массиве задач.
+     *
+     * @param array $names
+     */
     public function syncTask(array $names)
     {
 
     }
 
     /**
+     * Настраивает текущий таск-менеджер.
+     *
      * @param Task $task
      * @return $this
      */
@@ -147,6 +168,21 @@ class Worker extends Singleton
 
     public function run()
     {
+        if (!$this->task) {
+            throw new \Exception('Cannot run worker!');
+        }
         $this->app->run($this->task);
+    }
+
+    protected function handle(array $data)
+    {
+        switch ($data['command']) {
+            case 'wadd': // successfully add worker to controller
+                $this->run();
+                break;
+            case 'wdel': // controller has been delete this worker from self stack
+                $this->stop();
+                break;
+        }
     }
 }

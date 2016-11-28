@@ -18,7 +18,7 @@ class Init extends Worker
 {
     use Executor;
 
-    public $controller_path = '.';
+    public $controller_path = 'controller.php';
 
     protected static $instance;
 

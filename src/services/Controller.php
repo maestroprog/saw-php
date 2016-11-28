@@ -8,6 +8,8 @@
 
 namespace maestroprog\saw\services;
 
+use maestroprog\saw\entity\Task;
+use maestroprog\saw\entity\Worker;
 use maestroprog\saw\library\Singleton;
 use maestroprog\saw\library\Executor;
 use maestroprog\esockets\Peer;
@@ -34,7 +36,8 @@ class Controller extends Singleton
     /**
      * Константы возможных состояний подключения с клиентом
      */
-    const STATE_ACCEPTED = 1; // соединение принято
+    const PEER_NEW = 0; // новое соединение
+    const PEER_ACCEPTED = 1; // соединение принято
 
     /**
      * @var bool
@@ -95,6 +98,12 @@ class Controller extends Singleton
         return true;
     }
 
+    /**
+     * Старт контроллера.
+     *
+     * @return bool
+     * @throws \Exception
+     */
     public function start()
     {
         if (extension_loaded('pcntl')) {
@@ -110,18 +119,25 @@ class Controller extends Singleton
         Log::log('start');
         $this->ss->onConnectPeer(function (Peer $peer) {
             Log::log('peer connected ' . $peer->getAddress());
-            $peer->set('state', self::STATE_ACCEPTED);
+            $peer->set(self::KSTATE, self::PEER_NEW);
             $peer->onRead(function ($data) use ($peer) {
-                if (!is_array($data) || !isset($data['command'])) {
-                    return $peer->send('BYE');
+                if ($data === 'HELLO') {
+                    $peer->set(self::KSTATE, self::PEER_ACCEPTED);
+                    $peer->send('ACCEPT');
+                } elseif ($peer->get(self::KSTATE) !== self::PEER_ACCEPTED) {
+                    $peer->send('HELLO');
+                } elseif (!is_array($data) || !isset($data['command'])) {
+                    $peer->send('INVALID');
+                } else {
+                    $this->handle($data, $peer);
                 }
-                return $this->handle($data, $peer);
             });
             $peer->onDisconnect(function () use ($peer) {
                 Log::log('peer disconnected');
             });
             if (!$peer->send('HELLO')) {
                 Log::log('HELLO FAIL SEND!');
+                $peer->disconnect(); // не нужен нам такой клиент
             }
         });
         register_shutdown_function(function () {
@@ -129,6 +145,30 @@ class Controller extends Singleton
             Log::log('stopped');
         });
         return true;
+    }
+
+    /**
+     * Заставляем работать контроллер :)
+     */
+    public function work()
+    {
+        while ($this->work) {
+            $this->ss->listen(); // слушаем кто присоединился
+            $this->ss->read(); // читаем входящие запросы
+            $this->wBalance(); // балансируем воркеры
+            $this->tBalance(); // раскидываем задачки
+            if ($this->dispatch_signals) {
+                pcntl_signal_dispatch();
+            }
+            usleep(INTERVAL);
+        }
+    }
+
+    public function stop()
+    {
+        $this->work = false;
+        $this->ss->disconnect();
+        Log::log('closed');
     }
 
     protected function handle(array $data, Peer $peer)
@@ -151,51 +191,44 @@ class Controller extends Singleton
                 $this->tRun($peer->getDsc(), $data['name']);
                 break;
         }
-        return null;
     }
 
-    const WNEW = 0;
-    const WREADY = 1;
-    const WRUN = 2;
-    const WSTOP = 3;
-
-    const KDSC = 'dsc';
-    const KADDR = 'address';
     const KSTATE = 'state';
-    const KTASKS = 'tasks';
-
-    const TNEW = 0;
-    const TRUN = 1;
-    const TERR = 2;
-
-    const KTID = 'tid';
-    const KNAME = 'name';
 
     /**
-     * Известные воркеры.
+     * Наши воркеры.
      *
-     * @var array
+     * @var Worker[]
      */
     private $workers = [];
 
     /**
-     * Известные известным воркерам задачи.
+     * Известные воркерам задачи.
      *
-     * @var array
+     * @var bool[][] $name => $dsc => true
      */
-    private $tasks = [];
+    private $tasksKnow = [];
+
+    /**
+     * Очередь новых поступающих задач.
+     *
+     * @var Task[]
+     */
+    private $taskNew = [];
+
+    /**
+     * Ассоциация названия задачи с его ID
+     *
+     * @var int[string] $name => $tid
+     */
+    private $taskAssoc = [];
 
     /**
      * Выполняемые воркерами задачи.
      *
-     * @var array
+     * @var Task[]
      */
-    private $trun = [];
-
-    /**
-     * @var array[][] $name => $tid => []
-     */
-    private $tnew = [];
+    private $taskRun = [];
 
     /**
      * @var int Состояние запуска нового воркера.
@@ -208,12 +241,7 @@ class Controller extends Singleton
             return false;
         }
         $this->running = 0;
-        $this->workers[$dsc] = [
-            self::KDSC => $dsc,
-            self::KADDR => $address,
-            self::KSTATE => self::WREADY,
-            self::KTASKS => []
-        ];
+        $this->workers[$dsc] = new Worker($dsc, $address);
         return true;
     }
 
@@ -221,6 +249,8 @@ class Controller extends Singleton
     {
         $this->server->getPeerByDsc($dsc)->send(['command' => 'wdel']);
         unset($this->workers[$dsc]);
+        // TODO
+        // нужно запилить механизм перехвата невыполненных задач
         foreach ($this->tasks as $name => $workers) {
             if (isset($workers[$dsc])) {
                 unset($this->tasks[$name][$dsc]);
@@ -228,30 +258,35 @@ class Controller extends Singleton
         }
     }
 
+    /**
+     * Функция добавляет задачу в список известных воркеру задач.
+     *
+     * @param int $dsc
+     * @param string $name
+     */
     private function tAdd(int $dsc, string $name)
     {
-        if (!isset($this->workers[$dsc][self::KTASKS][$name])) {
-            $this->workers[$dsc][self::KTASKS][$name] = true;
-            $this->tasks[$name][$dsc] = true;
+        static $tid = 0; // task ID
+        if (!isset($this->taskAssoc[$name])) {
+            $this->taskAssoc[$name] = $tid++;
+        }
+        if (!$this->workers[$dsc]->isKnowTask($tid)) {
+            $this->workers[$dsc]->addKnowTask($this->taskAssoc[$name]);
+            $this->tasksKnow[$name][$dsc] = true;
         }
     }
 
     /**
-     * Функция добавляет задачу в очередь на выполнение.
+     * Функция добавляет задачу в очередь на выполнение для заданного воркера.
      *
      * @param int $dsc
      * @param string $name
      */
     private function tRun(int $dsc, string $name)
     {
-        static $tid = 0;
-        $this->tnew[$tid] = [
-            self::KTID => $tid,
-            self::KNAME => $name,
-            self::KDSC => $dsc,
-            self::KSTATE => self::TNEW
-        ];
-        $this->running = 0;
+        static $rid = 0; // task run ID
+        $this->taskNew[$rid] = new Task($this->taskAssoc[$name], $rid, $name, $dsc);
+        $rid++;
     }
 
     private function wBalance()
@@ -274,54 +309,47 @@ class Controller extends Singleton
      */
     private function tBalance()
     {
-        foreach ($this->tnew as $tid => $data) {
-            $worker = $this->wMinT(function ($data) {
-                return $data[self::KSTATE] != self::WSTOP;
+        foreach ($this->taskNew as $rid => $task) {
+            $worker = $this->wMinT($task->getName(), function (Worker $worker) {
+                return $worker->getState() != Worker::STOP;
             });
             if ($worker >= 0) {
-                $this->workers[$worker][self::KTASKS][$tid] = $tid;
-                //$this->trun
-
+                $workerPeer = $this->server->getPeerByDsc($worker);
+                if ($workerPeer->send(['command' => 'trun', 'name' => $task->getName()])) {
+                    $this->workers[$worker]->addTask($task);
+                    $this->taskRun[$rid] = $task;
+                }
             }
         }
     }
 
-    private function wMinT(callable $filter = null) : int
+    /**
+     * Функция выбирает наименее загруженный воркер.
+     *
+     * @param string $name задача
+     * @param callable|null $filter ($data)
+     * @return int
+     */
+    private function wMinT($name, callable $filter = null) : int
     {
         $selectedDsc = -1;
-        foreach ($this->workers as $dsc => $data) {
-            if (!is_null($filter) && !$filter($data)) {
+        foreach ($this->workers as $dsc => $worker) {
+            if (!is_null($filter) && !$filter($worker)) {
+                // отфильтровали
+                continue;
+            }
+            if (!$worker->isKnowTask($this->taskAssoc[$name])) {
+                // не знает такую задачу
                 continue;
             }
             if (!isset($count)) {
-                $count = count($data[self::KTASKS]);
+                $count = $worker->getCountTasks();
                 $selectedDsc = $dsc;
-            } elseif ($count > ($newCount = count($data[self::KTASKS]))) {
+            } elseif ($count > ($newCount = $worker->getCountTasks())) {
                 $count = $newCount;
                 $selectedDsc = $dsc;
             }
         }
         return $selectedDsc;
-    }
-
-    public function work()
-    {
-        while ($this->work) {
-            $this->ss->listen();
-            $this->ss->read();
-            $this->wBalance();
-            $this->tBalance();
-            if ($this->dispatch_signals) {
-                pcntl_signal_dispatch();
-            }
-            usleep(INTERVAL);
-        }
-    }
-
-    public function stop()
-    {
-        $this->work = false;
-        $this->ss->disconnect();
-        Log::log('closed');
     }
 }
