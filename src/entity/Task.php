@@ -49,6 +49,13 @@ class Task
      */
     private $state;
 
+    /**
+     * Результат выполнения задачи.
+     *
+     * @var mixed
+     */
+    private $result;
+
     public function __construct(int $tid, int $rid, string $name, int $dsc, int $state = self::NEW)
     {
         $this->tid = $tid;

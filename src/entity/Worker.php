@@ -9,6 +9,8 @@
 namespace maestroprog\saw\entity;
 
 
+use maestroprog\esockets\Peer;
+
 class Worker
 {
     const NEW = 0; // новый воркер
@@ -17,18 +19,9 @@ class Worker
     const STOP = 3; // воркер, остановивший работу
 
     /**
-     * Peer ID воркера.
-     *
-     * @var int
+     * @var Peer
      */
-    private $dsc;
-
-    /**
-     * Сетевой адрес воркера.
-     *
-     * @var string
-     */
-    private $address;
+    private $peer;
 
     /**
      * Состояние воркера.
@@ -50,11 +43,11 @@ class Worker
      */
     private $runTasks = [];
 
-    public function __construct(int $dsc, string $address, int $state = self::READY)
+    public function __construct(Peer $peer, int $state = self::NEW)
     {
-        $this->dsc = $dsc;
-        $this->address = $address;
+        $this->peer = $peer;
         $this->state = $state;
+        $peer->send(['command' => 'wadd', 'result' => true]);
     }
 
     public function getState() : int

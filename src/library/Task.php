@@ -8,8 +8,8 @@
 
 namespace maestroprog\saw\library;
 
-use maestroprog\saw\services\Init;
-use maestroprog\saw\services\Worker;
+use maestroprog\saw\service\Init;
+use maestroprog\saw\service\Worker;
 
 /**
  * Задача для воркера.

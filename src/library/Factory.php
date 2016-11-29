@@ -8,9 +8,9 @@
 
 namespace maestroprog\saw\library;
 
-use maestroprog\saw\services\Controller;
-use maestroprog\saw\services\Worker;
-use maestroprog\saw\services\Init;
+use maestroprog\saw\service\Controller;
+use maestroprog\saw\service\Worker;
+use maestroprog\saw\service\Init;
 use maestroprog\esockets\debug\Log;
 
 /**
@@ -88,6 +88,15 @@ class Factory extends Singleton
         } else {
             throw new \Exception('Cannot initialize Init worker');
         }
+    }
+
+    private $dispatcher;
+
+    public function createDispatcher(array $knowCommands) : Dispatcher
+    {
+
+        $this->dispatcher or $this->dispatcher = Dispatcher::getInstance()->add($knowCommands);
+        return $this->dispatcher;
     }
 
     protected function createTask(Worker $controller) : Task

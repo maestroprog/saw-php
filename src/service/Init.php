@@ -6,7 +6,7 @@
  * Time: 22:48
  */
 
-namespace maestroprog\saw\services;
+namespace maestroprog\saw\service;
 
 use maestroprog\saw\library\Executor;
 use maestroprog\esockets\debug\Log;

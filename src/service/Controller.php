@@ -6,10 +6,11 @@
  * Time: 21:44
  */
 
-namespace maestroprog\saw\services;
+namespace maestroprog\saw\service;
 
 use maestroprog\saw\entity\Task;
 use maestroprog\saw\entity\Worker;
+use maestroprog\saw\library\Factory;
 use maestroprog\saw\library\Singleton;
 use maestroprog\saw\library\Executor;
 use maestroprog\esockets\Peer;
@@ -173,9 +174,15 @@ class Controller extends Singleton
 
     protected function handle(array $data, Peer $peer)
     {
+        try {
+            $command = Factory::getInstance()->createCommand($data['command'], $peer);
+            $command->handle($data['data']);
+        } catch (\Throwable $e) {
+
+        }
         switch ($data['command']) {
             case 'wadd': // add worker
-                if ($this->wAdd($peer->getDsc(), $peer->getAddress())) {
+                if ($this->wAdd($peer)) {
                     $peer->send(['command' => 'wadd']);
                 } else {
                     $peer->send(['command' => 'wdel']);
@@ -235,13 +242,13 @@ class Controller extends Singleton
      */
     private $running = 0;
 
-    private function wAdd(int $dsc, string $address) : bool
+    private function wAdd(Peer $peer) : bool
     {
         if (!$this->running) {
             return false;
         }
         $this->running = 0;
-        $this->workers[$dsc] = new Worker($dsc, $address);
+        $this->workers[$peer->getDsc()] = new Worker($peer);
         return true;
     }
 

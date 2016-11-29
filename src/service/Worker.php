@@ -6,8 +6,11 @@
  * Time: 21:56
  */
 
-namespace maestroprog\saw\services;
+namespace maestroprog\saw\service;
 
+use maestroprog\saw\command\WorkerAdd;
+use maestroprog\saw\library\Dispatcher;
+use maestroprog\saw\library\Factory;
 use maestroprog\saw\library\Singleton;
 use maestroprog\saw\library\Application;
 use maestroprog\saw\library\Task;
@@ -45,6 +48,11 @@ class Worker extends Singleton
     private $task;
 
     /**
+     * @var
+     */
+    private $dispatcher;
+
+    /**
      * Инициализация
      *
      * @param array $config
@@ -78,6 +86,9 @@ class Worker extends Singleton
             trigger_error('Worker application must be instance of maestroprog\saw\Application', E_USER_ERROR);
             return false;
         }
+        $this->dispatcher = Factory::getInstance()->createDispatcher([
+            WorkerAdd::NAME => WorkerAdd::class,
+        ]);
         return true;
     }
 
@@ -88,7 +99,7 @@ class Worker extends Singleton
             if ($data === 'HELLO') {
                 $this->sc->send('HELLO');
             } elseif ($data === 'ACCEPT') {
-                $this->sc->send(['command' => 'wadd']);
+                Dispatcher::getInstance()->create(WorkerAdd::NAME, $this->sc)->run();
             } elseif ($data === 'INVALID') {
                 // todo
             } elseif ($data === 'BYE') {
