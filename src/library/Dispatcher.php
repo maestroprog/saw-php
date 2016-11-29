@@ -46,9 +46,6 @@ class Dispatcher extends Singleton
         if (!isset($this->know[$command])) {
             throw new \Exception(sprintf('I don\'t know command %s', $command));
         }
-        /**
-         * @var $class Command
-         */
         $class = $this->know[$command];
         $this->created[$id] = $command = new $class($id, $client);
         $id++;

@@ -44,7 +44,6 @@ abstract class Command
 
     public function run($data = [])
     {
-
         $this->state = self::STATE_RUN;
         if (!$this->peer->send([
             'command' => $this->getCommand(),

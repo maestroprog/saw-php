@@ -48,7 +48,7 @@ class Worker extends Singleton
     private $task;
 
     /**
-     * @var
+     * @var Dispatcher
      */
     private $dispatcher;
 
@@ -99,7 +99,7 @@ class Worker extends Singleton
             if ($data === 'HELLO') {
                 $this->sc->send('HELLO');
             } elseif ($data === 'ACCEPT') {
-                Dispatcher::getInstance()->create(WorkerAdd::NAME, $this->sc)->run();
+                $this->dispatcher->create(WorkerAdd::NAME, $this->sc)->run();
             } elseif ($data === 'INVALID') {
                 // todo
             } elseif ($data === 'BYE') {

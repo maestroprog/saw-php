@@ -94,7 +94,6 @@ class Factory extends Singleton
 
     public function createDispatcher(array $knowCommands) : Dispatcher
     {
-
         $this->dispatcher or $this->dispatcher = Dispatcher::getInstance()->add($knowCommands);
         return $this->dispatcher;
     }
