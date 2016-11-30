@@ -8,8 +8,10 @@
 
 namespace maestroprog\saw\service;
 
+use maestroprog\saw\command\WorkerAdd;
 use maestroprog\saw\entity\Task;
 use maestroprog\saw\entity\Worker;
+use maestroprog\saw\library\Dispatcher;
 use maestroprog\saw\library\Factory;
 use maestroprog\saw\library\Singleton;
 use maestroprog\saw\library\Executor;
@@ -73,6 +75,11 @@ class Controller extends Singleton
     private $ss;
 
     /**
+     * @var Dispatcher
+     */
+    private $dispatcher;
+
+    /**
      * Инициализация
      *
      * @param array $config
@@ -96,6 +103,9 @@ class Controller extends Singleton
             }
         }
         unset($config);
+        $this->dispatcher = Factory::getInstance()->createDispatcher([
+            WorkerAdd::NAME => WorkerAdd::class,
+        ]);
         return true;
     }
 
@@ -127,7 +137,7 @@ class Controller extends Singleton
                     $peer->send('ACCEPT');
                 } elseif ($peer->get(self::KSTATE) !== self::PEER_ACCEPTED) {
                     $peer->send('HELLO');
-                } elseif (!is_array($data) || !isset($data['command'])) {
+                } elseif (!is_array($data) || !$this->dispatcher->valid($data)) {
                     $peer->send('INVALID');
                 } else {
                     $this->handle($data, $peer);
@@ -175,8 +185,8 @@ class Controller extends Singleton
     protected function handle(array $data, Peer $peer)
     {
         try {
-            $command = Factory::getInstance()->createCommand($data['command'], $peer);
-            $command->handle($data['data']);
+            $command = $this->dispatcher->dispatch($data, $peer);
+            
         } catch (\Throwable $e) {
 
         }

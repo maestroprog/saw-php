@@ -9,6 +9,7 @@
 namespace maestroprog\saw\library;
 
 use maestroprog\esockets\base\Net;
+use maestroprog\saw\command\WorkerAdd;
 
 /**
  * Диспетчер команд.
@@ -51,13 +52,28 @@ class Dispatcher extends Singleton
         $id++;
     }
 
-    public function dispatch($data)
+    public function dispatch($data, Net $peer) : Command
     {
-
+        $command = $data['command'];
+        if (!isset($this->know[$command])) {
+            throw new \Exception(sprintf('I don\'t know command %s', $command));
+        }
+        if (isset($this->created[$data['id']])) {
+            $command = $this->created[$data['id']];
+        } else {
+            $class = $this->know[$command];
+            $this->created[$data['id']] = $command = new $class($data['id'], $peer, $data['state']);
+        }
+        /** @var Command $command */
+        $command->handle($data);
+        return $command;
     }
 
-    public function load(string $name)
+    public function valid(array &$data)
     {
-
+        return isset($data['command'])
+        && isset($data['state'])
+        && isset($data['id'])
+        && isset($data['data']);
     }
 }

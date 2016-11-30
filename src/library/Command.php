@@ -40,6 +40,8 @@ abstract class Command
         $this->state = $state;
     }
 
+    public function
+
     abstract public function getCommand() : string;
 
     public function run($data = [])
