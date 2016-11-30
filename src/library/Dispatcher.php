@@ -64,8 +64,6 @@ class Dispatcher extends Singleton
             $class = $this->know[$command];
             $this->created[$data['id']] = $command = new $class($data['id'], $peer, $data['state']);
         }
-        /** @var Command $command */
-        $command->handle($data);
         return $command;
     }
 

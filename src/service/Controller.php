@@ -9,8 +9,10 @@
 namespace maestroprog\saw\service;
 
 use maestroprog\saw\command\WorkerAdd;
+use maestroprog\saw\command\WorkerDelete;
 use maestroprog\saw\entity\Task;
 use maestroprog\saw\entity\Worker;
+use maestroprog\saw\library\Command;
 use maestroprog\saw\library\Dispatcher;
 use maestroprog\saw\library\Factory;
 use maestroprog\saw\library\Singleton;
@@ -105,6 +107,7 @@ class Controller extends Singleton
         unset($config);
         $this->dispatcher = Factory::getInstance()->createDispatcher([
             WorkerAdd::NAME => WorkerAdd::class,
+            WorkerDelete::NAME => WorkerDelete::class,
         ]);
         return true;
     }
@@ -186,27 +189,34 @@ class Controller extends Singleton
     {
         try {
             $command = $this->dispatcher->dispatch($data, $peer);
-            
-        } catch (\Throwable $e) {
-
-        }
-        switch ($data['command']) {
-            case 'wadd': // add worker
-                if ($this->wAdd($peer)) {
-                    $peer->send(['command' => 'wadd']);
-                } else {
-                    $peer->send(['command' => 'wdel']);
+            $command->handle($data['data']);
+            if ($command->getState() === Command::STATE_RUN) {
+                switch ($command->getCommand()) {
+                    case WorkerAdd::NAME: // add worker
+                        if ($this->wAdd($peer)) {
+                            $command->success();
+                        } else {
+                            $command->error();
+                        }
+                        break;
+                    case 'wdel': // del worker
+                        $this->wDel($peer->getDsc());
+                        break;
+                    case 'tadd': // add new task (сообщает что воркеру стала известна новая задача)
+                        $this->tAdd($peer->getDsc(), $data['name']);
+                        break;
+                    case 'trun': // run task (name) (передает на запуск задачи в очередь)
+                        $this->tRun($peer->getDsc(), $data['name']);
+                        break;
+                    default:
+                        throw new \Exception('Undefined command ' . $command->getCommand());
                 }
-                break;
-            case 'wdel': // del worker
-                $this->wDel($peer->getDsc());
-                break;
-            case 'tadd': // add new task (сообщает что воркеру стала известна новая задача)
-                $this->tAdd($peer->getDsc(), $data['name']);
-                break;
-            case 'trun': // run task (name) (передает на запуск задачи в очередь)
-                $this->tRun($peer->getDsc(), $data['name']);
-                break;
+            } elseif ($command->getState() === Command::STATE_RES) {
+
+            }
+        } catch (\Throwable $e) {
+            // todo
+            return;
         }
     }
 

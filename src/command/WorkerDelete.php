@@ -2,17 +2,17 @@
 /**
  * Created by PhpStorm.
  * User: yarullin
- * Date: 29.11.16
- * Time: 10:58
+ * Date: 30.11.16
+ * Time: 22:41
  */
 
 namespace maestroprog\saw\command;
 
 use maestroprog\saw\library\Command;
 
-class WorkerAdd extends Command
+class WorkerDelete extends Command
 {
-    const NAME = 'wadd';
+    const NAME = 'wdel';
 
     public function getData() : array
     {
@@ -26,7 +26,7 @@ class WorkerAdd extends Command
 
     public function handle($data)
     {
-
+        // TODO: Implement handle() method.
     }
 
 }

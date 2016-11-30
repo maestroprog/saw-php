@@ -9,6 +9,8 @@
 namespace maestroprog\saw\service;
 
 use maestroprog\saw\command\WorkerAdd;
+use maestroprog\saw\command\WorkerDelete;
+use maestroprog\saw\library\Command;
 use maestroprog\saw\library\Dispatcher;
 use maestroprog\saw\library\Factory;
 use maestroprog\saw\library\Singleton;
@@ -88,6 +90,7 @@ class Worker extends Singleton
         }
         $this->dispatcher = Factory::getInstance()->createDispatcher([
             WorkerAdd::NAME => WorkerAdd::class,
+            WorkerDelete::NAME => WorkerDelete::class,
         ]);
         return true;
     }
@@ -104,7 +107,7 @@ class Worker extends Singleton
                 // todo
             } elseif ($data === 'BYE') {
                 $this->work = false;
-            } elseif (is_array($data) && isset($data['command'])) {
+            } elseif (is_array($data) && $this->dispatcher->valid($data)) {
                 $this->handle($data);
             }
         });
@@ -187,6 +190,23 @@ class Worker extends Singleton
 
     protected function handle(array $data)
     {
+        try {
+            $command = $this->dispatcher->dispatch($data, $this->sc);
+            switch ($command->getState()) {
+                case Command::STATE_NEW:
+                    // приняли незапущенную команду.. и что с ней делать?
+                    break;
+                case Command::STATE_RUN:
+                    $command->handle($data['data']);
+                    break;
+                case Command::STATE_RES:
+                    $command->result($data['data']);
+                    break;
+            }
+        } catch (\Throwable $e) {
+
+        }
+
         switch ($data['command']) {
             case 'wadd': // successfully add worker to controller
                 $this->run();

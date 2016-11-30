@@ -16,6 +16,10 @@ abstract class Command
     const STATE_RUN = 1;
     const STATE_RES = 2;
 
+    const RES_VOID = 0;
+    const RES_SUCCESS = 1;
+    const RES_ERROR = 2;
+
     const NAME = 'void';
 
     /**
@@ -33,18 +37,25 @@ abstract class Command
      */
     private $state;
 
+    /**
+     * @var int
+     */
+    private $code;
+
     public function __construct(int $id, Net $peer, $state = self::STATE_NEW)
     {
         $this->id = $id;
         $this->peer = $peer;
         $this->state = $state;
+        $this->code = self::RES_VOID;
     }
 
-    public function
+    public function getState() : int
+    {
+        return $this->state;
+    }
 
-    abstract public function getCommand() : string;
-
-    public function run($data = [])
+    final public function run($data = [])
     {
         $this->state = self::STATE_RUN;
         if (!$this->peer->send([
@@ -57,7 +68,41 @@ abstract class Command
         }
     }
 
-    abstract public function handle($data);
+    final public function result()
+    {
+        $this->state = self::STATE_RES;
+        if (!$this->peer->send([
+            'command' => $this->getCommand(),
+            'state' => $this->state,
+            'id' => $this->id,
+            'code' => $this->code,
+            'data' => $this->getData()])
+        ) {
+            throw new \Exception('Fail for send result of command ' . $this->getCommand());
+        }
+    }
 
-    abstract public function handleResult($result);
+    final public function success()
+    {
+        $this->code = self::RES_SUCCESS;
+        $this->result(); // отправляем результаты работы
+    }
+
+    final public function error()
+    {
+        $this->code = self::RES_ERROR;
+        $this->result(); // отправляем результаты работы
+    }
+
+    abstract public function getData() : array;
+
+    abstract public function getCommand() : string;
+
+    /**
+     * Инициализирует входные параметры, поступившие от команды.
+     *
+     * @param $data
+     * @return mixed
+     */
+    abstract public function handle($data);
 }
