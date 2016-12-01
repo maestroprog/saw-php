@@ -9,7 +9,6 @@
 namespace maestroprog\saw\library;
 
 use maestroprog\esockets\base\Net;
-use maestroprog\saw\command\WorkerAdd;
 
 /**
  * Диспетчер команд.

@@ -24,9 +24,8 @@ class WorkerAdd extends Command
         return self::NAME;
     }
 
-    public function handle($data)
+    public function handle(array $data)
     {
 
     }
-
 }

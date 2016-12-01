@@ -12,6 +12,8 @@ use maestroprog\esockets\base\Net;
 
 abstract class Command
 {
+    use CommandCode;
+
     const STATE_NEW = 0;
     const STATE_RUN = 1;
     const STATE_RES = 2;
@@ -42,6 +44,9 @@ abstract class Command
      */
     private $code;
 
+    private $onSuccess;
+    private $onError;
+
     public function __construct(int $id, Net $peer, $state = self::STATE_NEW)
     {
         $this->id = $id;
@@ -55,6 +60,13 @@ abstract class Command
         return $this->state;
     }
 
+    /**
+     * Отправляет команду на выполнение.
+     *
+     * @param array $data
+     * @throws \Exception
+     * @throws \Throwable
+     */
     final public function run($data = [])
     {
         $this->state = self::STATE_RUN;
@@ -68,6 +80,12 @@ abstract class Command
         }
     }
 
+    /**
+     * Отправляет результат выполнения команды.
+     *
+     * @throws \Exception
+     * @throws \Throwable
+     */
     final public function result()
     {
         $this->state = self::STATE_RES;
@@ -82,16 +100,51 @@ abstract class Command
         }
     }
 
+    /**
+     * Сообщает об успешном выполнении команды.
+     *
+     * @throws \Exception
+     */
     final public function success()
     {
         $this->code = self::RES_SUCCESS;
         $this->result(); // отправляем результаты работы
     }
 
+    /**
+     * Сообщает об ошибке выполнении команды.
+     *
+     * @throws \Exception
+     */
     final public function error()
     {
         $this->code = self::RES_ERROR;
         $this->result(); // отправляем результаты работы
+    }
+
+    /**
+     * Задает колбэк, вызывающийся при успешном выполнении команды.
+     *
+     * @param callable $callback
+     * @return $this
+     */
+    final public function setSuccess(callable $callback)
+    {
+        $this->onSuccess = $callback;
+        return $this;
+    }
+
+    /**
+     * Задает колбэк, вызывающийся при неудачном выполнении команды.
+     *
+     * @param callable $callback
+     * @return $this
+     */
+
+    final public function setError(callable $callback)
+    {
+        $this->onError = $callback;
+        return $this;
     }
 
     abstract public function getData() : array;
@@ -104,5 +157,5 @@ abstract class Command
      * @param $data
      * @return mixed
      */
-    abstract public function handle($data);
+    abstract public function handle(array $data);
 }

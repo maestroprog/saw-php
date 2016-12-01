@@ -24,9 +24,8 @@ class WorkerDelete extends Command
         return self::NAME;
     }
 
-    public function handle($data)
+    public function handle(array $data)
     {
         // TODO: Implement handle() method.
     }
-
 }

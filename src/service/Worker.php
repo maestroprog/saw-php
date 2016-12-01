@@ -102,7 +102,15 @@ class Worker extends Singleton
             if ($data === 'HELLO') {
                 $this->sc->send('HELLO');
             } elseif ($data === 'ACCEPT') {
-                $this->dispatcher->create(WorkerAdd::NAME, $this->sc)->run();
+                $this->dispatcher
+                    ->create(WorkerAdd::NAME, $this->sc)
+                    ->setError(function () {
+                        $this->stop();
+                    })
+                    ->setSuccess(function () {
+                        //todo
+                    })
+                    ->run();
             } elseif ($data === 'INVALID') {
                 // todo
             } elseif ($data === 'BYE') {
@@ -192,19 +200,21 @@ class Worker extends Singleton
     {
         try {
             $command = $this->dispatcher->dispatch($data, $this->sc);
-            switch ($command->getState()) {
-                case Command::STATE_NEW:
-                    // приняли незапущенную команду.. и что с ней делать?
-                    break;
-                case Command::STATE_RUN:
-                    $command->handle($data['data']);
-                    break;
-                case Command::STATE_RES:
-                    $command->result($data['data']);
-                    break;
+            $command->handle($data['data']);
+            if ($command->getState() === Command::STATE_RUN) {
+                switch ($command->getCommand()) {
+                    case WorkerAdd::NAME: // add worker
+
+                        break;
+                    default:
+                        throw new \Exception('Undefined command ' . $command->getCommand());
+                }
+            } elseif ($command->getState() === Command::STATE_RES) {
+
             }
         } catch (\Throwable $e) {
-
+            // todo
+            return;
         }
 
         switch ($data['command']) {
