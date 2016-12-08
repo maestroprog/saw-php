@@ -99,24 +99,34 @@ class Worker extends Singleton
     {
         $this->sc->onRead(function ($data) {
             Log::log('I RECEIVED ' . $data . ' :)');
-            if ($data === 'HELLO') {
-                $this->sc->send('HELLO');
-            } elseif ($data === 'ACCEPT') {
-                $this->dispatcher
-                    ->create(WorkerAdd::NAME, $this->sc)
-                    ->setError(function () {
-                        $this->stop();
-                    })
-                    ->setSuccess(function () {
-                        //todo
-                    })
-                    ->run();
-            } elseif ($data === 'INVALID') {
-                // todo
-            } elseif ($data === 'BYE') {
-                $this->work = false;
-            } elseif (is_array($data) && $this->dispatcher->valid($data)) {
-                $this->handle($data);
+
+            switch ($data) {
+                case 'HELLO':
+                    $this->sc->send('HELLO');
+                    break;
+                case 'ACCEPT':
+                    $this->dispatcher
+                        ->create(WorkerAdd::NAME, $this->sc)
+                        ->setError(function () {
+                            $this->stop();
+                        })
+                        ->setSuccess(function () {
+                            //todo
+                        })
+                        ->run();
+                    break;
+                case 'INVALID':
+                    // todo
+                    break;
+                case 'BYE':
+                    $this->work = false;
+                    break;
+                default:
+                    if (is_array($data) && $this->dispatcher->valid($data)) {
+                        $this->handle($data);
+                    } else {
+                        $this->sc->send('INVALID');
+                    }
             }
         });
 
