@@ -8,15 +8,13 @@
 
 namespace maestroprog\saw\service;
 
+use maestroprog\library\controller\Core;
 use maestroprog\saw\command\WorkerAdd;
 use maestroprog\saw\command\WorkerDelete;
-use maestroprog\saw\entity\Task;
-use maestroprog\saw\entity\Worker;
 use maestroprog\saw\library\Command;
 use maestroprog\saw\library\Dispatcher;
 use maestroprog\saw\library\Factory;
 use maestroprog\saw\library\Singleton;
-use maestroprog\saw\library\Executor;
 use maestroprog\esockets\Peer;
 use maestroprog\esockets\TcpServer;
 use maestroprog\esockets\debug\Log;
@@ -27,7 +25,6 @@ use maestroprog\esockets\debug\Log;
  */
 class Controller extends Singleton
 {
-    use Executor;
 
     protected static $instance;
     /**
@@ -76,6 +73,8 @@ class Controller extends Singleton
      */
     private $ss;
 
+    private $core;
+
     /**
      * @var Dispatcher
      */
@@ -97,6 +96,17 @@ class Controller extends Singleton
             unset($config);
             return false;
         }
+        $this->configure($config);
+        $this->core = new Core($this->ss, $this->worker_path, $this->worker_multiplier, $this->worker_max);
+        $this->dispatcher = Factory::getInstance()->createDispatcher([
+            WorkerAdd::NAME => WorkerAdd::class,
+            WorkerDelete::NAME => WorkerDelete::class,
+        ]);
+        return true;
+    }
+
+    private function configure(&$config)
+    {
         // настройка доп. параметров
         if (isset($config['params'])) {
             foreach ($config['params'] as $key => &$param) {
@@ -105,11 +115,6 @@ class Controller extends Singleton
             }
         }
         unset($config);
-        $this->dispatcher = Factory::getInstance()->createDispatcher([
-            WorkerAdd::NAME => WorkerAdd::class,
-            WorkerDelete::NAME => WorkerDelete::class,
-        ]);
-        return true;
     }
 
     /**
@@ -131,29 +136,7 @@ class Controller extends Singleton
             throw new \Exception('Cannot start: not connected');
         }
         Log::log('start');
-        $this->ss->onConnectPeer(function (Peer $peer) {
-            Log::log('peer connected ' . $peer->getAddress());
-            $peer->set(self::KSTATE, self::PEER_NEW);
-            $peer->onRead(function ($data) use ($peer) {
-                if ($data === 'HELLO') {
-                    $peer->set(self::KSTATE, self::PEER_ACCEPTED);
-                    $peer->send('ACCEPT');
-                } elseif ($peer->get(self::KSTATE) !== self::PEER_ACCEPTED) {
-                    $peer->send('HELLO');
-                } elseif (!is_array($data) || !$this->dispatcher->valid($data)) {
-                    $peer->send('INVALID');
-                } else {
-                    $this->handle($data, $peer);
-                }
-            });
-            $peer->onDisconnect(function () use ($peer) {
-                Log::log('peer disconnected');
-            });
-            if (!$peer->send('HELLO')) {
-                Log::log('HELLO FAIL SEND!');
-                $peer->disconnect(); // не нужен нам такой клиент
-            }
-        });
+        $this->ss->onConnectPeer($this->onConnectPeer());
         register_shutdown_function(function () {
             $this->stop();
             Log::log('stopped');
@@ -183,6 +166,33 @@ class Controller extends Singleton
         $this->work = false;
         $this->ss->disconnect();
         Log::log('closed');
+    }
+
+    protected function onConnectPeer()
+    {
+        return function (Peer $peer) {
+            Log::log('peer connected ' . $peer->getAddress());
+            $peer->set(self::KSTATE, self::PEER_NEW);
+            $peer->onRead(function ($data) use ($peer) {
+                if ($data === 'HELLO') {
+                    $peer->set(self::KSTATE, self::PEER_ACCEPTED);
+                    $peer->send('ACCEPT');
+                } elseif ($peer->get(self::KSTATE) !== self::PEER_ACCEPTED) {
+                    $peer->send('HELLO');
+                } elseif (!is_array($data) || !$this->dispatcher->valid($data)) {
+                    $peer->send('INVALID');
+                } else {
+                    $this->handle($data, $peer);
+                }
+            });
+            $peer->onDisconnect(function () use ($peer) {
+                Log::log('peer disconnected');
+            });
+            if (!$peer->send('HELLO')) {
+                Log::log('HELLO FAIL SEND!');
+                $peer->disconnect(); // не нужен нам такой клиент
+            }
+        };
     }
 
     protected function handle(array $data, Peer $peer)
@@ -223,160 +233,21 @@ class Controller extends Singleton
     const KSTATE = 'state';
 
     /**
-     * Наши воркеры.
-     *
-     * @var Worker[]
+     * @param array $config
+     * @return Controller
+     * @throws \Exception
      */
-    private $workers = [];
-
-    /**
-     * Известные воркерам задачи.
-     *
-     * @var bool[][] $name => $dsc => true
-     */
-    private $tasksKnow = [];
-
-    /**
-     * Очередь новых поступающих задач.
-     *
-     * @var Task[]
-     */
-    private $taskNew = [];
-
-    /**
-     * Ассоциация названия задачи с его ID
-     *
-     * @var int[string] $name => $tid
-     */
-    private $taskAssoc = [];
-
-    /**
-     * Выполняемые воркерами задачи.
-     *
-     * @var Task[]
-     */
-    private $taskRun = [];
-
-    /**
-     * @var int Состояние запуска нового воркера.
-     */
-    private $running = 0;
-
-    private function wAdd(Peer $peer) : bool
+    public static function create(array $config): Controller
     {
-        if (!$this->running) {
-            return false;
-        }
-        $this->running = 0;
-        $this->workers[$peer->getDsc()] = new Worker($peer);
-        return true;
-    }
-
-    private function wDel(int $dsc)
-    {
-        $this->server->getPeerByDsc($dsc)->send(['command' => 'wdel']);
-        unset($this->workers[$dsc]);
-        // TODO
-        // нужно запилить механизм перехвата невыполненных задач
-        foreach ($this->tasks as $name => $workers) {
-            if (isset($workers[$dsc])) {
-                unset($this->tasks[$name][$dsc]);
+        $controller = self::getInstance();
+        if ($controller->init($config)) {
+            Log::log('configured. start...');
+            if (!$controller->start()) {
+                Log::log('Saw start failed');
+                throw new \Exception('Saw start failed');
             }
+            Log::log('start end');
         }
-    }
-
-    /**
-     * Функция добавляет задачу в список известных воркеру задач.
-     *
-     * @param int $dsc
-     * @param string $name
-     */
-    private function tAdd(int $dsc, string $name)
-    {
-        static $tid = 0; // task ID
-        if (!isset($this->taskAssoc[$name])) {
-            $this->taskAssoc[$name] = $tid++;
-        }
-        if (!$this->workers[$dsc]->isKnowTask($tid)) {
-            $this->workers[$dsc]->addKnowTask($this->taskAssoc[$name]);
-            $this->tasksKnow[$name][$dsc] = true;
-        }
-    }
-
-    /**
-     * Функция добавляет задачу в очередь на выполнение для заданного воркера.
-     *
-     * @param int $dsc
-     * @param string $name
-     */
-    private function tRun(int $dsc, string $name)
-    {
-        static $rid = 0; // task run ID
-        $this->taskNew[$rid] = new Task($this->taskAssoc[$name], $rid, $name, $dsc);
-        $rid++;
-    }
-
-    private function wBalance()
-    {
-        if (count($this->workers) < $this->worker_max && !$this->running) {
-            // run new worker
-            $this->exec($this->worker_path);
-            $this->running = time();
-        } elseif ($this->running && $this->running < time() - 10) {
-            // timeout 10 sec
-            $this->running = 0;
-            Log::log('Can not run worker!');
-        } else {
-            // so good; всё ок
-        }
-    }
-
-    /**
-     * Функция разгребает очередь задач, раскидывая их по воркерам.
-     */
-    private function tBalance()
-    {
-        foreach ($this->taskNew as $rid => $task) {
-            $worker = $this->wMinT($task->getName(), function (Worker $worker) {
-                return $worker->getState() != Worker::STOP;
-            });
-            if ($worker >= 0) {
-                $workerPeer = $this->server->getPeerByDsc($worker);
-                if ($workerPeer->send(['command' => 'trun', 'name' => $task->getName()])) {
-                    $this->workers[$worker]->addTask($task);
-                    $this->taskRun[$rid] = $task;
-                }
-            }
-        }
-    }
-
-    /**
-     * Функция выбирает наименее загруженный воркер.
-     *
-     * @param string $name задача
-     * @param callable|null $filter ($data)
-     * @return int
-     */
-    private function wMinT($name, callable $filter = null) : int
-    {
-        $selectedDsc = -1;
-        foreach ($this->workers as $dsc => $worker) {
-            if (!is_null($filter) && !$filter($worker)) {
-                // отфильтровали
-                continue;
-            }
-            if (!$worker->isKnowTask($this->taskAssoc[$name])) {
-                // не знает такую задачу
-                continue;
-            }
-            if (!isset($count)) {
-                $count = $worker->getCountTasks();
-                $selectedDsc = $dsc;
-            } elseif ($count > ($newCount = $worker->getCountTasks())) {
-                $count = $newCount;
-                $selectedDsc = $dsc;
-            }
-        }
-        return $selectedDsc;
+        return $controller;
     }
 }

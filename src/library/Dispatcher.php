@@ -49,6 +49,7 @@ class Dispatcher extends Singleton
         $class = $this->know[$command];
         $this->created[$id] = $command = new $class($id, $client);
         $id++;
+        return $command;
     }
 
     public function dispatch($data, Net $peer) : Command

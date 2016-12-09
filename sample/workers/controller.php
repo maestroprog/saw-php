@@ -16,7 +16,7 @@ if (PHP_SAPI !== 'cli') {
 define('SAW_ENVIRONMENT', 'Controller');
 
 $config = require __DIR__ . '/../config.php';
-$controller = \maestroprog\saw\library\Factory::getInstance()->configure($config)->createController();
+$controller = \maestroprog\saw\service\Controller::create($config);
 
 \maestroprog\esockets\debug\Log::log('work start');
 $controller->work();

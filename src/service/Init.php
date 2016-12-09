@@ -10,6 +10,7 @@ namespace maestroprog\saw\service;
 
 use maestroprog\saw\library\Executor;
 use maestroprog\esockets\debug\Log;
+use maestroprog\saw\library\Factory;
 
 /**
  * Воркер, использующийся входным скриптом.
@@ -56,5 +57,33 @@ class Init extends Worker
             'command' => 'trun',
             'name' => $name,
         ]);
+    }
+
+    /**
+     * @param array $config
+     * @return Worker
+     * @throws \Exception
+     */
+    public static function create(array $config) : Worker
+    {
+        $init = Init::getInstance();
+        if ($init->init($config)) {
+            Log::log('configured. input...');
+            if (!($init->connect() or $init->start())) {
+                Log::log('Saw start failed');
+                throw new \Exception('Framework starting fail');
+            }
+            register_shutdown_function(function () use ($init) {
+                Log::log('work start');
+                //$init->work();
+                Log::log('work end');
+
+                $init->stop();
+                Log::log('closed');
+            });
+            return $init->setTask(Factory::getInstance()->createTask($init));
+        } else {
+            throw new \Exception('Cannot initialize Init worker');
+        }
     }
 }

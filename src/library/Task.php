@@ -38,7 +38,7 @@ class Task extends Singleton
 
     public function run(callable $task, string $name, &$result = null)
     {
-        if (self::getInstance()->controller->addTask($task, $name, $result)) {
+        if ($this->controller->addTask($task, $name, $result)) {
             // можно спокойно выходить отсюда :)
         } else {
             $result = $task();
