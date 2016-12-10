@@ -8,9 +8,9 @@
 
 namespace maestroprog\saw\service;
 
+use maestroprog\library\worker\Core;
 use maestroprog\saw\command\WorkerAdd;
 use maestroprog\saw\command\WorkerDelete;
-use maestroprog\saw\library\Command;
 use maestroprog\saw\library\Dispatcher;
 use maestroprog\saw\library\Factory;
 use maestroprog\saw\library\Singleton;
@@ -18,6 +18,7 @@ use maestroprog\saw\library\Application;
 use maestroprog\saw\library\Task;
 use maestroprog\esockets\TcpClient;
 use maestroprog\esockets\debug\Log;
+use maestroprog\saw\entity\Command;
 
 /**
  * Воркер, использующийся воркер-скриптом.
@@ -49,6 +50,8 @@ class Worker extends Singleton
      */
     private $task;
 
+    private $core;
+
     /**
      * @var Dispatcher
      */
@@ -76,6 +79,23 @@ class Worker extends Singleton
             trigger_error('Net configuration not found', E_USER_NOTICE);
             return false;
         }
+        $this->configure($config);
+        $this->core = new Core($this->sc, $this->worker_app, $this->worker_app_class);
+        $this->dispatcher = Factory::getInstance()->createDispatcher([
+            new Command(
+                WorkerAdd::NAME,
+                WorkerAdd::class,
+                function (\maestroprog\saw\library\Command $context) {
+
+                }
+            ),
+            WorkerDelete::NAME => WorkerDelete::class,
+        ]);
+        return true;
+    }
+
+    private function configure(array &$config)
+    {
         // настройка доп. параметров
         if (isset($config['params'])) {
             foreach ($config['params'] as $key => &$param) {
@@ -85,24 +105,6 @@ class Worker extends Singleton
                 unset($param);
             }
         }
-        if (empty($this->worker_app) || !file_exists($this->worker_app)) {
-            trigger_error('Worker application configuration not found', E_USER_ERROR);
-            return false;
-        }
-        require_once $this->worker_app;
-        if (!class_exists($this->worker_app_class)) {
-            trigger_error('Worker application must be configured with "worker_app_class"', E_USER_ERROR);
-        }
-        $this->app = new $this->worker_app_class();
-        if (!$this->app instanceof Application) {
-            trigger_error('Worker application must be instance of maestroprog\saw\Application', E_USER_ERROR);
-            return false;
-        }
-        $this->dispatcher = Factory::getInstance()->createDispatcher([
-            WorkerAdd::NAME => WorkerAdd::class,
-            WorkerDelete::NAME => WorkerDelete::class,
-        ]);
-        return true;
     }
 
     public function connect()
@@ -124,29 +126,6 @@ class Worker extends Singleton
         }
     }
 
-    /**
-     * @var array
-     */
-    private $knowCommands = [];
-
-    /**
-     * Оповещает контроллер о том, что данный воркер узнал новую задачу.
-     * Контроллер запоминает это.
-     *
-     * @param callable $callback
-     * @param string $name
-     * @param $result
-     */
-    public function addTask(callable &$callback, string $name, &$result)
-    {
-        if (!isset($this->knowCommands[$name])) {
-            $this->knowCommands[$name] = [$callback, &$result];
-            $this->sc->send([
-                'command' => 'tadd',
-                'name' => $name,
-            ]);
-        }
-    }
 
     /**
      * Метод под нужды таскера - запускает ожидание завершения выполнения указанных в массиве задач.
@@ -178,7 +157,7 @@ class Worker extends Singleton
         $this->app->run($this->task);
     }
 
-    protected function onRead()
+    protected function onRead(): callable
     {
         return function ($data) {
             Log::log('I RECEIVED ' . $data . ' :)');
@@ -244,12 +223,13 @@ class Worker extends Singleton
                 break;
         }
     }
+
     /**
      * @param array $config
      * @return Worker
      * @throws \Exception
      */
-    public static function create(array $config) : Worker
+    public static function create(array $config): Worker
     {
         $init = Worker::getInstance();
         if ($init->init($config)) {

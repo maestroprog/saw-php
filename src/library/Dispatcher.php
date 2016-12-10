@@ -9,6 +9,7 @@
 namespace maestroprog\saw\library;
 
 use maestroprog\esockets\base\Net;
+use maestroprog\saw\entity\Command;
 
 /**
  * Диспетчер команд.
@@ -29,6 +30,11 @@ class Dispatcher extends Singleton
      */
     private $created = [];
 
+    /**
+     * @param Command[] $command
+     * @return Dispatcher
+     * @throws \Exception
+     */
     public function add(array $command) : self
     {
         foreach ($command as $name => $class) {
@@ -47,6 +53,9 @@ class Dispatcher extends Singleton
             throw new \Exception(sprintf('I don\'t know command %s', $command));
         }
         $class = $this->know[$command];
+        if (!class_exists($class)) {
+            throw new \Exception(sprintf('I don\'t know Class %s', $class));
+        }
         $this->created[$id] = $command = new $class($id, $client);
         $id++;
         return $command;

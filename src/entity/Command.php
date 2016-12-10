@@ -13,5 +13,6 @@ class Command
 {
     public function __construct(string $name, string $class, callable $executor)
     {
+
     }
 }

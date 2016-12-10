@@ -114,7 +114,6 @@ class Controller extends Singleton
                 unset($param);
             }
         }
-        unset($config);
     }
 
     /**

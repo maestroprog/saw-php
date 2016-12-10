@@ -35,7 +35,6 @@ class Core
      */
     private $workerMax;
 
-
     public function __construct(
         TcpServer $server,
         string $workerPath,
