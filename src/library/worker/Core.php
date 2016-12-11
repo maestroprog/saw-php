@@ -10,10 +10,18 @@ namespace maestroprog\library\worker;
 
 use maestroprog\esockets\TcpClient;
 use maestroprog\saw\library\Application;
+use maestroprog\saw\library\Task;
 
 class Core
 {
     private $peer;
+
+    private $task;
+
+    /**
+     * @var Application
+     */
+    private $app;
 
     public function __construct(
         TcpClient $peer,
@@ -36,6 +44,26 @@ class Core
     }
 
     /**
+     * Настраивает текущий таск-менеджер.
+     *
+     * @param Task $task
+     * @return $this
+     */
+    public function setTask(Task $task)
+    {
+        $this->task = $task;
+        return $this;
+    }
+
+    public function run()
+    {
+        if (!$this->task) {
+            throw new \Exception('Cannot run worker!');
+        }
+        $this->app->run($this->task);
+    }
+
+    /**
      * @var array
      */
     private $knowCommands = [];
@@ -52,7 +80,7 @@ class Core
     {
         if (!isset($this->knowCommands[$name])) {
             $this->knowCommands[$name] = [$callback, &$result];
-            $this->sc->send([
+            $this->peer->send([
                 'command' => 'tadd',
                 'name' => $name,
             ]);

@@ -10,6 +10,16 @@ use \maestroprog\saw\library\Task;
 
 class App extends \maestroprog\saw\library\Application
 {
+    public function init(array $_SERVER)
+    {
+        // TODO: Implement init() method.
+    }
+
+    public function end()
+    {
+        // TODO: Implement end() method.
+    }
+
     public function run(Task $task)
     {
         $task->run(function () {

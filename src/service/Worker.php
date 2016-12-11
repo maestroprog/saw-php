@@ -11,6 +11,7 @@ namespace maestroprog\saw\service;
 use maestroprog\library\worker\Core;
 use maestroprog\saw\command\WorkerAdd;
 use maestroprog\saw\command\WorkerDelete;
+use maestroprog\saw\library\Command;
 use maestroprog\saw\library\Dispatcher;
 use maestroprog\saw\library\Factory;
 use maestroprog\saw\library\Singleton;
@@ -18,7 +19,7 @@ use maestroprog\saw\library\Application;
 use maestroprog\saw\library\Task;
 use maestroprog\esockets\TcpClient;
 use maestroprog\esockets\debug\Log;
-use maestroprog\saw\entity\Command;
+use maestroprog\saw\entity\Command as EntityCommand;
 
 /**
  * Воркер, использующийся воркер-скриптом.
@@ -50,6 +51,9 @@ class Worker extends Singleton
      */
     private $task;
 
+    /**
+     * @var Core
+     */
     private $core;
 
     /**
@@ -82,11 +86,11 @@ class Worker extends Singleton
         $this->configure($config);
         $this->core = new Core($this->sc, $this->worker_app, $this->worker_app_class);
         $this->dispatcher = Factory::getInstance()->createDispatcher([
-            new Command(
+            new EntityCommand(
                 WorkerAdd::NAME,
                 WorkerAdd::class,
-                function (\maestroprog\saw\library\Command $context) {
-
+                function (Command $context) {
+                    $this->core->run();
                 }
             ),
             WorkerDelete::NAME => WorkerDelete::class,
@@ -145,16 +149,8 @@ class Worker extends Singleton
      */
     public function setTask(Task $task)
     {
-        $this->task = $task;
+        $this->core->setTask($task);
         return $this;
-    }
-
-    public function run()
-    {
-        if (!$this->task) {
-            throw new \Exception('Cannot run worker!');
-        }
-        $this->app->run($this->task);
     }
 
     protected function onRead(): callable
@@ -185,43 +181,12 @@ class Worker extends Singleton
                     break;
                 default:
                     if (is_array($data) && $this->dispatcher->valid($data)) {
-                        $this->handle($data);
+                        $this->dispatcher->dispatch($data, $this->sc);
                     } else {
                         $this->sc->send('INVALID');
                     }
             }
         };
-    }
-
-    protected function handle(array $data)
-    {
-        try {
-            $command = $this->dispatcher->dispatch($data, $this->sc);
-            $command->handle($data['data']);
-            if ($command->getState() === Command::STATE_RUN) {
-                switch ($command->getCommand()) {
-                    case WorkerAdd::NAME: // add worker
-
-                        break;
-                    default:
-                        throw new \Exception('Undefined command ' . $command->getCommand());
-                }
-            } elseif ($command->getState() === Command::STATE_RES) {
-
-            }
-        } catch (\Throwable $e) {
-            // todo
-            return;
-        }
-
-        switch ($data['command']) {
-            case 'wadd': // successfully add worker to controller
-                $this->run();
-                break;
-            case 'wdel': // controller has been delete this worker from self stack
-                $this->stop();
-                break;
-        }
     }
 
     /**

@@ -44,9 +44,6 @@ abstract class Command
      */
     private $code;
 
-    private $onSuccess;
-    private $onError;
-
     public function __construct(int $id, Net $peer, $state = self::STATE_NEW)
     {
         $this->id = $id;
@@ -55,6 +52,11 @@ abstract class Command
         $this->code = self::RES_VOID;
     }
 
+    /**
+     * Возвращает состояние команды.
+     *
+     * @return int
+     */
     public function getState() : int
     {
         return $this->state;
@@ -101,58 +103,21 @@ abstract class Command
     }
 
     /**
-     * Сообщает об успешном выполнении команды.
+     * Возвращает кастомные данные, которые нужно передать вместе с командой.
      *
-     * @throws \Exception
+     * @return array
      */
-    final public function success()
-    {
-        $this->code = self::RES_SUCCESS;
-        $this->result(); // отправляем результаты работы
-    }
-
-    /**
-     * Сообщает об ошибке выполнении команды.
-     *
-     * @throws \Exception
-     */
-    final public function error()
-    {
-        $this->code = self::RES_ERROR;
-        $this->result(); // отправляем результаты работы
-    }
-
-    /**
-     * Задает колбэк, вызывающийся при успешном выполнении команды.
-     *
-     * @param callable $callback
-     * @return $this
-     */
-    final public function setSuccess(callable $callback)
-    {
-        $this->onSuccess = $callback;
-        return $this;
-    }
-
-    /**
-     * Задает колбэк, вызывающийся при неудачном выполнении команды.
-     *
-     * @param callable $callback
-     * @return $this
-     */
-
-    final public function setError(callable $callback)
-    {
-        $this->onError = $callback;
-        return $this;
-    }
-
     abstract public function getData() : array;
 
+    /**
+     * Возвращает имя команды.
+     *
+     * @return string
+     */
     abstract public function getCommand() : string;
 
     /**
-     * Инициализирует входные параметры, поступившие от команды.
+     * Инициализирует кастомные данные, поступившие вместе с командой.
      *
      * @param $data
      * @return mixed

@@ -9,7 +9,7 @@
 namespace maestroprog\saw\library;
 
 use maestroprog\esockets\base\Net;
-use maestroprog\saw\entity\Command;
+use maestroprog\saw\entity\Command as EntityCommand;
 
 /**
  * Диспетчер команд.
@@ -19,7 +19,7 @@ class Dispatcher extends Singleton
     /**
      * Команды, которые мы знаем.
      *
-     * @var array
+     * @var EntityCommand[]
      */
     private $know = [];
 
@@ -31,22 +31,22 @@ class Dispatcher extends Singleton
     private $created = [];
 
     /**
-     * @param Command[] $command
+     * @param EntityCommand[] $commands
      * @return Dispatcher
      * @throws \Exception
      */
-    public function add(array $command) : self
+    public function add(array $commands): self
     {
-        foreach ($command as $name => $class) {
-            if (isset($this->know[$name]) || !class_exists($class)) {
-                throw new \Exception(sprintf('Command %s cannot added', $name));
+        foreach ($commands as $command) {
+            if (isset($this->know[$command->getName()]) || !class_exists($command->getClass())) {
+                throw new \Exception(sprintf('Command %s cannot added', $command->getName()));
             }
-            $this->know[$name] = $class;
+            $this->know[$command->getName()] = $command;
         }
         return $this;
     }
 
-    public function create(string $command, Net $client) : Command
+    public function create(string $command, Net $client): Command
     {
         static $id = 0;
         if (!isset($this->know[$command])) {
@@ -61,26 +61,38 @@ class Dispatcher extends Singleton
         return $command;
     }
 
-    public function dispatch($data, Net $peer) : Command
+    public function dispatch($data, Net $peer)
     {
         $command = $data['command'];
         if (!isset($this->know[$command])) {
             throw new \Exception(sprintf('I don\'t know command %s', $command));
         }
+        $commandEntity = $this->know[$command];
         if (isset($this->created[$data['id']])) {
             $command = $this->created[$data['id']];
         } else {
-            $class = $this->know[$command];
+            $class = $commandEntity->getClass();
             $this->created[$data['id']] = $command = new $class($data['id'], $peer, $data['state']);
         }
-        return $command;
+        /** @var $command Command */
+        switch ($command->getState()) {
+            case Command::STATE_NEW:
+                // why??
+                break;
+            case Command::STATE_RUN:
+                $commandEntity->exec($command);
+                break;
+            case Command::STATE_RES:
+                $command->dispatch();
+                break;
+        }
     }
 
     public function valid(array &$data)
     {
         return isset($data['command'])
-        && isset($data['state'])
-        && isset($data['id'])
-        && isset($data['data']);
+            && isset($data['state'])
+            && isset($data['id'])
+            && isset($data['data']);
     }
 }
