@@ -9,8 +9,11 @@
 namespace maestroprog\saw\service;
 
 use maestroprog\library\controller\Core;
+use maestroprog\saw\command\TaskAdd;
+use maestroprog\saw\command\TaskRun;
 use maestroprog\saw\command\WorkerAdd;
 use maestroprog\saw\command\WorkerDelete;
+use maestroprog\saw\entity\Command as EntityCommand;
 use maestroprog\saw\library\Command;
 use maestroprog\saw\library\Dispatcher;
 use maestroprog\saw\library\Factory;
@@ -73,6 +76,9 @@ class Controller extends Singleton
      */
     private $ss;
 
+    /**
+     * @var Core
+     */
     private $core;
 
     /**
@@ -97,11 +103,43 @@ class Controller extends Singleton
             return false;
         }
         $this->configure($config);
-        $this->core = new Core($this->ss, $this->worker_path, $this->worker_multiplier, $this->worker_max);
         $this->dispatcher = Factory::getInstance()->createDispatcher([
-            WorkerAdd::NAME => WorkerAdd::class,
-            WorkerDelete::NAME => WorkerDelete::class,
+            new EntityCommand(
+                WorkerAdd::NAME,
+                WorkerAdd::class,
+                function (Command $context) {
+                    return $this->core->wAdd($context->getPeer()->getDsc());
+                }
+            ),
+            new EntityCommand(
+                WorkerDelete::NAME,
+                WorkerDelete::class,
+                function (Command $context) {
+                    $this->core->wDel($context->getPeer()->getDsc());
+                }
+            ),
+            new EntityCommand(
+                TaskAdd::NAME,
+                TaskAdd::class,
+                function (Command $context) {
+                    $this->core->tAdd($context->getPeer()->getDsc(), $context->getData()['name']);
+                }
+            ),
+            new EntityCommand(
+                TaskRun::NAME,
+                TaskRun::class,
+                function (Command $context) {
+                    $this->core->tRun($context->getPeer()->getDsc(), $context->getData()['name']);
+                }
+            ),
         ]);
+        $this->core = new Core(
+            $this->ss,
+            $this->dispatcher,
+            $this->worker_path,
+            $this->worker_multiplier,
+            $this->worker_max
+        );
         return true;
     }
 
@@ -151,8 +189,8 @@ class Controller extends Singleton
         while ($this->work) {
             $this->ss->listen(); // слушаем кто присоединился
             $this->ss->read(); // читаем входящие запросы
-            $this->wBalance(); // балансируем воркеры
-            $this->tBalance(); // раскидываем задачки
+            $this->core->wBalance(); // балансируем воркеры
+            $this->core->tBalance(); // раскидываем задачки
             if ($this->dispatch_signals) {
                 pcntl_signal_dispatch();
             }
@@ -181,7 +219,7 @@ class Controller extends Singleton
                 } elseif (!is_array($data) || !$this->dispatcher->valid($data)) {
                     $peer->send('INVALID');
                 } else {
-                    $this->handle($data, $peer);
+                    $this->dispatcher->dispatch($data, $peer);
                 }
             });
             $peer->onDisconnect(function () use ($peer) {
@@ -192,41 +230,6 @@ class Controller extends Singleton
                 $peer->disconnect(); // не нужен нам такой клиент
             }
         };
-    }
-
-    protected function handle(array $data, Peer $peer)
-    {
-        try {
-            $command = $this->dispatcher->dispatch($data, $peer);
-            $command->handle($data['data']);
-            if ($command->getState() === Command::STATE_RUN) {
-                switch ($command->getCommand()) {
-                    case WorkerAdd::NAME: // add worker
-                        if ($this->wAdd($peer)) {
-                            $command->success();
-                        } else {
-                            $command->error();
-                        }
-                        break;
-                    case 'wdel': // del worker
-                        $this->wDel($peer->getDsc());
-                        break;
-                    case 'tadd': // add new task (сообщает что воркеру стала известна новая задача)
-                        $this->tAdd($peer->getDsc(), $data['name']);
-                        break;
-                    case 'trun': // run task (name) (передает на запуск задачи в очередь)
-                        $this->tRun($peer->getDsc(), $data['name']);
-                        break;
-                    default:
-                        throw new \Exception('Undefined command ' . $command->getCommand());
-                }
-            } elseif ($command->getState() === Command::STATE_RES) {
-
-            }
-        } catch (\Throwable $e) {
-            // todo
-            return;
-        }
     }
 
     const KSTATE = 'state';

@@ -68,22 +68,30 @@ class Dispatcher extends Singleton
             throw new \Exception(sprintf('I don\'t know command %s', $command));
         }
         $commandEntity = $this->know[$command];
+        /** @var $command Command */
         if (isset($this->created[$data['id']])) {
             $command = $this->created[$data['id']];
+            $command->handle($data['data']);
         } else {
             $class = $commandEntity->getClass();
             $this->created[$data['id']] = $command = new $class($data['id'], $peer, $data['state']);
         }
-        /** @var $command Command */
+        // смотрим, в каком состоянии находится поступившая к нам команда
         switch ($command->getState()) {
             case Command::STATE_NEW:
                 // why??
+                // такого состояния не может быть..
                 break;
             case Command::STATE_RUN:
-                $commandEntity->exec($command);
+                // если команда поступила на выполнение -  выполняем
+                if ($commandEntity->exec($command) !== false) {
+                    $command->success(); //
+                } else {
+                    $command->error();
+                }
                 break;
             case Command::STATE_RES:
-                $command->dispatch();
+                $command->dispatch($data['data']);
                 break;
         }
     }

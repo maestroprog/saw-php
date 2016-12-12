@@ -22,9 +22,13 @@ class Command
         $this->executor = $executor;
     }
 
-    public function exec($context)
+    /**
+     * @param $context \maestroprog\saw\library\Command
+     * @return bool
+     */
+    public function exec($context): bool
     {
-        call_user_func($this->executor, $context);
+        return call_user_func($this->executor, $context);
     }
 
     public function getName()

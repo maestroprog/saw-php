@@ -66,7 +66,7 @@ class Core
     /**
      * @var array
      */
-    private $knowCommands = [];
+    private $knowTasks = [];
 
     /**
      * Оповещает контроллер о том, что данный воркер узнал новую задачу.
@@ -78,12 +78,13 @@ class Core
      */
     public function addTask(callable &$callback, string $name, &$result)
     {
-        if (!isset($this->knowCommands[$name])) {
-            $this->knowCommands[$name] = [$callback, &$result];
-            $this->peer->send([
-                'command' => 'tadd',
-                'name' => $name,
-            ]);
+        if (!isset($this->knowTasks[$name])) {
+            $this->knowTasks[$name] = [$callback, &$result];
         }
+    }
+
+    public function runTask(&$callback, string $name, &$result)
+    {
+
     }
 }

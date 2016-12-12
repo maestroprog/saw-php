@@ -20,17 +20,19 @@ trait CommandCode
     private $onError;
 
     /**
+     * @param $result array
+     * @throws \Exception
      * Запускает механизм... todo результат выполнения команды
      */
-    public function dispatch()
+    public function dispatch(&$result)
     {
         if ($this->isSuccess()) {
             if (is_callable($this->onSuccess)) {
-                call_user_func($this->onSuccess);
+                call_user_func($this->onSuccess, $result);
             }
         } elseif ($this->isError()) {
             if (is_callable($this->onError)) {
-                call_user_func($this->onError);
+                call_user_func($this->onError, $result);
             }
         } else {
             throw new \Exception('Why is not success and is not error?');
@@ -55,6 +57,7 @@ trait CommandCode
 
     /**
      * Задает колбэк, вызывающийся при успешном выполнении команды.
+     * Колбек должен принимать
      *
      * @param callable $callback
      * @return $this

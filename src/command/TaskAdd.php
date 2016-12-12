@@ -2,8 +2,8 @@
 /**
  * Created by PhpStorm.
  * User: yarullin
- * Date: 29.11.16
- * Time: 10:58
+ * Date: 12.12.16
+ * Time: 21:08
  */
 
 namespace maestroprog\saw\command;
@@ -11,17 +11,19 @@ namespace maestroprog\saw\command;
 use maestroprog\saw\library\Command;
 
 /**
- * Команда воркера "Воркер стартовал".
+ * Команда "Задача добавлена".
  * От воркера отправляется контроллеру для извещения.
  * От контроллера такая команда не отправляется (пока такое не предусмотрено).
  */
-class WorkerAdd extends Command
+class TaskAdd extends Command
 {
-    const NAME = 'wadd';
+    const NAME = 'tadd';
+
+    private $data;
 
     public function getData(): array
     {
-        return [];
+        return $this->data;
     }
 
     public function getCommand(): string
@@ -31,5 +33,9 @@ class WorkerAdd extends Command
 
     public function handle(array $data)
     {
+        if (!isset($data['name'])) {
+            throw new \Exception('PIZDES');
+        }
+        $this->data['name'] = $data['name'];
     }
 }

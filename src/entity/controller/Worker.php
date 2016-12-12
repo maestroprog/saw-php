@@ -6,22 +6,20 @@
  * Time: 20:18
  */
 
-namespace maestroprog\saw\entity;
+namespace maestroprog\saw\entity\controller;
 
+use maestroprog\saw\entity\Task;
 
-use maestroprog\esockets\Peer;
-
+/**
+ * Сущность воркера, которой оперирует контроллер.
+ * Зеркалирует состояние воркера, при этом управляется только извне.
+ */
 class Worker
 {
     const NEW = 0; // новый воркер
     const READY = 1; // воркер, готовый к выполнению задач
     const RUN = 2; // воркер, выполняющий задачу
     const STOP = 3; // воркер, остановивший работу
-
-    /**
-     * @var Peer
-     */
-    private $peer;
 
     /**
      * Состояние воркера.
@@ -43,19 +41,17 @@ class Worker
      */
     private $runTasks = [];
 
-    public function __construct(Peer $peer, int $state = self::NEW)
+    public function __construct(int $state = self::NEW)
     {
-        $this->peer = $peer;
         $this->state = $state;
-        $peer->send(['command' => 'wadd', 'result' => true]);
     }
 
-    public function getState() : int
+    public function getState(): int
     {
         return $this->state;
     }
 
-    public function isKnowTask(int $tid) : bool
+    public function isKnowTask(int $tid): bool
     {
         return in_array($tid, $this->knowTasks);
     }

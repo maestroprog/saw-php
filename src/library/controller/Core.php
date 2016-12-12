@@ -8,11 +8,13 @@
 
 namespace maestroprog\library\controller;
 
+use maestroprog\esockets\base\Net;
 use maestroprog\esockets\debug\Log;
 use maestroprog\esockets\Peer;
 use maestroprog\esockets\TcpServer;
 use maestroprog\saw\entity\Task;
-use maestroprog\saw\entity\Worker;
+use maestroprog\saw\entity\controller\Worker;
+use maestroprog\saw\library\Dispatcher;
 use maestroprog\saw\library\Executor;
 
 class Core
@@ -22,6 +24,8 @@ class Core
      * @var TcpServer
      */
     private $server;
+
+    private $dispatcher;
 
     private $workerPath;
 
@@ -37,12 +41,14 @@ class Core
 
     public function __construct(
         TcpServer $server,
+        Dispatcher $dispatcher,
         string $workerPath,
         int $workerMultiplier,
         int $workerMax
     )
     {
         $this->server = $server;
+        $this->dispatcher = $dispatcher;
         $this->workerPath = $workerPath;
         $this->workerMultiplier = $workerMultiplier;
         $this->workerMax = $workerMax;
@@ -88,17 +94,17 @@ class Core
      */
     private $running = 0;
 
-    private function wAdd(Peer $peer): bool
+    public function wAdd(int $dsc): bool
     {
         if (!$this->running) {
             return false;
         }
         $this->running = 0;
-        $this->workers[$peer->getDsc()] = new Worker($peer);
+        $this->workers[$dsc] = new Worker();
         return true;
     }
 
-    private function wDel(int $dsc)
+    public function wDel(int $dsc)
     {
         $this->server->getPeerByDsc($dsc)->send(['command' => 'wdel']);
         unset($this->workers[$dsc]);
@@ -117,7 +123,7 @@ class Core
      * @param int $dsc
      * @param string $name
      */
-    private function tAdd(int $dsc, string $name)
+    public function tAdd(int $dsc, string $name)
     {
         static $tid = 0; // task ID
         if (!isset($this->taskAssoc[$name])) {
@@ -135,14 +141,14 @@ class Core
      * @param int $dsc
      * @param string $name
      */
-    private function tRun(int $dsc, string $name)
+    public function tRun(int $dsc, string $name)
     {
         static $rid = 0; // task run ID
         $this->taskNew[$rid] = new Task($this->taskAssoc[$name], $rid, $name, $dsc);
         $rid++;
     }
 
-    private function wBalance()
+    public function wBalance()
     {
         if (count($this->workers) < $this->workerMax && !$this->running) {
             // run new worker
@@ -160,7 +166,7 @@ class Core
     /**
      * Функция разгребает очередь задач, раскидывая их по воркерам.
      */
-    private function tBalance()
+    public function tBalance()
     {
         foreach ($this->taskNew as $rid => $task) {
             $worker = $this->wMinT($task->getName(), function (Worker $worker) {
@@ -168,10 +174,13 @@ class Core
             });
             if ($worker >= 0) {
                 $workerPeer = $this->server->getPeerByDsc($worker);
-                if ($workerPeer->send(['command' => 'trun', 'name' => $task->getName()])) {
-                    $this->workers[$worker]->addTask($task);
-                    $this->taskRun[$rid] = $task;
-                }
+
+                $this->dispatcher->create($task->getName(), $workerPeer)
+                    ->setSuccess(function () {
+                        $this->workers[$worker]->addTask($task);
+                        $this->taskRun[$rid] = $task;
+                    })
+                    ->run();
             }
         }
     }

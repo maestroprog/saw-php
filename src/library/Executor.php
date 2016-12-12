@@ -28,4 +28,13 @@ trait Executor
         }
         Log::log($e);
     }
+
+    /**
+     * Прихлопывает запущенный процесс
+     */
+    private function kill()
+    {
+        // todo
+    }
+
 }

@@ -8,6 +8,7 @@
 
 namespace maestroprog\saw\service;
 
+use maestroprog\saw\command\TaskRun;
 use maestroprog\saw\library\Executor;
 use maestroprog\esockets\debug\Log;
 use maestroprog\saw\library\Factory;
@@ -45,18 +46,13 @@ class Init extends Worker
         return false;
     }
 
-    private function kill()
-    {
-        // todo
-    }
-
     public function addTask(callable &$callback, string $name, &$result)
     {
-        parent::addTask($callback, $name, $result);
-        return $this->sc->send([
-            'command' => 'trun',
-            'name' => $name,
-        ]);
+        $this->dispatcher->create(TaskRun::NAME, $this->sc)
+            ->setSuccess(function (&$data) use (&$result) {
+                $result = $data['result'];
+            })
+            ->run();
     }
 
     /**
@@ -64,12 +60,12 @@ class Init extends Worker
      * @return Worker
      * @throws \Exception
      */
-    public static function create(array $config) : Worker
+    public static function create(array $config): Worker
     {
         $init = Init::getInstance();
         if ($init->init($config)) {
             Log::log('configured. input...');
-            if (!($init->connect() or $init->start())) {
+            if (!($init->connect() && $init->start())) {
                 Log::log('Saw start failed');
                 throw new \Exception('Framework starting fail');
             }

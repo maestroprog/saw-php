@@ -9,6 +9,7 @@
 namespace maestroprog\saw\library;
 
 use maestroprog\esockets\base\Net;
+use maestroprog\esockets\Peer;
 
 abstract class Command
 {
@@ -57,9 +58,17 @@ abstract class Command
      *
      * @return int
      */
-    public function getState() : int
+    public function getState(): int
     {
         return $this->state;
+    }
+
+    /**
+     * @return Net|Peer
+     */
+    public function getPeer(): Net
+    {
+        return $this->peer;
     }
 
     /**
@@ -107,14 +116,14 @@ abstract class Command
      *
      * @return array
      */
-    abstract public function getData() : array;
+    abstract public function getData(): array;
 
     /**
      * Возвращает имя команды.
      *
      * @return string
      */
-    abstract public function getCommand() : string;
+    abstract public function getCommand(): string;
 
     /**
      * Инициализирует кастомные данные, поступившие вместе с командой.
