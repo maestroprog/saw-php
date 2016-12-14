@@ -14,7 +14,7 @@ use maestroprog\esockets\Peer;
 use maestroprog\esockets\TcpServer;
 use maestroprog\saw\entity\Task;
 use maestroprog\saw\entity\controller\Worker;
-use maestroprog\saw\library\Dispatcher;
+use maestroprog\saw\library\CommandDispatcher;
 use maestroprog\saw\library\Executor;
 
 class Core
@@ -41,7 +41,7 @@ class Core
 
     public function __construct(
         TcpServer $server,
-        Dispatcher $dispatcher,
+        CommandDispatcher $dispatcher,
         string $workerPath,
         int $workerMultiplier,
         int $workerMax

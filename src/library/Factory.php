@@ -23,17 +23,17 @@ class Factory extends Singleton
 
     /**
      * @param Command[] $knowCommands
-     * @return Dispatcher
+     * @return CommandDispatcher
      * @throws \Exception
      */
-    public function createDispatcher(array $knowCommands) : Dispatcher
+    public function createDispatcher(array $knowCommands) : CommandDispatcher
     {
-        $this->dispatcher or $this->dispatcher = Dispatcher::getInstance()->add($knowCommands);
+        $this->dispatcher or $this->dispatcher = CommandDispatcher::getInstance()->add($knowCommands);
         return $this->dispatcher;
     }
 
-    public function createTask(Worker $controller) : Task
+    public function createTaskManager(Worker $controller) : TaskManager
     {
-        return Task::getInstance()->setController($controller);
+        return TaskManager::getInstance()->setController($controller);
     }
 }

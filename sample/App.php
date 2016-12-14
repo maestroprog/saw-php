@@ -6,7 +6,7 @@
  * Time: 16:22
  */
 
-use \maestroprog\saw\library\Task;
+use \maestroprog\saw\library\TaskManager;
 
 class App extends \maestroprog\saw\library\Application
 {
@@ -20,21 +20,21 @@ class App extends \maestroprog\saw\library\Application
         // TODO: Implement end() method.
     }
 
-    public function run(Task $task)
+    public function run(TaskManager $taskManager)
     {
-        $task->run(function () {
+        $taskManager->run(function () {
             for ($i = 0; $i < 10000; $i++) {
                 'nope';
             }
         }, 'MODULE_1_INIT');
 
-        $task->run(function () {
+        $taskManager->run(function () {
             for ($i = 0; $i < 10000; $i++) {
                 'nope';
             }
         }, 'MODULE_2_INIT');
 
-        $task->run(function () {
+        $taskManager->run(function () {
             for ($i = 0; $i < 10000; $i++) {
                 'nope';
             }

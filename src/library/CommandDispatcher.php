@@ -14,7 +14,7 @@ use maestroprog\saw\entity\Command as EntityCommand;
 /**
  * Диспетчер команд.
  */
-class Dispatcher extends Singleton
+class CommandDispatcher extends Singleton
 {
     /**
      * Команды, которые мы знаем.
@@ -32,7 +32,7 @@ class Dispatcher extends Singleton
 
     /**
      * @param EntityCommand[] $commands
-     * @return Dispatcher
+     * @return CommandDispatcher
      * @throws \Exception
      */
     public function add(array $commands): self

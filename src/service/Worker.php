@@ -14,11 +14,11 @@ use maestroprog\saw\command\TaskRun;
 use maestroprog\saw\command\WorkerAdd;
 use maestroprog\saw\command\WorkerDelete;
 use maestroprog\saw\library\Command;
-use maestroprog\saw\library\Dispatcher;
+use maestroprog\saw\library\CommandDispatcher;
 use maestroprog\saw\library\Factory;
 use maestroprog\saw\library\Singleton;
 use maestroprog\saw\library\Application;
-use maestroprog\saw\library\Task;
+use maestroprog\saw\library\TaskManager;
 use maestroprog\esockets\TcpClient;
 use maestroprog\esockets\debug\Log;
 use maestroprog\saw\entity\Command as EntityCommand;
@@ -49,9 +49,9 @@ class Worker extends Singleton
     private $app;
 
     /**
-     * @var Task
+     * @var TaskManager
      */
-    private $task;
+    private $taskManager;
 
     /**
      * @var Core
@@ -59,7 +59,7 @@ class Worker extends Singleton
     private $core;
 
     /**
-     * @var Dispatcher
+     * @var CommandDispatcher
      */
     protected $dispatcher;
 
@@ -188,12 +188,12 @@ class Worker extends Singleton
     /**
      * Настраивает текущий таск-менеджер.
      *
-     * @param Task $task
+     * @param TaskManager $taskManager
      * @return $this
      */
-    public function setTask(Task $task)
+    public function setTask(TaskManager $taskManager)
     {
-        $this->core->setTask($task);
+        $this->core->setTaskManager($taskManager);
         return $this;
     }
 
@@ -251,7 +251,7 @@ class Worker extends Singleton
                 $init->stop();
                 Log::log('closed');
             });
-            return $init->setTask(Factory::getInstance()->createTask($init));
+            return $init->setTask(Factory::getInstance()->createTaskManager($init));
         } else {
             throw new \Exception('Cannot initialize Worker');
         }

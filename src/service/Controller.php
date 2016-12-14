@@ -15,7 +15,7 @@ use maestroprog\saw\command\WorkerAdd;
 use maestroprog\saw\command\WorkerDelete;
 use maestroprog\saw\entity\Command as EntityCommand;
 use maestroprog\saw\library\Command;
-use maestroprog\saw\library\Dispatcher;
+use maestroprog\saw\library\CommandDispatcher;
 use maestroprog\saw\library\Factory;
 use maestroprog\saw\library\Singleton;
 use maestroprog\esockets\Peer;
@@ -82,7 +82,7 @@ class Controller extends Singleton
     private $core;
 
     /**
-     * @var Dispatcher
+     * @var CommandDispatcher
      */
     private $dispatcher;
 

@@ -24,12 +24,12 @@ abstract class Application
 
     /**
      * Запускает выполнение кода.
-     * Внутри функции обязательно должны идти вызовы @see \maestroprog\saw\library\Task::run();
+     * Внутри функции обязательно должны идти вызовы @see \maestroprog\saw\library\TaskManager::run();
      *
-     * @param Task $task
+     * @param TaskManager $taskManager
      * @return mixed
      */
-    abstract public function run(Task $task);
+    abstract public function run(TaskManager $taskManager);
 
     /**
      * Завершает выполнение приложения.

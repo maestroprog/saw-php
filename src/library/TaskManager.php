@@ -18,7 +18,7 @@ use maestroprog\saw\service\Worker;
  * Описание относится именно к данной версии.
  * @todo Нужно окружение.
  */
-class Task extends Singleton
+class TaskManager extends Singleton
 {
     protected static $instance;
     /**
@@ -36,6 +36,13 @@ class Task extends Singleton
         return $this;
     }
 
+    /**
+     * Запуск задачи.
+     *
+     * @param callable $task
+     * @param string $name
+     * @param null $result
+     */
     public function run(callable $task, string $name, &$result = null)
     {
         if ($this->controller->addTask($task, $name, $result)) {

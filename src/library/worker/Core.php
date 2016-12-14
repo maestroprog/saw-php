@@ -10,13 +10,17 @@ namespace maestroprog\library\worker;
 
 use maestroprog\esockets\TcpClient;
 use maestroprog\saw\library\Application;
-use maestroprog\saw\library\Task;
+use maestroprog\saw\library\TaskManager;
 
+/**
+ * Ядро воркера.
+ * Само по себе нужно только для изоляции приложения.
+ */
 class Core
 {
     private $peer;
 
-    private $task;
+    private $taskManager;
 
     /**
      * @var Application
@@ -46,21 +50,21 @@ class Core
     /**
      * Настраивает текущий таск-менеджер.
      *
-     * @param Task $task
+     * @param TaskManager $taskManager
      * @return $this
      */
-    public function setTask(Task $task)
+    public function setTaskManager(TaskManager $taskManager)
     {
-        $this->task = $task;
+        $this->taskManager = $taskManager;
         return $this;
     }
 
     public function run()
     {
-        if (!$this->task) {
+        if (!$this->taskManager) {
             throw new \Exception('Cannot run worker!');
         }
-        $this->app->run($this->task);
+        $this->app->run($this->taskManager);
     }
 
     /**
