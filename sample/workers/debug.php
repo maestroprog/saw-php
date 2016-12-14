@@ -6,7 +6,7 @@
  * Time: 17:02
  */
 
-use maestroprog\Saw\Init;
+use maestroprog\saw\services\Init;
 
 define('SAW_ENVIRONMENT', 'Debug');
 $config = require __DIR__ . '/../config.php';
@@ -14,17 +14,17 @@ $config = require __DIR__ . '/../config.php';
 try {
     $init = Init::getInstance();
     if ($init->init($config)) {
-        out('configured. input...');
+        \maestroprog\esockets\debug\Log::log('configured. input...');
         if (!($init->connect() or $init->start())) {
-            out('Saw start failed');
+            \maestroprog\esockets\debug\Log::log('Saw start failed');
             throw new \Exception('Framework starting fail');
         }
-        out('work start');
+        \maestroprog\esockets\debug\Log::log('work start');
         $init->work();
-        out('input end');
+        \maestroprog\esockets\debug\Log::log('input end');
 
         $init->stop();
-        out('closed');
+        \maestroprog\esockets\debug\Log::log('closed');
     }
 } catch (Exception $e) {
     switch (PHP_SAPI) {

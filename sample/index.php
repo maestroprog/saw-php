@@ -8,31 +8,21 @@
 
 $time = microtime(true);
 
-ini_set('display_errors', true);
-error_reporting(E_ALL);
-ini_set('error_log', 'e.log');
-ini_set('log_errors', true);
+$config = require __DIR__ . '/config.php';
 
-
-require __DIR__ . DIRECTORY_SEPARATOR . '../autoload.php';
-require __DIR__ . DIRECTORY_SEPARATOR . '../vendors/maestroprog/esockets/autoload.php';
-
-echo 'input start' . PHP_EOL;
-
-/**
- * @var $task \maestroprog\Saw\Task
- */
-if (!($task = require_once __DIR__ . DIRECTORY_SEPARATOR . '../src/workers/input.php')) {
-    throw new Exception('Cannot init!');
+out('input start');
+try {
+    $init = \maestroprog\saw\service\Init::create($config);
+} catch (Throwable $e) {
+    header('HTTP/1.1 503 Service Unavailable');
+    echo sprintf('<p style="color:red">%s</p>', $e->getMessage());
+    exit;
 }
-
-echo 'input end' . PHP_EOL;
+out('input end');
 
 $time2 = microtime(true);
 
-require_once 'App.php';
-$app = new App();
-$app->run($task);
+$init->run();
 
 $mtrue = microtime(true);
 $time22 = $mtrue - $time2;
