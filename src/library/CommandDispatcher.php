@@ -14,7 +14,7 @@ use maestroprog\saw\entity\Command as EntityCommand;
 /**
  * Диспетчер команд.
  */
-class CommandDispatcher extends Singleton
+final class CommandDispatcher extends Singleton
 {
     /**
      * Команды, которые мы знаем.

@@ -80,6 +80,9 @@ abstract class Command
      */
     final public function run($data = [])
     {
+        if (!$this->isValid()) {
+            throw new \Exception('Invalid command ' . $this->getCommand());
+        }
         $this->state = self::STATE_RUN;
         if (!$this->peer->send([
             'command' => $this->getCommand(),
@@ -132,4 +135,13 @@ abstract class Command
      * @return mixed
      */
     abstract public function handle(array $data);
+
+
+    /**
+     * Выполняет необходимые проверки перед запуском задачи,
+     * а именно - есть ли все необходимые данные для запуска задачи.
+     *
+     * @return bool
+     */
+    abstract public function isValid(): bool;
 }

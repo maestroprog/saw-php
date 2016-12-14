@@ -13,6 +13,7 @@ use maestroprog\saw\command\TaskAdd;
 use maestroprog\saw\command\TaskRun;
 use maestroprog\saw\command\WorkerAdd;
 use maestroprog\saw\command\WorkerDelete;
+use maestroprog\saw\entity\Task;
 use maestroprog\saw\library\Command;
 use maestroprog\saw\library\CommandDispatcher;
 use maestroprog\saw\library\Factory;
@@ -44,19 +45,9 @@ class Worker extends Singleton
     protected $sc;
 
     /**
-     * @var Application
-     */
-    private $app;
-
-    /**
      * @var TaskManager
      */
-    private $taskManager;
-
-    /**
-     * @var Core
-     */
-    private $core;
+    protected $taskManager;
 
     /**
      * @var CommandDispatcher
@@ -64,12 +55,22 @@ class Worker extends Singleton
     protected $dispatcher;
 
     /**
+     * @var Application
+     */
+    protected $app;
+
+    /**
+     * @var Core only for Worker
+     */
+    private $core;
+
+    /**
      * Инициализация
      *
      * @param array $config
      * @return bool
      */
-    public function init(array &$config)
+    public function init(array &$config): bool
     {
         // настройка сети
         if (isset($config['net'])) {
@@ -90,7 +91,7 @@ class Worker extends Singleton
     }
 
     /**
-     * Запускаем воркер в отдельном методе.
+     * @throws \Exception
      */
     public function start()
     {
@@ -123,7 +124,6 @@ class Worker extends Singleton
                 }
             ),
         ]);
-        return true;
     }
 
     private function configure(array &$config)
@@ -141,7 +141,9 @@ class Worker extends Singleton
 
     public function connect()
     {
-        return $this->sc->connect();
+        if (!$this->sc->connect()) {
+            throw new \Exception('Cannot connect to Controller');
+        }
     }
 
     public function stop()
@@ -159,30 +161,29 @@ class Worker extends Singleton
     }
 
     /**
-     * Добавляет задачу на выполнение.
+     * Метод под нужды таскера - запускает ожидание завершения выполнения указанных в массиве задач.
      *
-     * @param callable $task
-     * @param string $name
-     * @param $result
+     * @param array $tasks
+     * @return bool
      */
-    public function addTask(callable &$task, string $name, &$result)
+    public function sync(array $tasks): bool
     {
-        $this->core->addTask($task, $name, $result);
-        $this->dispatcher->create(TaskAdd::NAME, $this->sc)
-            ->setError(function () use (&$task, $name, &$result) {
-                $this->addTask($task, $name, $result); // опять пробуем добавить команду
-            })
-            ->run();
+
     }
 
     /**
-     * Метод под нужды таскера - запускает ожидание завершения выполнения указанных в массиве задач.
+     * Добавляет задачу на выполнение.
      *
-     * @param array $names
+     * @param Task $task
      */
-    public function syncTask(array $names)
+    public function addTask(Task $task)
     {
-
+        $this->core->addTask($task);
+        $this->dispatcher->create(TaskAdd::NAME, $this->sc)
+            ->setError(function () use ($task) {
+                $this->addTask($task); // опять пробуем добавить команду
+            })
+            ->run();
     }
 
     /**
@@ -243,8 +244,11 @@ class Worker extends Singleton
         $init = Worker::getInstance();
         if ($init->init($config)) {
             Log::log('configured. input...');
-            if (!($init->connect() && $init->start())) {
-                Log::log('Worker connect failed');
+            try {
+                $init->connect();
+                $init->start();
+            } catch (\Exception $e) {
+                Log::log(sprintf('Worker connect or start failed with error: %s', $e->getMessage()));
                 throw new \Exception('Worker starting fail');
             }
             register_shutdown_function(function () use ($init) {

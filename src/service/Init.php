@@ -9,6 +9,8 @@
 namespace maestroprog\saw\service;
 
 use maestroprog\saw\command\TaskRun;
+use maestroprog\saw\entity\Command;
+use maestroprog\saw\entity\Task;
 use maestroprog\saw\library\Executor;
 use maestroprog\esockets\debug\Log;
 use maestroprog\saw\library\Factory;
@@ -16,7 +18,7 @@ use maestroprog\saw\library\Factory;
 /**
  * Воркер, использующийся входным скриптом.
  */
-class Init extends Worker
+final class Init extends Worker
 {
     use Executor;
 
@@ -24,6 +26,9 @@ class Init extends Worker
 
     protected static $instance;
 
+    /**
+     * @throws \Exception
+     */
     public function start()
     {
         Log::log('starting');
@@ -35,24 +40,36 @@ class Init extends Worker
         $try = 0;
         do {
             $try_run = microtime(true);
-            #usleep(100000);
-            if ($this->connect()) {
-                Log::log(sprintf('run: %f, exec: %f, connected: %f', $before_run, $after_run - $before_run, $try_run - $after_run));
+            try {
+                $this->connect();
+                Log::log(sprintf(
+                    'run: %f, exec: %f, connected: %f',
+                    $before_run,
+                    $after_run - $before_run,
+                    $try_run - $after_run
+                ));
                 Log::log('before run time: ' . $before_run);
-                return true;
+
+                $this->dispatcher = Factory::getInstance()->createDispatcher([
+                    new Command(TaskRun::NAME, TaskRun::class),
+                ]);
+            } catch (\Exception $e) {
+                usleep(10000);
             }
-            usleep(10000);
         } while ($try++ < 10);
-        return false;
+        throw new \Exception('Attempts were unsuccessfully');
     }
 
-    public function addTask(callable &$callback, string $name, &$result)
+    public function addTask(Task $task)
     {
         $this->dispatcher->create(TaskRun::NAME, $this->sc)
-            ->setSuccess(function (&$data) use (&$result) {
-                $result = $data['result'];
+            ->setSuccess(function (&$result) use ($task) {
+                $task->setResult($result);
             })
-            ->run();
+            ->setError(function () use ($task) {
+                throw new \Exception('Failed executing Task ' . $task->getName());
+            })
+            ->run(TaskRun::serializeTask($task));
     }
 
     /**
@@ -65,8 +82,11 @@ class Init extends Worker
         $init = Init::getInstance();
         if ($init->init($config)) {
             Log::log('configured. input...');
-            if (!($init->connect() && $init->start())) {
-                Log::log('Saw start failed');
+            try {
+                $init->connect();
+                $init->start();
+            } catch (\Exception $e) {
+                Log::log(sprintf('Saw connect or start failed with error: %s', $e->getMessage()));
                 throw new \Exception('Framework starting fail');
             }
             register_shutdown_function(function () use ($init) {
@@ -77,7 +97,7 @@ class Init extends Worker
                 $init->stop();
                 Log::log('closed');
             });
-            return $init->setTask(Factory::getInstance()->createTask($init));
+            return $init->setTask(Factory::getInstance()->createTaskManager($init));
         } else {
             throw new \Exception('Cannot initialize Init worker');
         }

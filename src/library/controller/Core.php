@@ -17,7 +17,7 @@ use maestroprog\saw\entity\controller\Worker;
 use maestroprog\saw\library\CommandDispatcher;
 use maestroprog\saw\library\Executor;
 
-class Core
+final class Core
 {
     use Executor;
     /**

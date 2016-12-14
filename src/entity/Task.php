@@ -12,14 +12,8 @@ class Task
 {
     const NEW = 0; // новая задача
     const RUN = 1; // выполняемая задача
-    const ERR = 2; // ошибка при выполнении
-
-    /**
-     * ID задачи.
-     *
-     * @var int
-     */
-    private $tid;
+    const END = 2; // выполненная задача
+    const ERR = 3; // ошибка при выполнении
 
     /**
      * ID выполняемой задачи.
@@ -56,37 +50,43 @@ class Task
      */
     private $result;
 
-    public function __construct(int $tid, int $rid, string $name, int $dsc, int $state = self::NEW)
+    public function __construct(int $rid, string $name, int $dsc = 0, int $state = self::NEW)
     {
-        $this->tid = $tid;
         $this->rid = $rid;
         $this->name = $name;
         $this->dsc = $dsc;
         $this->state = $state;
     }
 
-    public function getTaskId() : int
-    {
-        return $this->tid;
-    }
-
-    public function getRunId() : int
+    public function getRunId(): int
     {
         return $this->rid;
     }
 
-    public function getName() : string
+    public function getName(): string
     {
         return $this->name;
     }
 
-    public function getPeerDsc() : int
+    public function getPeerDsc(): int
     {
         return $this->dsc;
     }
 
-    public function getState() : int
+    public function getState(): int
     {
         return $this->state;
+    }
+
+    public function setResult(&$result)
+    {
+        $this->state = self::END;
+        $this->result = $result;
+    }
+
+    public function setError(string $error)
+    {
+        $this->state = self::ERR;
+        $this->result = $error;
     }
 }

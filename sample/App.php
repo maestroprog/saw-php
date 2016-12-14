@@ -22,22 +22,26 @@ class App extends \maestroprog\saw\library\Application
 
     public function run(TaskManager $taskManager)
     {
-        $taskManager->run(function () {
+        $task1 = $taskManager->run(function () {
             for ($i = 0; $i < 10000; $i++) {
                 'nope';
             }
         }, 'MODULE_1_INIT');
 
-        $taskManager->run(function () {
+        $task2 = $taskManager->run(function () {
             for ($i = 0; $i < 10000; $i++) {
                 'nope';
             }
         }, 'MODULE_2_INIT');
 
-        $taskManager->run(function () {
+        $task3 = $taskManager->run(function () {
             for ($i = 0; $i < 10000; $i++) {
                 'nope';
             }
         }, 'MODULE_3_INIT');
+
+        $taskManager->sync([
+            $task1, $task2, $task3
+        ]);
     }
 }

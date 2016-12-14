@@ -9,13 +9,23 @@
 namespace maestroprog\saw\entity;
 
 
-class Command
+final class Command
 {
     private $name;
     private $class;
     private $executor;
 
-    public function __construct(string $name, string $class, callable $executor)
+    /**
+     * Если executor не задан, то это означает,
+     * что данная команда не будет выполняться,
+     * но будет отправляться другим,
+     * и принимать какие-то результаты выполнения.
+     *
+     * @param string $name
+     * @param string $class
+     * @param callable|null $executor
+     */
+    public function __construct(string $name, string $class, callable $executor = null)
     {
         $this->name = $name;
         $this->class = $class;
@@ -28,7 +38,7 @@ class Command
      */
     public function exec($context): bool
     {
-        return call_user_func($this->executor, $context);
+        return $this->isExecutable() && call_user_func($this->executor, $context);
     }
 
     public function getName()
@@ -39,5 +49,10 @@ class Command
     public function getClass()
     {
         return $this->class;
+    }
+
+    public function isExecutable()
+    {
+        return $this->executor !== null;
     }
 }

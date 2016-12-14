@@ -32,4 +32,9 @@ class WorkerDelete extends Command
     public function handle(array $data)
     {
     }
+
+    public function isValid(): bool
+    {
+        return true;
+    }
 }

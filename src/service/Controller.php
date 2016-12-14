@@ -26,7 +26,7 @@ use maestroprog\esockets\debug\Log;
  * Связующее звено между входным скриптом,
  * обеспечивающее контроль за работой Worker-ов.
  */
-class Controller extends Singleton
+final class Controller extends Singleton
 {
 
     protected static $instance;

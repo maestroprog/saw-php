@@ -9,15 +9,12 @@
 namespace maestroprog\saw\library;
 
 use maestroprog\saw\entity\Command;
-use maestroprog\saw\service\Controller;
 use maestroprog\saw\service\Worker;
-use maestroprog\saw\service\Init;
-use maestroprog\esockets\debug\Log;
 
 /**
  * Фабрика воркеров.
  */
-class Factory extends Singleton
+final class Factory extends Singleton
 {
     private $dispatcher;
 
@@ -26,13 +23,13 @@ class Factory extends Singleton
      * @return CommandDispatcher
      * @throws \Exception
      */
-    public function createDispatcher(array $knowCommands) : CommandDispatcher
+    public function createDispatcher(array $knowCommands): CommandDispatcher
     {
         $this->dispatcher or $this->dispatcher = CommandDispatcher::getInstance()->add($knowCommands);
         return $this->dispatcher;
     }
 
-    public function createTaskManager(Worker $controller) : TaskManager
+    public function createTaskManager(Worker $controller): TaskManager
     {
         return TaskManager::getInstance()->setController($controller);
     }

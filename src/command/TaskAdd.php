@@ -38,4 +38,9 @@ class TaskAdd extends Command
         }
         $this->data['name'] = $data['name'];
     }
+
+    public function isValid(): bool
+    {
+        return true;
+    }
 }

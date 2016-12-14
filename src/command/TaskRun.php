@@ -8,6 +8,7 @@
 
 namespace maestroprog\saw\command;
 
+use maestroprog\saw\entity\Task;
 use maestroprog\saw\library\Command;
 
 /**
@@ -33,9 +34,26 @@ class TaskRun extends Command
 
     public function handle(array $data)
     {
-        if (!isset($data['callback']) || !isset($data['name']) || !isset($data['result'])) {
+        if (!isset($data['name']) || !isset($data['result'])) {
             throw new \Exception('Cannot handle, empty data');
         }
         $this->data = $data;
+    }
+
+    public function isValid(): bool
+    {
+        return isset($this->data['name']);
+    }
+
+    /**
+     * Команда сама знает, что ей нужно знать о задаче
+     * - поэтому дадим ей задачу, пускай возьмёт все, что ей нужно.
+     *
+     * @param Task $task
+     * @return array
+     */
+    public static function serializeTask(Task $task): array
+    {
+        return ['name' => $task->getName()];
     }
 }

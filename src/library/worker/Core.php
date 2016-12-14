@@ -9,6 +9,7 @@
 namespace maestroprog\library\worker;
 
 use maestroprog\esockets\TcpClient;
+use maestroprog\saw\entity\Task;
 use maestroprog\saw\library\Application;
 use maestroprog\saw\library\TaskManager;
 
@@ -16,7 +17,7 @@ use maestroprog\saw\library\TaskManager;
  * Ядро воркера.
  * Само по себе нужно только для изоляции приложения.
  */
-class Core
+final class Core
 {
     private $peer;
 
@@ -35,15 +36,15 @@ class Core
     {
         $this->peer = $peer;
         if (empty($workerApp) || !file_exists($workerApp)) {
-            trigger_error('Worker application configuration not found', E_USER_ERROR);
+            throw new \Exception('Worker application configuration not found');
         }
         require_once $workerApp;
         if (!class_exists($workerAppClass)) {
-            trigger_error('Worker application must be configured with "worker_app_class"', E_USER_ERROR);
+            throw new \Exception('Worker application must be configured with "worker_app_class"');
         }
         $this->app = new $workerAppClass();
         if (!$this->app instanceof Application) {
-            trigger_error('Worker application must be instance of maestroprog\saw\Application', E_USER_ERROR);
+            throw new \Exception('Worker application must be instance of maestroprog\saw\Application');
         }
     }
 
@@ -80,7 +81,7 @@ class Core
      * @param string $name
      * @param $result
      */
-    public function addTask(callable &$callback, string $name, &$result)
+    public function addTask(Task $task)
     {
         if (!isset($this->knowTasks[$name])) {
             $this->knowTasks[$name] = [$callback, &$result];
