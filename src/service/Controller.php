@@ -13,8 +13,10 @@ use maestroprog\saw\command\TaskAdd;
 use maestroprog\saw\command\TaskRun;
 use maestroprog\saw\command\WorkerAdd;
 use maestroprog\saw\command\WorkerDelete;
+use maestroprog\saw\exception\DelayCommand;
 use maestroprog\saw\entity\Command as EntityCommand;
-use maestroprog\saw\library\Command;
+use maestroprog\saw\exception\ForwardCommand;
+use maestroprog\saw\library\dispatcher\Command;
 use maestroprog\saw\library\CommandDispatcher;
 use maestroprog\saw\library\Factory;
 use maestroprog\saw\library\Singleton;
@@ -130,6 +132,7 @@ final class Controller extends Singleton
                 TaskRun::class,
                 function (Command $context) {
                     $this->core->tRun($context->getPeer()->getDsc(), $context->getData()['name']);
+                    throw new ForwardCommand();
                 }
             ),
         ]);

@@ -6,7 +6,7 @@
  * Time: 0:51
  */
 
-namespace maestroprog\saw\library;
+namespace maestroprog\saw\library\dispatcher;
 
 
 trait CommandCode
@@ -15,7 +15,6 @@ trait CommandCode
      * @var int
      */
     private $code;
-
     private $onSuccess;
     private $onError;
 

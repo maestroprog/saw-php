@@ -6,7 +6,7 @@
  * Time: 10:25
  */
 
-namespace maestroprog\saw\library;
+namespace maestroprog\saw\library\dispatcher;
 
 use maestroprog\esockets\base\Net;
 use maestroprog\esockets\Peer;

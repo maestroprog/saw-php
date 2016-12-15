@@ -9,6 +9,9 @@
 namespace maestroprog\saw\library;
 
 use maestroprog\esockets\base\Net;
+use maestroprog\saw\exception\DelayCommand;
+use maestroprog\saw\exception\ForwardCommand;
+use maestroprog\saw\library\dispatcher\Command;
 use maestroprog\saw\entity\Command as EntityCommand;
 
 /**
@@ -85,10 +88,16 @@ final class CommandDispatcher extends Singleton
                 break;
             case Command::STATE_RUN:
                 // если команда поступила на выполнение -  выполняем
-                if ($commandEntity->exec($command) !== false) {
-                    $command->success(); //
-                } else {
-                    $command->error();
+                try {
+                    if ($commandEntity->exec($command) !== false) {
+                        $command->success();
+                    } else {
+                        $command->error();
+                    }
+                } catch (ForwardCommand $e) {
+
+                } catch (\Exception $e) {
+
                 }
                 break;
             case Command::STATE_RES:

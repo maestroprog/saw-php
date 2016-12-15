@@ -8,7 +8,7 @@
 
 namespace maestroprog\saw\command;
 
-use maestroprog\saw\library\Command;
+use maestroprog\saw\library\dispatcher\Command;
 
 /**
  * Команда воркера "Воркер стартовал".

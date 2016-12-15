@@ -14,7 +14,7 @@ use maestroprog\saw\command\TaskRun;
 use maestroprog\saw\command\WorkerAdd;
 use maestroprog\saw\command\WorkerDelete;
 use maestroprog\saw\entity\Task;
-use maestroprog\saw\library\Command;
+use maestroprog\saw\library\dispatcher\Command;
 use maestroprog\saw\library\CommandDispatcher;
 use maestroprog\saw\library\Factory;
 use maestroprog\saw\library\Singleton;

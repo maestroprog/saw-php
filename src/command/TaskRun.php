@@ -8,8 +8,8 @@
 
 namespace maestroprog\saw\command;
 
-use maestroprog\saw\entity\Task;
-use maestroprog\saw\library\Command;
+use maestroprog\saw\library\entity\Task;
+use maestroprog\saw\library\dispatcher\Command;
 
 /**
  * Общая команда "Задача запущена".

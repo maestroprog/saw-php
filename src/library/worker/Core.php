@@ -44,7 +44,7 @@ final class Core
         }
         $this->app = new $workerAppClass();
         if (!$this->app instanceof Application) {
-            throw new \Exception('Worker application must be instance of maestroprog\saw\Application');
+            throw new \Exception('Worker application must be instance of maestroprog\saw\library\Application');
         }
     }
 
