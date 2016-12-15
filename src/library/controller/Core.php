@@ -12,6 +12,7 @@ use maestroprog\esockets\base\Net;
 use maestroprog\esockets\debug\Log;
 use maestroprog\esockets\Peer;
 use maestroprog\esockets\TcpServer;
+use maestroprog\saw\command\TaskRun;
 use maestroprog\saw\entity\Task;
 use maestroprog\saw\entity\controller\Worker;
 use maestroprog\saw\library\CommandDispatcher;
@@ -144,7 +145,7 @@ final class Core
     public function tRun(int $dsc, string $name)
     {
         static $rid = 0; // task run ID
-        $this->taskNew[$rid] = new Task($this->taskAssoc[$name], $rid, $name, $dsc);
+        $this->taskNew[$rid] = new Task($rid, $name, $dsc);
         $rid++;
     }
 
@@ -174,13 +175,20 @@ final class Core
             });
             if ($worker >= 0) {
                 $workerPeer = $this->server->getPeerByDsc($worker);
-
-                $this->dispatcher->create($task->getName(), $workerPeer)
-                    ->setSuccess(function () {
-                        $this->workers[$worker]->addTask($task);
-                        $this->taskRun[$rid] = $task;
-                    })
-                    ->run();
+                try {
+                    $this->dispatcher->create(TaskRun::NAME, $workerPeer)
+                        ->setSuccess(function (&$result) use ($worker, $rid, $task) {
+                            $task->setResult($result);
+                        })
+                        ->setError(function () use ($task) {
+                            //todo
+                        })
+                        ->run();
+                    $this->workers[$worker]->addTask($task);
+                    $this->taskRun[$rid] = $task;
+                } catch (\Throwable $e) {
+                    throw new \Exception('Cannot balanced Task ' . $task->getRunId(), 0, $e);
+                }
             }
         }
     }

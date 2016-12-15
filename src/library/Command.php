@@ -53,6 +53,11 @@ abstract class Command
         $this->code = self::RES_VOID;
     }
 
+    public function getId(): int
+    {
+        return $this->id;
+    }
+
     /**
      * Возвращает состояние команды.
      *

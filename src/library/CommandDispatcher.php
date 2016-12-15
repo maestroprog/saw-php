@@ -69,16 +69,17 @@ final class CommandDispatcher extends Singleton
         }
         $commandEntity = $this->know[$command];
         /** @var $command Command */
-        if (isset($this->created[$data['id']])) {
-            $command = $this->created[$data['id']];
-            $command->handle($data['data']);
-        } else {
+        if (!isset($this->created[$data['id']])) {
             $class = $commandEntity->getClass();
             $this->created[$data['id']] = $command = new $class($data['id'], $peer, $data['state']);
+        } else {
+            $command = $this->created[$data['id']];
+            $command->handle($data['data']);
         }
         // смотрим, в каком состоянии находится поступившая к нам команда
         switch ($command->getState()) {
             case Command::STATE_NEW:
+                throw new \Exception('Команду даже не запустили!');
                 // why??
                 // такого состояния не может быть..
                 break;
@@ -92,6 +93,7 @@ final class CommandDispatcher extends Singleton
                 break;
             case Command::STATE_RES:
                 $command->dispatch($data['data']);
+                unset($this->created[$command->getId()]);
                 break;
         }
     }

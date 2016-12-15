@@ -83,12 +83,12 @@ final class Core
      */
     public function addTask(Task $task)
     {
-        if (!isset($this->knowTasks[$name])) {
-            $this->knowTasks[$name] = [$callback, &$result];
+        if (!isset($this->knowTasks[$task->getName()])) {
+            $this->knowTasks[$task->getName()] = 1;
         }
     }
 
-    public function runTask(&$callback, string $name, &$result)
+    public function runTask(string $name, &$result)
     {
 
     }
