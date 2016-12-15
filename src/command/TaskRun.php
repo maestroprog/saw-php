@@ -54,6 +54,9 @@ class TaskRun extends Command
      */
     public static function serializeTask(Task $task): array
     {
-        return ['name' => $task->getName()];
+        return [
+            'name' => $task->getName(),
+            $task->getState()
+        ];
     }
 }

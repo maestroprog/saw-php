@@ -13,6 +13,7 @@ use maestroprog\esockets\debug\Log;
 use maestroprog\esockets\Peer;
 use maestroprog\esockets\TcpServer;
 use maestroprog\saw\command\TaskRun;
+use maestroprog\saw\command\WorkerAdd;
 use maestroprog\saw\entity\Task;
 use maestroprog\saw\entity\controller\Worker;
 use maestroprog\saw\library\CommandDispatcher;
@@ -177,8 +178,13 @@ final class Core
                 $workerPeer = $this->server->getPeerByDsc($worker);
                 try {
                     $this->dispatcher->create(TaskRun::NAME, $workerPeer)
-                        ->setSuccess(function (&$result) use ($worker, $rid, $task) {
+                        ->setSuccess(function (&$result) use ($worker, $rid, $task, $workerPeer) {
                             $task->setResult($result);
+                            $this->dispatcher->create(TaskRun::NAME, $workerPeer)
+                                ->setError(function () {
+
+                                })
+                                ->run(TaskRun::serializeTask($task));
                         })
                         ->setError(function () use ($task) {
                             //todo
