@@ -8,24 +8,21 @@
 
 namespace maestroprog\saw\command;
 
-use maestroprog\saw\library\entity\Task;
+use maestroprog\saw\entity\Task;
 use maestroprog\saw\library\dispatcher\Command;
 
 /**
  * Общая команда "Задача запущена".
  * От воркера отправляется контроллеру для постановки в очередь на запуск.
  * От контроллера отправляется воркеру в виде приказа для запуска задачи.
+ *
+ * Результат выполнения команды - успешный/неуспешный запуск выполнения задачи.
  */
 class TaskRun extends Command
 {
     const NAME = 'trun';
 
-    private $data;
-
-    public function & getData(): array
-    {
-        return $this->data;
-    }
+    protected $needData = ['name', 'run_id'];
 
     public function getCommand(): string
     {
@@ -34,15 +31,25 @@ class TaskRun extends Command
 
     public function handle(array $data)
     {
-        if (!isset($data['name']) || !isset($data['result'])) {
-            throw new \Exception('Cannot handle, empty data');
+        parent::handle($data);
+        if (isset($data['command_id'])) {
+            $this->data['command_id'] = $data['command_id'];
         }
-        $this->data = $data;
     }
 
-    public function isValid(): bool
+    public function getName(): string
     {
-        return isset($this->data['name']);
+        return $this->data['name'];
+    }
+
+    public function getRunId(): int
+    {
+        return $this->data['run_id'];
+    }
+
+    public function getFromDsc()
+    {
+        return $this->data['from_dsc'] ?? null;
     }
 
     /**
@@ -56,7 +63,8 @@ class TaskRun extends Command
     {
         return [
             'name' => $task->getName(),
-            $task->getState()
+            'run_id' => $task->getRunId(),
+            'from_dsc' => $task->getPeerDsc(),
         ];
     }
 }

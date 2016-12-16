@@ -10,6 +10,7 @@ namespace maestroprog\saw\service;
 
 use maestroprog\library\worker\Core;
 use maestroprog\saw\command\TaskAdd;
+use maestroprog\saw\command\TaskRes;
 use maestroprog\saw\command\TaskRun;
 use maestroprog\saw\command\WorkerAdd;
 use maestroprog\saw\command\WorkerDelete;
@@ -114,13 +115,16 @@ class Worker extends Singleton
             new EntityCommand(
                 TaskRun::NAME,
                 TaskRun::class,
-                function (Command $context) {
-                    $data = $context->getData();
-                    $this->core->runTask(
-                        $data['callback'],
-                        $data['name'],
-                        $data['result']
-                    );
+                function (TaskRun $context) {
+                    // выполняем задачу
+                    $result = $this->core->runTask($context->getName());
+                    $task = new Task($context->getRunId(), $context->getName(), $context->getFromDsc());
+                    $task->setResult($result);
+                    $this->dispatcher->create(TaskRes::NAME, $this->sc)
+                        ->onError(function () {
+                            //todo
+                        })
+                        ->run(TaskRes::serializeTask($task));
                 }
             ),
         ]);

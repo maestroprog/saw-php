@@ -8,6 +8,7 @@
 
 namespace maestroprog\saw\service;
 
+use maestroprog\saw\command\TaskRes;
 use maestroprog\saw\command\TaskRun;
 use maestroprog\saw\entity\Command;
 use maestroprog\saw\entity\Task;
@@ -52,6 +53,9 @@ final class Init extends Worker
 
                 $this->dispatcher = Factory::getInstance()->createDispatcher([
                     new Command(TaskRun::NAME, TaskRun::class),
+                    new Command(TaskRes::NAME, TaskRes::class, function (TaskRes $context) {
+
+                    }),
                 ]);
             } catch (\Exception $e) {
                 usleep(10000);
@@ -63,11 +67,8 @@ final class Init extends Worker
     public function addTask(Task $task)
     {
         $this->dispatcher->create(TaskRun::NAME, $this->sc)
-            ->setSuccess(function (&$result) use ($task) {
-                $task->setResult($result);
-            })
-            ->setError(function () use ($task) {
-                throw new \Exception('Failed executing Task ' . $task->getName());
+            ->onError(function () use ($task) {
+                throw new \Exception('Failed run Task ' . $task->getName());
             })
             ->run(TaskRun::serializeTask($task));
     }

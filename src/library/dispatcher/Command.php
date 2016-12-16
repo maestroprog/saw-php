@@ -25,6 +25,10 @@ abstract class Command
 
     const NAME = 'void';
 
+    protected $data = [];
+
+    protected $needData = [];
+
     /**
      * @var int
      */
@@ -124,7 +128,10 @@ abstract class Command
      *
      * @return array
      */
-    abstract public function getData(): array;
+    public function getData(): array
+    {
+        return $this->data;
+    }
 
     /**
      * Возвращает имя команды.
@@ -137,10 +144,12 @@ abstract class Command
      * Инициализирует кастомные данные, поступившие вместе с командой.
      *
      * @param $data
-     * @return mixed
+     * @return void
      */
-    abstract public function handle(array $data);
-
+    public function handle(array $data)
+    {
+        $this->data = array_merge($this->data, array_intersect_key($data, array_flip($this->needData)));
+    }
 
     /**
      * Выполняет необходимые проверки перед запуском задачи,
@@ -148,5 +157,8 @@ abstract class Command
      *
      * @return bool
      */
-    abstract public function isValid(): bool;
+    protected function isValid(): bool
+    {
+        return count(array_diff_key(array_flip($this->needData), $this->data)) > 0;
+    }
 }

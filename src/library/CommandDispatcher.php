@@ -94,10 +94,8 @@ final class CommandDispatcher extends Singleton
                     } else {
                         $command->error();
                     }
-                } catch (ForwardCommand $e) {
-
                 } catch (\Exception $e) {
-
+                    //todo
                 }
                 break;
             case Command::STATE_RES:
@@ -113,5 +111,10 @@ final class CommandDispatcher extends Singleton
             && isset($data['state'])
             && isset($data['id'])
             && isset($data['data']);
+    }
+
+    public function remember(int $commandId): Command
+    {
+        return $this->created[$commandId] ?? null;
     }
 }

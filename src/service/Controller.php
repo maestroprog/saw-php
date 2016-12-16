@@ -132,7 +132,6 @@ final class Controller extends Singleton
                 TaskRun::class,
                 function (Command $context) {
                     $this->core->tRun($context->getPeer()->getDsc(), $context->getData()['name']);
-                    throw new ForwardCommand();
                 }
             ),
         ]);

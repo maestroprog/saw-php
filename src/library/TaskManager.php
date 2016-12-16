@@ -70,6 +70,11 @@ class TaskManager extends Singleton
         return call_user_func($this->link[$name]);
     }
 
+    public function receiveResult()
+    {
+
+    }
+
     public function setController(Worker $controller)
     {
         $this->controller = $controller;

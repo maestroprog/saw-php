@@ -21,6 +21,9 @@ final class Core
 {
     private $peer;
 
+    /**
+     * @var TaskManager
+     */
     private $taskManager;
 
     /**
@@ -77,9 +80,7 @@ final class Core
      * Оповещает контроллер о том, что данный воркер узнал новую задачу.
      * Контроллер запоминает это.
      *
-     * @param callable $callback
-     * @param string $name
-     * @param $result
+     * @param Task $task
      */
     public function addTask(Task $task)
     {
@@ -88,8 +89,8 @@ final class Core
         }
     }
 
-    public function runTask(string $name, &$result)
+    public function runTask(string $name)
     {
-
+        return $this->taskManager->runCallback($name);
     }
 }

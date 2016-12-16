@@ -14,33 +14,17 @@ use maestroprog\saw\library\dispatcher\Command;
  * Команда "Задача добавлена".
  * От воркера отправляется контроллеру для извещения.
  * От контроллера такая команда не отправляется (пока такое не предусмотрено).
+ *
+ * Результат выполнения команды - успешное/неуспешное добавление в известные команды.
  */
 class TaskAdd extends Command
 {
     const NAME = 'tadd';
 
-    private $data;
-
-    public function getData(): array
-    {
-        return $this->data;
-    }
+    protected $needData = ['name'];
 
     public function getCommand(): string
     {
         return self::NAME;
-    }
-
-    public function handle(array $data)
-    {
-        if (!isset($data['name'])) {
-            throw new \Exception('PIZDES');
-        }
-        $this->data['name'] = $data['name'];
-    }
-
-    public function isValid(): bool
-    {
-        return true;
     }
 }

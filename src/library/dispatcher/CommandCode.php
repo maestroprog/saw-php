@@ -27,11 +27,11 @@ trait CommandCode
     {
         if ($this->isSuccess()) {
             if (is_callable($this->onSuccess)) {
-                call_user_func($this->onSuccess, $result);
+                call_user_func($this->onSuccess, $this, $result);
             }
         } elseif ($this->isError()) {
             if (is_callable($this->onError)) {
-                call_user_func($this->onError, $result);
+                call_user_func($this->onError, $this, $result);
             }
         } else {
             throw new \Exception('Why is not success and is not error?');
@@ -61,7 +61,7 @@ trait CommandCode
      * @param callable $callback
      * @return $this
      */
-    final public function setSuccess(callable $callback)
+    final public function onSuccess(callable $callback)
     {
         $this->onSuccess = $callback;
         return $this;
@@ -74,7 +74,7 @@ trait CommandCode
      * @return $this
      */
 
-    final public function setError(callable $callback)
+    final public function onError(callable $callback)
     {
         $this->onError = $callback;
         return $this;
