@@ -17,7 +17,7 @@ define('SAW_ENVIRONMENT', 'Input');
 $config = require __DIR__ . '/../config.php';
 
 try {
-    $worker = \maestroprog\saw\library\service\Worker::create($config);
+    $worker = \maestroprog\saw\service\Worker::create($config);
 } catch (Throwable $e) {
     \maestroprog\esockets\debug\Log::log($e->getMessage());
     exit(1);

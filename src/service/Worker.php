@@ -8,7 +8,7 @@
 
 namespace maestroprog\saw\service;
 
-use maestroprog\library\worker\Core;
+use maestroprog\saw\library\worker\Core;
 use maestroprog\saw\command\TaskAdd;
 use maestroprog\saw\command\TaskRes;
 use maestroprog\saw\command\TaskRun;
@@ -32,8 +32,6 @@ use maestroprog\saw\entity\Command as EntityCommand;
  */
 class Worker extends Singleton
 {
-    protected static $instance;
-
     public $work = true;
 
     public $worker_app;
@@ -63,7 +61,7 @@ class Worker extends Singleton
     /**
      * @var Core only for Worker
      */
-    private $core;
+    protected $core;
 
     /**
      * Инициализация
@@ -112,19 +110,30 @@ class Worker extends Singleton
                     $this->stop();
                 }
             ),
+            new EntityCommand(TaskAdd::NAME, TaskAdd::class),
             new EntityCommand(
                 TaskRun::NAME,
                 TaskRun::class,
                 function (TaskRun $context) {
                     // выполняем задачу
-                    $result = $this->core->runTask($context->getName());
-                    $task = new Task($context->getRunId(), $context->getName(), $context->getFromDsc());
-                    $task->setResult($result);
-                    $this->dispatcher->create(TaskRes::NAME, $this->sc)
+                    //$result = $this->core->runTask($context->getName());
+                    //$task = new Task($context->getRunId(), $context->getName(), $context->getFromDsc());
+                    //$task->setResult($result);
+                    /*$this->dispatcher->create(TaskRes::NAME, $this->sc)
                         ->onError(function () {
                             //todo
                         })
-                        ->run(TaskRes::serializeTask($task));
+                        ->run(TaskRes::serializeTask($task));*/
+                }
+            ),
+            new EntityCommand(
+                TaskRes::NAME,
+                TaskRes::class,
+                function (TaskRes $context) {
+                    $this->core->receiveTask(
+                        $context->getRunId(),
+                        $context->getResult()
+                    );
                 }
             ),
         ]);
@@ -145,9 +154,7 @@ class Worker extends Singleton
 
     public function connect()
     {
-        if (!$this->sc->connect()) {
-            throw new \Exception('Cannot connect to Controller');
-        }
+        return $this->sc->connect();
     }
 
     public function stop()
@@ -158,21 +165,27 @@ class Worker extends Singleton
 
     public function work()
     {
+        $this->sc->setBlock();
         while ($this->work) {
             $this->sc->read();
             usleep(INTERVAL);
         }
     }
 
+    public function run()
+    {
+        $this->core->run();
+    }
+
     /**
      * Метод под нужды таскера - запускает ожидание завершения выполнения указанных в массиве задач.
      *
-     * @param array $tasks
+     * @param Task[] $tasks
      * @return bool
      */
-    public function sync(array $tasks): bool
+    public function sync(array $tasks, float $timeout = 0.1)
     {
-
+        return $this->core->syncTask($tasks, $timeout);
     }
 
     /**
@@ -184,10 +197,10 @@ class Worker extends Singleton
     {
         $this->core->addTask($task);
         $this->dispatcher->create(TaskAdd::NAME, $this->sc)
-            ->setError(function () use ($task) {
+            ->onError(function () use ($task) {
                 $this->addTask($task); // опять пробуем добавить команду
             })
-            ->run();
+            ->run(['name' => $task->getName()]);
     }
 
     /**
@@ -205,7 +218,8 @@ class Worker extends Singleton
     protected function onRead(): callable
     {
         return function ($data) {
-            Log::log('I RECEIVED ' . $data . ' :)');
+            Log::log('I RECEIVED  :)');
+            var_dump($data);
 
             switch ($data) {
                 case 'HELLO':
@@ -214,10 +228,10 @@ class Worker extends Singleton
                 case 'ACCEPT':
                     $this->dispatcher
                         ->create(WorkerAdd::NAME, $this->sc)
-                        ->setError(function () {
+                        ->onError(function () {
                             $this->stop();
                         })
-                        ->setSuccess(function () {
+                        ->onSuccess(function () {
                             //todo
                         })
                         ->run();
@@ -245,7 +259,7 @@ class Worker extends Singleton
      */
     public static function create(array $config): Worker
     {
-        $init = Worker::getInstance();
+        $init = self::getInstance();
         if ($init->init($config)) {
             Log::log('configured. input...');
             try {

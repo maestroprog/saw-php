@@ -80,7 +80,7 @@ set_exception_handler(function (Throwable $e) {
         $e->getMessage(),
         $e->getFile(),
         $e->getLine(),
-        print_r($e->getTrace(), true)
+        ''//print_r($e->getTrace(), true)
     ));
 });
 
@@ -99,7 +99,7 @@ return [
         'controller_path' => __DIR__ . DS . 'workers' . DS . 'controller.php',
         'worker_path' => __DIR__ . DS . 'workers' . DS . 'worker.php',
         'worker_multiplier' => 4,
-        'worker_max' => 8,
+        'worker_max' => 1,
         'worker_app' => __DIR__ . DS . 'App.php',
         'worker_app_class' => App::class,
     ]

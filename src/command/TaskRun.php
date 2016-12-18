@@ -35,6 +35,9 @@ class TaskRun extends Command
         if (isset($data['command_id'])) {
             $this->data['command_id'] = $data['command_id'];
         }
+        if (isset($data['from_dsc'])) {
+            $this->data['from_dsc'] = $data['from_dsc'];
+        }
     }
 
     public function getName(): string

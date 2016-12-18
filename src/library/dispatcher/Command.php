@@ -49,12 +49,12 @@ abstract class Command
      */
     private $code;
 
-    public function __construct(int $id, Net $peer, $state = self::STATE_NEW)
+    public function __construct(int $id, Net $peer, $state = self::STATE_NEW, $code = self::RES_VOID)
     {
         $this->id = $id;
         $this->peer = $peer;
         $this->state = $state;
-        $this->code = self::RES_VOID;
+        $this->code = $code;
     }
 
     public function getId(): int
@@ -89,7 +89,7 @@ abstract class Command
      */
     final public function run($data = [])
     {
-        if (!$this->isValid()) {
+        if (!$this->isValid($data)) {
             throw new \Exception('Invalid command ' . $this->getCommand());
         }
         $this->state = self::STATE_RUN;
@@ -155,10 +155,11 @@ abstract class Command
      * Выполняет необходимые проверки перед запуском задачи,
      * а именно - есть ли все необходимые данные для запуска задачи.
      *
+     * todo final!
      * @return bool
      */
-    protected function isValid(): bool
+    protected function isValid(&$data): bool
     {
-        return count(array_diff_key(array_flip($this->needData), $this->data)) > 0;
+        return count(array_diff_key(array_flip($this->needData), $data)) === 0;
     }
 }

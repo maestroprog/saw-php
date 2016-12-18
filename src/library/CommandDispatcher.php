@@ -9,8 +9,6 @@
 namespace maestroprog\saw\library;
 
 use maestroprog\esockets\base\Net;
-use maestroprog\saw\exception\DelayCommand;
-use maestroprog\saw\exception\ForwardCommand;
 use maestroprog\saw\library\dispatcher\Command;
 use maestroprog\saw\entity\Command as EntityCommand;
 
@@ -51,14 +49,14 @@ final class CommandDispatcher extends Singleton
 
     public function create(string $command, Net $client): Command
     {
-        static $id = 0;
         if (!isset($this->know[$command])) {
             throw new \Exception(sprintf('I don\'t know command %s', $command));
         }
-        $class = $this->know[$command];
+        $class = $this->know[$command]->getClass();
         if (!class_exists($class)) {
             throw new \Exception(sprintf('I don\'t know Class %s', $class));
         }
+        static $id = 0;
         $this->created[$id] = $command = new $class($id, $client);
         $id++;
         return $command;
@@ -72,14 +70,15 @@ final class CommandDispatcher extends Singleton
         }
         $commandEntity = $this->know[$command];
         /** @var $command Command */
-        if (!isset($this->created[$data['id']])) {
+        if (!isset($this->created[$data['id']]) || $data['state'] !== Command::STATE_RES) {
             $class = $commandEntity->getClass();
-            $this->created[$data['id']] = $command = new $class($data['id'], $peer, $data['state']);
+            $command = new $class($data['id'], $peer, $data['state'], $data['code']);
         } else {
             $command = $this->created[$data['id']];
-            $command->handle($data['data']);
         }
+        $command->handle($data['data']);
         // смотрим, в каком состоянии находится поступившая к нам команда
+        sleep(5);
         switch ($command->getState()) {
             case Command::STATE_NEW:
                 throw new \Exception('Команду даже не запустили!');
@@ -96,6 +95,8 @@ final class CommandDispatcher extends Singleton
                     }
                 } catch (\Exception $e) {
                     //todo
+                    echo $e->getMessage();
+                    exit;
                 }
                 break;
             case Command::STATE_RES:

@@ -6,7 +6,7 @@
  * Time: 14:52
  */
 
-namespace maestroprog\library\worker;
+namespace maestroprog\saw\library\worker;
 
 use maestroprog\esockets\TcpClient;
 use maestroprog\saw\entity\Task;
@@ -26,10 +26,12 @@ final class Core
      */
     private $taskManager;
 
+    private $appClass;
+
     /**
      * @var Application
      */
-    private $app;
+    public $app;
 
     public function __construct(
         TcpClient $peer,
@@ -45,10 +47,7 @@ final class Core
         if (!class_exists($workerAppClass)) {
             throw new \Exception('Worker application must be configured with "worker_app_class"');
         }
-        $this->app = new $workerAppClass();
-        if (!$this->app instanceof Application) {
-            throw new \Exception('Worker application must be instance of maestroprog\saw\library\Application');
-        }
+        $this->appClass = $workerAppClass;
     }
 
     /**
@@ -63,12 +62,21 @@ final class Core
         return $this;
     }
 
+    /**
+     * Запускает приложение, которое привязано к воркеру.
+     *
+     * @throws \Exception
+     */
     public function run()
     {
         if (!$this->taskManager) {
             throw new \Exception('Cannot run worker!');
         }
-        $this->app->run($this->taskManager);
+        $this->app = new $this->appClass($this->taskManager);
+        if (!$this->app instanceof Application) {
+            throw new \Exception('Worker application must be instance of maestroprog\saw\library\Application');
+        }
+        $this->app->run();
     }
 
     /**
@@ -78,7 +86,7 @@ final class Core
 
     /**
      * Оповещает контроллер о том, что данный воркер узнал новую задачу.
-     * Контроллер запоминает это.
+     * Контроллер (и сам воркер) запоминает это.
      *
      * @param Task $task
      */
@@ -89,8 +97,58 @@ final class Core
         }
     }
 
+    /**
+     * Прямой запуск выполнения задачи.
+     *
+     * @param string $name
+     * @return mixed
+     */
     public function runTask(string $name)
     {
         return $this->taskManager->runCallback($name);
+    }
+
+    /**
+     * Метод запускает синхронизацию своего состояния с контроллером.
+     *
+     * @param Task[] $tasks
+     * @param float $timeout
+     * @return bool
+     */
+    public function syncTask(array $tasks, float $timeout = 1.0): bool
+    {
+        $time = microtime(true);
+        do {
+            $ok = true;
+            foreach ($tasks as $task) {
+                if ($task->getState() === Task::ERR) {
+                    break;
+                }
+                if ($task->getState() !== Task::END) {
+                    $ok = false;
+                }
+            }
+            if ($ok) {
+                break;
+            }
+            if (microtime(true) - $time > $timeout) {
+                // default wait timeout 1 sec
+                break;
+            }
+        } while (true);
+
+        return $ok;
+    }
+
+    /**
+     * Принимает от контроллера результат выполненной задачи.
+     *
+     * @param int $rid
+     * @param $result
+     */
+    public function receiveTask(int $rid, &$result)
+    {
+        $task = $this->taskManager->getRunTask($rid);
+        $task->setResult($result);
     }
 }

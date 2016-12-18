@@ -21,8 +21,10 @@ class Singleton
      */
     public static function getInstance()
     {
-        static::$instance or static::$instance = new static();
-        return static::$instance;
+        if (!isset(static::$instance[static::class])) {
+            static::$instance[static::class] = new static();
+        }
+        return static::$instance[static::class];
     }
 
     private function __clone()

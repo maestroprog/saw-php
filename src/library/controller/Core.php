@@ -6,15 +6,12 @@
  * Time: 20:22
  */
 
-namespace maestroprog\library\controller;
+namespace maestroprog\saw\library\controller;
 
-use maestroprog\esockets\base\Net;
 use maestroprog\esockets\debug\Log;
-use maestroprog\esockets\Peer;
 use maestroprog\esockets\TcpServer;
 use maestroprog\saw\command\TaskRes;
 use maestroprog\saw\command\TaskRun;
-use maestroprog\saw\command\WorkerAdd;
 use maestroprog\saw\entity\Task;
 use maestroprog\saw\entity\controller\Worker;
 use maestroprog\saw\library\CommandDispatcher;
@@ -45,6 +42,7 @@ final class Core
     public function __construct(
         TcpServer $server,
         CommandDispatcher $dispatcher,
+        string $phpBinaryPath,
         string $workerPath,
         int $workerMultiplier,
         int $workerMax
@@ -52,6 +50,7 @@ final class Core
     {
         $this->server = $server;
         $this->dispatcher = $dispatcher;
+        $this->php_binary_path = $phpBinaryPath;
         $this->workerPath = $workerPath;
         $this->workerMultiplier = $workerMultiplier;
         $this->workerMax = $workerMax;
@@ -151,11 +150,27 @@ final class Core
         $rid++;
     }
 
+    public function tRes(int $rid, int $dsc, &$result)
+    {
+        $peer = $this->server->getPeerByDsc($dsc);
+        // @todo empty name!
+        $task = new Task($rid, '', $dsc, Task::END);
+        $task->setResult($result);
+        $this->dispatcher->create(TaskRes::NAME, $peer)
+            ->onError(function () {
+                //todo
+            })
+            ->onSuccess(function () {
+                //todo
+            })
+            ->run(TaskRes::serializeTask($task));
+    }
+
     public function wBalance()
     {
         if (count($this->workers) < $this->workerMax && !$this->running) {
             // run new worker
-            $this->exec($this->workerPath);
+            //$this->exec($this->workerPath);
             $this->running = time();
         } elseif ($this->running && $this->running < time() - 10) {
             // timeout 10 sec
@@ -187,6 +202,7 @@ final class Core
 
                     $this->workers[$worker]->addTask($task);
                     $this->taskRun[$rid] = $task;
+                    unset($this->taskNew[$rid]);
                 } catch (\Throwable $e) {
                     throw new \Exception('Cannot balanced Task ' . $task->getRunId(), 0, $e);
                 }

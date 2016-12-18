@@ -38,7 +38,7 @@ final class Command
      */
     public function exec(\maestroprog\saw\library\dispatcher\Command $context)
     {
-        return $this->isExecutable() ? call_user_func($this->executor, $context) : null;
+        return $this->isExecutable() ? call_user_func($this->executor, $context) : (var_dump($this->getName()));
     }
 
     public function getName()

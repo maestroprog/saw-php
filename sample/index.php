@@ -12,10 +12,13 @@ $config = require __DIR__ . '/config.php';
 
 out('input start');
 try {
-    $init = \maestroprog\saw\library\service\Init::create($config);
+    $init = \maestroprog\saw\service\Init::create($config);
 } catch (Throwable $e) {
     header('HTTP/1.1 503 Service Unavailable');
     echo sprintf('<p style="color:red">%s</p>', $e->getMessage());
+    if ($e->getPrevious()) {
+        echo sprintf('<p style="color:deeppink">%s</p>', $e->getPrevious()->getMessage());
+    }
     exit;
 }
 out('input end');

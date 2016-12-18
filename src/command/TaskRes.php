@@ -29,6 +29,30 @@ class TaskRes extends Command
         return self::NAME;
     }
 
+
+    public function handle(array $data)
+    {
+        parent::handle($data);
+        if (isset($data['from_dsc'])) {
+            $this->data['from_dsc'] = $data['from_dsc'];
+        }
+    }
+
+    public function getRunId(): int
+    {
+        return $this->data['run_id'];
+    }
+
+    public function getFromDsc()
+    {
+        return $this->data['from_dsc'] ?? null;
+    }
+
+    public function & getResult()
+    {
+        return $this->data['result'];
+    }
+
     /**
      * Команда сама знает, что ей нужно знать о задаче
      * - поэтому дадим ей задачу, пускай возьмёт все, что ей нужно.
@@ -39,7 +63,6 @@ class TaskRes extends Command
     public static function serializeTask(Task $task): array
     {
         return [
-            'name' => $task->getName(),
             'run_id' => $task->getRunId(),
             'from_dsc' => $task->getPeerDsc(),
             'result' => $task->getResult(),
