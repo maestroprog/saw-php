@@ -80,7 +80,7 @@ set_exception_handler(function (Throwable $e) {
         $e->getMessage(),
         $e->getFile(),
         $e->getLine(),
-        print_r($e->getTrace(), true)
+        ''//print_r($e->getTrace(), true)
     ));
 });
 

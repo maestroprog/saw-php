@@ -6,7 +6,7 @@
  * Time: 17:02
  */
 
-use maestroprog\saw\services\Init;
+use maestroprog\saw\library\services\Init;
 
 define('SAW_ENVIRONMENT', 'Debug');
 $config = require __DIR__ . '/../config.php';

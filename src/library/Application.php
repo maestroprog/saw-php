@@ -8,28 +8,42 @@
 
 namespace maestroprog\saw\library;
 
+use maestroprog\saw\entity\Task;
+
 /**
  * Абстрактный класс приложения.
  * Необходимо наследоваться от него, и запускать приложение.
  */
 abstract class Application
 {
+    protected $taskManager;
+
+    /**
+     * Application constructor.
+     * @param TaskManager $taskManager
+     */
+    final public function __construct(TaskManager $taskManager)
+    {
+        $this->taskManager = $taskManager;
+    }
+
     /**
      * Инициализирует окружение.
      *
-     * @param array $_SERVER
      * @return mixed
      */
-    abstract public function init(array $_SERVER);
+    public function init()
+    {
+
+    }
 
     /**
      * Запускает выполнение кода.
      * Внутри функции обязательно должны идти вызовы @see \maestroprog\saw\library\TaskManager::run();
      *
-     * @param TaskManager $taskManager
      * @return mixed
      */
-    abstract public function run(TaskManager $taskManager);
+    abstract public function run();
 
     /**
      * Завершает выполнение приложения.
@@ -38,4 +52,9 @@ abstract class Application
      * @return mixed
      */
     abstract public function end();
+
+    final public function thread(callable $callback, string $name): Task
+    {
+        return $this->taskManager->run($callback, $name);
+    }
 }

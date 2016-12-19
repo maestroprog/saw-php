@@ -8,13 +8,14 @@
 
 namespace maestroprog\saw\service;
 
-use maestroprog\library\controller\Core;
+use maestroprog\saw\library\controller\Core;
 use maestroprog\saw\command\TaskAdd;
+use maestroprog\saw\command\TaskRes;
 use maestroprog\saw\command\TaskRun;
 use maestroprog\saw\command\WorkerAdd;
 use maestroprog\saw\command\WorkerDelete;
 use maestroprog\saw\entity\Command as EntityCommand;
-use maestroprog\saw\library\Command;
+use maestroprog\saw\library\dispatcher\Command;
 use maestroprog\saw\library\CommandDispatcher;
 use maestroprog\saw\library\Factory;
 use maestroprog\saw\library\Singleton;
@@ -28,8 +29,6 @@ use maestroprog\esockets\debug\Log;
  */
 final class Controller extends Singleton
 {
-
-    protected static $instance;
     /**
      * Константы возможных типов подключающихся клиентов
      */
@@ -53,6 +52,8 @@ final class Controller extends Singleton
      * @var bool вызывать pcntl_dispatch_signals()
      */
     public $dispatch_signals = false;
+
+    public $php_binary_path = 'php';
 
     public $worker_path = 'worker.php';
 
@@ -128,14 +129,26 @@ final class Controller extends Singleton
             new EntityCommand(
                 TaskRun::NAME,
                 TaskRun::class,
-                function (Command $context) {
-                    $this->core->tRun($context->getPeer()->getDsc(), $context->getData()['name']);
+                function (TaskRun $context) {
+                    $this->core->tRun($context->getRunId(), $context->getPeer()->getDsc(), $context->getName());
+                }
+            ),
+            new EntityCommand(
+                TaskRes::NAME,
+                TaskRes::class,
+                function (TaskRes $context) {
+                    $this->core->tRes(
+                        $context->getRunId(),
+                        $context->getFromDsc(),
+                        $context->getResult()
+                    );
                 }
             ),
         ]);
         $this->core = new Core(
             $this->ss,
             $this->dispatcher,
+            $this->php_binary_path,
             $this->worker_path,
             $this->worker_multiplier,
             $this->worker_max
@@ -211,7 +224,9 @@ final class Controller extends Singleton
             Log::log('peer connected ' . $peer->getAddress());
             $peer->set(self::KSTATE, self::PEER_NEW);
             $peer->onRead(function ($data) use ($peer) {
-                if ($data === 'HELLO') {
+                Log::log('I RECEIVED  :) from ' . $peer->getDsc() . $peer->getAddress());
+                Log::log(var_export($data, true));
+                if ($data === 'HELLO' && $peer->get(self::KSTATE) !== self::PEER_ACCEPTED) {
                     $peer->set(self::KSTATE, self::PEER_ACCEPTED);
                     $peer->send('ACCEPT');
                 } elseif ($peer->get(self::KSTATE) !== self::PEER_ACCEPTED) {

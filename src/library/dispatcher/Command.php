@@ -6,9 +6,10 @@
  * Time: 10:25
  */
 
-namespace maestroprog\saw\library;
+namespace maestroprog\saw\library\dispatcher;
 
 use maestroprog\esockets\base\Net;
+use maestroprog\esockets\debug\Log;
 use maestroprog\esockets\Peer;
 
 abstract class Command
@@ -24,6 +25,10 @@ abstract class Command
     const RES_ERROR = 2;
 
     const NAME = 'void';
+
+    protected $data = [];
+
+    protected $needData = [];
 
     /**
      * @var int
@@ -45,12 +50,23 @@ abstract class Command
      */
     private $code;
 
-    public function __construct(int $id, Net $peer, $state = self::STATE_NEW)
+    public function __construct(int $id, Net $peer, int $state = self::STATE_NEW, int $code = self::RES_VOID)
     {
         $this->id = $id;
         $this->peer = $peer;
         $this->state = $state;
-        $this->code = self::RES_VOID;
+        $this->code = $code;
+    }
+
+    final public function reset(int $state, int $code)
+    {
+        $this->state = $state;
+        $this->code = $code;
+    }
+
+    public function getId(): int
+    {
+        return $this->id;
     }
 
     /**
@@ -80,7 +96,7 @@ abstract class Command
      */
     final public function run($data = [])
     {
-        if (!$this->isValid()) {
+        if (!$this->isValid($data)) {
             throw new \Exception('Invalid command ' . $this->getCommand());
         }
         $this->state = self::STATE_RUN;
@@ -88,6 +104,7 @@ abstract class Command
             'command' => $this->getCommand(),
             'state' => $this->state,
             'id' => $this->id,
+            'code' => $this->code,
             'data' => $data])
         ) {
             throw new \Exception('Fail run command ' . $this->getCommand());
@@ -119,7 +136,10 @@ abstract class Command
      *
      * @return array
      */
-    abstract public function getData(): array;
+    public function getData(): array
+    {
+        return $this->data;
+    }
 
     /**
      * Возвращает имя команды.
@@ -132,16 +152,23 @@ abstract class Command
      * Инициализирует кастомные данные, поступившие вместе с командой.
      *
      * @param $data
-     * @return mixed
+     * @return void
      */
-    abstract public function handle(array $data);
-
+    public function handle(array $data)
+    {
+        $this->data = array_merge($this->data, array_intersect_key($data, array_flip($this->needData)));
+    }
 
     /**
      * Выполняет необходимые проверки перед запуском задачи,
      * а именно - есть ли все необходимые данные для запуска задачи.
      *
+     * todo final!
      * @return bool
      */
-    abstract public function isValid(): bool;
+    protected function isValid(&$data): bool
+    {
+        return count(array_diff_key(array_flip($this->needData), $data)) === 0;
+    }
+
 }

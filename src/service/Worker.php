@@ -8,13 +8,14 @@
 
 namespace maestroprog\saw\service;
 
-use maestroprog\library\worker\Core;
+use maestroprog\saw\library\worker\Core;
 use maestroprog\saw\command\TaskAdd;
+use maestroprog\saw\command\TaskRes;
 use maestroprog\saw\command\TaskRun;
 use maestroprog\saw\command\WorkerAdd;
 use maestroprog\saw\command\WorkerDelete;
 use maestroprog\saw\entity\Task;
-use maestroprog\saw\library\Command;
+use maestroprog\saw\library\dispatcher\Command;
 use maestroprog\saw\library\CommandDispatcher;
 use maestroprog\saw\library\Factory;
 use maestroprog\saw\library\Singleton;
@@ -31,8 +32,6 @@ use maestroprog\saw\entity\Command as EntityCommand;
  */
 class Worker extends Singleton
 {
-    protected static $instance;
-
     public $work = true;
 
     public $worker_app;
@@ -43,11 +42,6 @@ class Worker extends Singleton
      * @var TcpClient socket connection
      */
     protected $sc;
-
-    /**
-     * @var TaskManager
-     */
-    protected $taskManager;
 
     /**
      * @var CommandDispatcher
@@ -62,7 +56,7 @@ class Worker extends Singleton
     /**
      * @var Core only for Worker
      */
-    private $core;
+    protected $core;
 
     /**
      * Инициализация
@@ -87,6 +81,13 @@ class Worker extends Singleton
             return false;
         }
         $this->configure($config);
+        if (empty($this->worker_app) || !file_exists($this->worker_app)) {
+            throw new \Exception('Worker application configuration not found');
+        }
+        require_once $this->worker_app;
+        if (!class_exists($this->worker_app_class)) {
+            throw new \Exception('Worker application must be configured with "worker_app_class"');
+        }
         return true;
     }
 
@@ -95,7 +96,7 @@ class Worker extends Singleton
      */
     public function start()
     {
-        $this->core = new Core($this->sc, $this->worker_app, $this->worker_app_class);
+        $this->core = new Core($this->sc, $this->worker_app_class);
         $this->dispatcher = Factory::getInstance()->createDispatcher([
             new EntityCommand(
                 WorkerAdd::NAME,
@@ -111,15 +112,30 @@ class Worker extends Singleton
                     $this->stop();
                 }
             ),
+            new EntityCommand(TaskAdd::NAME, TaskAdd::class),
             new EntityCommand(
                 TaskRun::NAME,
                 TaskRun::class,
-                function (Command $context) {
-                    $data = $context->getData();
-                    $this->core->runTask(
-                        $data['callback'],
-                        $data['name'],
-                        $data['result']
+                function (TaskRun $context) {
+                    // выполняем задачу
+                    $result = $this->core->runTask($context->getName());
+                    $task = new Task($context->getRunId(), $context->getName(), $context->getFromDsc());
+                    $task->setResult($result);
+                     $this->dispatcher->create(TaskRes::NAME, $this->sc)
+                         ->onError(function () {
+                             //todo
+                         })
+                         ->run(TaskRes::serializeTask($task));
+                }
+            ),
+            new EntityCommand(
+                TaskRes::NAME,
+                TaskRes::class,
+                function (TaskRes $context) {
+                    //todo
+                    $this->core->receiveTask(
+                        $context->getRunId(),
+                        $context->getResult()
                     );
                 }
             ),
@@ -141,9 +157,7 @@ class Worker extends Singleton
 
     public function connect()
     {
-        if (!$this->sc->connect()) {
-            throw new \Exception('Cannot connect to Controller');
-        }
+        return $this->sc->connect();
     }
 
     public function stop()
@@ -160,15 +174,42 @@ class Worker extends Singleton
         }
     }
 
+    public function run()
+    {
+        $this->core->run();
+    }
+
     /**
      * Метод под нужды таскера - запускает ожидание завершения выполнения указанных в массиве задач.
      *
-     * @param array $tasks
+     * @param Task[] $tasks
      * @return bool
      */
-    public function sync(array $tasks): bool
+    public function sync(array $tasks, float $timeout = 0.1)
     {
+        $time = microtime(true);
+        do {
+            $this->sc->read();
+            $ok = true;
+            foreach ($tasks as $task) {
+                if ($task->getState() === Task::ERR) {
+                    break;
+                }
+                if ($task->getState() !== Task::END) {
+                    $ok = false;
+                }
+            }
+            if ($ok) {
+                break;
+            }
+            if (microtime(true) - $time > $timeout) {
+                // default wait timeout 1 sec
+                break;
+            }
+            usleep(INTERVAL);
+        } while (true);
 
+        return $ok;
     }
 
     /**
@@ -180,10 +221,11 @@ class Worker extends Singleton
     {
         $this->core->addTask($task);
         $this->dispatcher->create(TaskAdd::NAME, $this->sc)
-            ->setError(function () use ($task) {
+            ->onError(function () use ($task) {
+                //todo
                 $this->addTask($task); // опять пробуем добавить команду
             })
-            ->run();
+            ->run(['name' => $task->getName()]);
     }
 
     /**
@@ -201,22 +243,28 @@ class Worker extends Singleton
     protected function onRead(): callable
     {
         return function ($data) {
-            Log::log('I RECEIVED ' . $data . ' :)');
+            Log::log('I RECEIVED  :)');
+            Log::log(var_export($data, true));
 
             switch ($data) {
                 case 'HELLO':
                     $this->sc->send('HELLO');
                     break;
                 case 'ACCEPT':
-                    $this->dispatcher
-                        ->create(WorkerAdd::NAME, $this->sc)
-                        ->setError(function () {
-                            $this->stop();
-                        })
-                        ->setSuccess(function () {
-                            //todo
-                        })
-                        ->run();
+                    /** временный костыль, т.к. @see Init наследуется от Worker-а */
+                    if (SAW_ENVIRONMENT === 'Worker') {
+                        $this->dispatcher
+                            ->create(WorkerAdd::NAME, $this->sc)
+                            ->onError(function () {
+                                $this->stop();
+                            })
+                            ->onSuccess(function () {
+                                $this->run();
+                            })
+                            ->run();
+                    } else {
+                        $this->run();
+                    }
                     break;
                 case 'INVALID':
                     // todo
@@ -241,7 +289,7 @@ class Worker extends Singleton
      */
     public static function create(array $config): Worker
     {
-        $init = Worker::getInstance();
+        $init = self::getInstance();
         if ($init->init($config)) {
             Log::log('configured. input...');
             try {

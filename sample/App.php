@@ -10,38 +10,70 @@ use \maestroprog\saw\library\TaskManager;
 
 class App extends \maestroprog\saw\library\Application
 {
-    public function init(array $_SERVER)
+    /**
+     * @var \maestroprog\saw\entity\Task[]
+     */
+    private $tasks = [];
+
+    public function init()
     {
         // TODO: Implement init() method.
     }
 
     public function end()
     {
-        // TODO: Implement end() method.
+        if ($this->taskManager->sync($this->tasks, 0.5)) {
+
+            foreach ($this->tasks as $task) {
+                var_dump($task->getResult());
+            }
+        } else {
+            echo 'DIE';
+        }
     }
 
-    public function run(TaskManager $taskManager)
+    public function run()
     {
-        $task1 = $taskManager->run(function () {
-            for ($i = 0; $i < 10000; $i++) {
+        $this->tasks[] = $this->thread(function () {
+            for ($i = 0; $i < 1000000; $i++) {
                 'nope';
             }
+            return 'i';
         }, 'MODULE_1_INIT');
 
-        $task2 = $taskManager->run(function () {
-            for ($i = 0; $i < 10000; $i++) {
+        $this->tasks[] = $this->thread(function () {
+            for ($i = 0; $i < 1000000; $i++) {
                 'nope';
             }
+            return 'i2';
         }, 'MODULE_2_INIT');
 
-        $task3 = $taskManager->run(function () {
-            for ($i = 0; $i < 10000; $i++) {
+        $this->tasks[] = $this->thread(function () {
+            for ($i = 0; $i < 1000000; $i++) {
                 'nope';
             }
+            return 'i3';
         }, 'MODULE_3_INIT');
 
-        $taskManager->sync([
-            $task1, $task2, $task3
-        ]);
+        $this->tasks[] = $this->thread(function () {
+            for ($i = 0; $i < 1000000; $i++) {
+                'nope';
+            }
+            return 'i3';
+        }, 'MODULE_4_INIT');
+
+        $this->tasks[] = $this->thread(function () {
+            for ($i = 0; $i < 1000000; $i++) {
+                'nope';
+            }
+            return 'i3';
+        }, 'MODULE_5_INIT');
+
+        $this->tasks[] = $this->thread(function () {
+            for ($i = 0; $i < 1000000; $i++) {
+                'nope';
+            }
+            return 'i3';
+        }, 'MODULE_6_INIT');
     }
 }

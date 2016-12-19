@@ -78,6 +78,11 @@ class Task
         return $this->state;
     }
 
+    public function & getResult()
+    {
+        return $this->result;
+    }
+
     public function setResult(&$result)
     {
         $this->state = self::END;

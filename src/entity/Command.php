@@ -33,12 +33,12 @@ final class Command
     }
 
     /**
-     * @param $context \maestroprog\saw\library\Command
-     * @return bool
+     * @param $context \maestroprog\saw\library\dispatcher\Command
+     * @return mixed
      */
-    public function exec($context): bool
+    public function exec(\maestroprog\saw\library\dispatcher\Command $context)
     {
-        return $this->isExecutable() && call_user_func($this->executor, $context);
+        return $this->isExecutable() ? call_user_func($this->executor, $context) : (var_dump($this->getName()));
     }
 
     public function getName()

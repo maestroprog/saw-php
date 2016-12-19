@@ -6,12 +6,12 @@
  * Time: 20:22
  */
 
-namespace maestroprog\library\controller;
+namespace maestroprog\saw\library\controller;
 
-use maestroprog\esockets\base\Net;
 use maestroprog\esockets\debug\Log;
-use maestroprog\esockets\Peer;
 use maestroprog\esockets\TcpServer;
+use maestroprog\saw\command\TaskRes;
+use maestroprog\saw\command\TaskRun;
 use maestroprog\saw\entity\Task;
 use maestroprog\saw\entity\controller\Worker;
 use maestroprog\saw\library\CommandDispatcher;
@@ -42,6 +42,7 @@ final class Core
     public function __construct(
         TcpServer $server,
         CommandDispatcher $dispatcher,
+        string $phpBinaryPath,
         string $workerPath,
         int $workerMultiplier,
         int $workerMax
@@ -49,6 +50,7 @@ final class Core
     {
         $this->server = $server;
         $this->dispatcher = $dispatcher;
+        $this->php_binary_path = $phpBinaryPath;
         $this->workerPath = $workerPath;
         $this->workerMultiplier = $workerMultiplier;
         $this->workerMax = $workerMax;
@@ -127,25 +129,44 @@ final class Core
     {
         static $tid = 0; // task ID
         if (!isset($this->taskAssoc[$name])) {
-            $this->taskAssoc[$name] = $tid++;
+            $this->taskAssoc[$name] = $tid;
         }
         if (!$this->workers[$dsc]->isKnowTask($tid)) {
             $this->workers[$dsc]->addKnowTask($this->taskAssoc[$name]);
             $this->tasksKnow[$name][$dsc] = true;
         }
+        $tid++;
     }
 
     /**
      * Функция добавляет задачу в очередь на выполнение для заданного воркера.
      *
+     * @param int $runId
      * @param int $dsc
      * @param string $name
      */
-    public function tRun(int $dsc, string $name)
+    public function tRun(int $runId, int $dsc, string $name)
     {
         static $rid = 0; // task run ID
-        $this->taskNew[$rid] = new Task($this->taskAssoc[$name], $rid, $name, $dsc);
+        $this->taskNew[$rid] = new Task($runId, $name, $dsc);
         $rid++;
+    }
+
+    public function tRes(int $rid, int $dsc, &$result)
+    {
+        $peer = $this->server->getPeerByDsc($dsc);
+        // @todo empty name!
+        $task = new Task($rid, '', $dsc, Task::END);
+        $task->setResult($result);
+        $this->dispatcher->create(TaskRes::NAME, $peer)
+            ->onError(function () {
+                //todo
+            })
+            ->onSuccess(function () {
+                //todo
+            })
+            ->run(TaskRes::serializeTask($task));
+        Log::log('I send res to ' . $peer->getDsc());
     }
 
     public function wBalance()
@@ -169,18 +190,34 @@ final class Core
     public function tBalance()
     {
         foreach ($this->taskNew as $rid => $task) {
+            if (!isset($this->tasksKnow[$task->getName()])) {
+                continue;
+            }
             $worker = $this->wMinT($task->getName(), function (Worker $worker) {
-                return $worker->getState() != Worker::STOP;
+                return $worker->getState() !== Worker::STOP;
             });
             if ($worker >= 0) {
                 $workerPeer = $this->server->getPeerByDsc($worker);
-
-                $this->dispatcher->create($task->getName(), $workerPeer)
-                    ->setSuccess(function () {
-                        $this->workers[$worker]->addTask($task);
-                        $this->taskRun[$rid] = $task;
-                    })
-                    ->run();
+                try {
+                    /** @var $command TaskRun */
+                    $this->dispatcher->create(TaskRun::NAME, $workerPeer)
+                        ->onError(function () use ($task) {
+                            Log::log('error run task ' . $task->getName());
+                            //todo
+                        })
+                        ->onSuccess(function () use ($worker, $rid, $task) {
+                            $this->workers[$worker]->addTask($task);
+                            $this->taskRun[$rid] = $task;
+                        })
+                        ->run(TaskRun::serializeTask($task));
+                    // т.к. выполнение задачи на стороне воркера произойдет раньше,
+                    // чем возврат ответа с успешным запуском
+                    // почистим массив. в дальшнейшем этот механизм надо пересмотреть todo
+                    // нельзя начинать выполнение раньше отправки ответа об успешном запуске?
+                    unset($this->taskNew[$rid]);
+                } catch (\Throwable $e) {
+                    throw new \Exception('Cannot balanced Task ' . $task->getRunId(), 0, $e);
+                }
             }
         }
     }

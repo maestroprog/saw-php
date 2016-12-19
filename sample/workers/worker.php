@@ -12,7 +12,7 @@ if (PHP_SAPI !== 'cli') {
     echo sprintf('<p style="color:red">%s</p>', 'Saw worker must be run in cli mode.');
 }
 
-define('SAW_ENVIRONMENT', 'Input');
+define('SAW_ENVIRONMENT', 'Worker');
 
 $config = require __DIR__ . '/../config.php';
 
