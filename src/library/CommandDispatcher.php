@@ -78,7 +78,6 @@ final class CommandDispatcher extends Singleton
         }
         $command->handle($data['data']);
         // смотрим, в каком состоянии находится поступившая к нам команда
-        sleep(5);
         switch ($command->getState()) {
             case Command::STATE_NEW:
                 throw new \Exception('Команду даже не запустили!');

@@ -170,7 +170,7 @@ final class Core
     {
         if (count($this->workers) < $this->workerMax && !$this->running) {
             // run new worker
-            //$this->exec($this->workerPath);
+            $this->exec($this->workerPath);
             $this->running = time();
         } elseif ($this->running && $this->running < time() - 10) {
             // timeout 10 sec
@@ -187,6 +187,9 @@ final class Core
     public function tBalance()
     {
         foreach ($this->taskNew as $rid => $task) {
+            if (!isset($this->tasksKnow[$task->getName()])) {
+                continue;
+            }
             $worker = $this->wMinT($task->getName(), function (Worker $worker) {
                 return $worker->getState() != Worker::STOP;
             });

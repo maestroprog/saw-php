@@ -35,18 +35,10 @@ final class Core
 
     public function __construct(
         TcpClient $peer,
-        string $workerApp,
         string $workerAppClass
     )
     {
         $this->peer = $peer;
-        if (empty($workerApp) || !file_exists($workerApp)) {
-            throw new \Exception('Worker application configuration not found');
-        }
-        require_once $workerApp;
-        if (!class_exists($workerAppClass)) {
-            throw new \Exception('Worker application must be configured with "worker_app_class"');
-        }
         $this->appClass = $workerAppClass;
     }
 
@@ -106,38 +98,6 @@ final class Core
     public function runTask(string $name)
     {
         return $this->taskManager->runCallback($name);
-    }
-
-    /**
-     * Метод запускает синхронизацию своего состояния с контроллером.
-     *
-     * @param Task[] $tasks
-     * @param float $timeout
-     * @return bool
-     */
-    public function syncTask(array $tasks, float $timeout = 1.0): bool
-    {
-        $time = microtime(true);
-        do {
-            $ok = true;
-            foreach ($tasks as $task) {
-                if ($task->getState() === Task::ERR) {
-                    break;
-                }
-                if ($task->getState() !== Task::END) {
-                    $ok = false;
-                }
-            }
-            if ($ok) {
-                break;
-            }
-            if (microtime(true) - $time > $timeout) {
-                // default wait timeout 1 sec
-                break;
-            }
-        } while (true);
-
-        return $ok;
     }
 
     /**

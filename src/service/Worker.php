@@ -44,11 +44,6 @@ class Worker extends Singleton
     protected $sc;
 
     /**
-     * @var TaskManager
-     */
-    protected $taskManager;
-
-    /**
      * @var CommandDispatcher
      */
     protected $dispatcher;
@@ -86,6 +81,13 @@ class Worker extends Singleton
             return false;
         }
         $this->configure($config);
+        if (empty($this->worker_app) || !file_exists($this->worker_app)) {
+            throw new \Exception('Worker application configuration not found');
+        }
+        require_once $this->worker_app;
+        if (!class_exists($this->worker_app_class)) {
+            throw new \Exception('Worker application must be configured with "worker_app_class"');
+        }
         return true;
     }
 
@@ -94,7 +96,7 @@ class Worker extends Singleton
      */
     public function start()
     {
-        $this->core = new Core($this->sc, $this->worker_app, $this->worker_app_class);
+        $this->core = new Core($this->sc, $this->worker_app_class);
         $this->dispatcher = Factory::getInstance()->createDispatcher([
             new EntityCommand(
                 WorkerAdd::NAME,
@@ -116,14 +118,14 @@ class Worker extends Singleton
                 TaskRun::class,
                 function (TaskRun $context) {
                     // выполняем задачу
-                    //$result = $this->core->runTask($context->getName());
-                    //$task = new Task($context->getRunId(), $context->getName(), $context->getFromDsc());
-                    //$task->setResult($result);
-                    /*$this->dispatcher->create(TaskRes::NAME, $this->sc)
+                    $result = $this->core->runTask($context->getName());
+                    $task = new Task($context->getRunId(), $context->getName(), $context->getFromDsc());
+                    $task->setResult($result);
+                    $this->dispatcher->create(TaskRes::NAME, $this->sc)
                         ->onError(function () {
                             //todo
                         })
-                        ->run(TaskRes::serializeTask($task));*/
+                        ->run(TaskRes::serializeTask($task));
                 }
             ),
             new EntityCommand(
@@ -185,7 +187,27 @@ class Worker extends Singleton
      */
     public function sync(array $tasks, float $timeout = 0.1)
     {
-        return $this->core->syncTask($tasks, $timeout);
+        $time = microtime(true);
+        do {
+            $ok = true;
+            foreach ($tasks as $task) {
+                if ($task->getState() === Task::ERR) {
+                    break;
+                }
+                if ($task->getState() !== Task::END) {
+                    $ok = false;
+                }
+            }
+            if ($ok) {
+                break;
+            }
+            if (microtime(true) - $time > $timeout) {
+                // default wait timeout 1 sec
+                break;
+            }
+        } while (true);
+
+        return $ok;
     }
 
     /**
