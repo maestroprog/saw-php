@@ -71,14 +71,8 @@ final class CommandDispatcher extends Singleton
         $commandEntity = $this->know[$command];
         /** @var $command Command */
         if ($data['state'] == Command::STATE_RES) {
-            if (!
-            isset($this->created[$data['id']])
-            ) {
-                echo 'AAAAAAAAAAAAAAAA';
-                sleep(10);
-                exit;
-            }
             $command = $this->created[$data['id']];
+            $command->reset($data['state'], $data['code']);
         } else {
             $class = $commandEntity->getClass();
             $command = new $class($data['id'], $peer, $data['state'], $data['code']);

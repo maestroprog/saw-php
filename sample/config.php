@@ -100,7 +100,7 @@ return [
         'controller_path' => __DIR__ . DS . 'workers' . DS . 'controller.php',
         'worker_path' => __DIR__ . DS . 'workers' . DS . 'worker.php',
         'worker_multiplier' => 4,
-        'worker_max' => 1,
+        'worker_max' => 8,
         'worker_app' => __DIR__ . DS . 'App.php',
         'worker_app_class' => App::class,
     ]

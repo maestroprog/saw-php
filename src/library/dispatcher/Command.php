@@ -9,6 +9,7 @@
 namespace maestroprog\saw\library\dispatcher;
 
 use maestroprog\esockets\base\Net;
+use maestroprog\esockets\debug\Log;
 use maestroprog\esockets\Peer;
 
 abstract class Command
@@ -49,10 +50,16 @@ abstract class Command
      */
     private $code;
 
-    public function __construct(int $id, Net $peer, $state = self::STATE_NEW, $code = self::RES_VOID)
+    public function __construct(int $id, Net $peer, int $state = self::STATE_NEW, int $code = self::RES_VOID)
     {
         $this->id = $id;
         $this->peer = $peer;
+        $this->state = $state;
+        $this->code = $code;
+    }
+
+    final public function reset(int $state, int $code)
+    {
         $this->state = $state;
         $this->code = $code;
     }
@@ -163,4 +170,5 @@ abstract class Command
     {
         return count(array_diff_key(array_flip($this->needData), $data)) === 0;
     }
+
 }

@@ -121,21 +121,22 @@ class Worker extends Singleton
                     $result = $this->core->runTask($context->getName());
                     $task = new Task($context->getRunId(), $context->getName(), $context->getFromDsc());
                     $task->setResult($result);
-                   /* $this->dispatcher->create(TaskRes::NAME, $this->sc)
-                        ->onError(function () {
-                            //todo
-                        })
-                        ->run(TaskRes::serializeTask($task));*/
+                     $this->dispatcher->create(TaskRes::NAME, $this->sc)
+                         ->onError(function () {
+                             //todo
+                         })
+                         ->run(TaskRes::serializeTask($task));
                 }
             ),
             new EntityCommand(
                 TaskRes::NAME,
                 TaskRes::class,
                 function (TaskRes $context) {
-                    /*$this->core->receiveTask(
+                    //todo
+                    $this->core->receiveTask(
                         $context->getRunId(),
                         $context->getResult()
-                    );*/
+                    );
                 }
             ),
         ]);
@@ -167,7 +168,6 @@ class Worker extends Singleton
 
     public function work()
     {
-        $this->sc->setBlock();
         while ($this->work) {
             $this->sc->read();
             usleep(INTERVAL);
@@ -189,6 +189,7 @@ class Worker extends Singleton
     {
         $time = microtime(true);
         do {
+            $this->sc->read();
             $ok = true;
             foreach ($tasks as $task) {
                 if ($task->getState() === Task::ERR) {
@@ -205,6 +206,7 @@ class Worker extends Singleton
                 // default wait timeout 1 sec
                 break;
             }
+            usleep(INTERVAL);
         } while (true);
 
         return $ok;
@@ -220,6 +222,7 @@ class Worker extends Singleton
         $this->core->addTask($task);
         $this->dispatcher->create(TaskAdd::NAME, $this->sc)
             ->onError(function () use ($task) {
+                //todo
                 $this->addTask($task); // опять пробуем добавить команду
             })
             ->run(['name' => $task->getName()]);
@@ -241,22 +244,27 @@ class Worker extends Singleton
     {
         return function ($data) {
             Log::log('I RECEIVED  :)');
-            var_dump($data);
+            Log::log(var_export($data, true));
 
             switch ($data) {
                 case 'HELLO':
                     $this->sc->send('HELLO');
                     break;
                 case 'ACCEPT':
-                    $this->dispatcher
-                        ->create(WorkerAdd::NAME, $this->sc)
-                        ->onError(function () {
-                            $this->stop();
-                        })
-                        ->onSuccess(function () {
-                            //todo
-                        })
-                        ->run();
+                    /** временный костыль, т.к. @see Init наследуется от Worker-а */
+                    if (SAW_ENVIRONMENT === 'Worker') {
+                        $this->dispatcher
+                            ->create(WorkerAdd::NAME, $this->sc)
+                            ->onError(function () {
+                                $this->stop();
+                            })
+                            ->onSuccess(function () {
+                                $this->run();
+                            })
+                            ->run();
+                    } else {
+                        $this->run();
+                    }
                     break;
                 case 'INVALID':
                     // todo

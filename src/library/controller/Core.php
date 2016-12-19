@@ -141,13 +141,14 @@ final class Core
     /**
      * Функция добавляет задачу в очередь на выполнение для заданного воркера.
      *
+     * @param int $runId
      * @param int $dsc
      * @param string $name
      */
-    public function tRun(int $dsc, string $name)
+    public function tRun(int $runId, int $dsc, string $name)
     {
         static $rid = 0; // task run ID
-        $this->taskNew[$rid] = new Task($rid, $name, $dsc);
+        $this->taskNew[$rid] = new Task($runId, $name, $dsc);
         $rid++;
     }
 
@@ -165,6 +166,7 @@ final class Core
                 //todo
             })
             ->run(TaskRes::serializeTask($task));
+        Log::log('I send res to ' . $peer->getDsc());
     }
 
     public function wBalance()
@@ -200,14 +202,19 @@ final class Core
                     /** @var $command TaskRun */
                     $this->dispatcher->create(TaskRun::NAME, $workerPeer)
                         ->onError(function () use ($task) {
+                            Log::log('error run task ' . $task->getName());
                             //todo
                         })
                         ->onSuccess(function () use ($worker, $rid, $task) {
                             $this->workers[$worker]->addTask($task);
                             $this->taskRun[$rid] = $task;
-                            unset($this->taskNew[$rid]);
                         })
                         ->run(TaskRun::serializeTask($task));
+                    // т.к. выполнение задачи на стороне воркера произойдет раньше,
+                    // чем возврат ответа с успешным запуском
+                    // почистим массив. в дальшнейшем этот механизм надо пересмотреть todo
+                    // нельзя начинать выполнение раньше отправки ответа об успешном запуске?
+                    unset($this->taskNew[$rid]);
                 } catch (\Throwable $e) {
                     throw new \Exception('Cannot balanced Task ' . $task->getRunId(), 0, $e);
                 }

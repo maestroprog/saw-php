@@ -35,21 +35,21 @@ class App extends \maestroprog\saw\library\Application
     public function run()
     {
         $this->tasks[] = $this->thread(function () {
-            for ($i = 0; $i < 10000; $i++) {
+            for ($i = 0; $i < 10000000; $i++) {
                 'nope';
             }
             return 'i';
         }, 'MODULE_1_INIT');
 
         $this->tasks[] = $this->thread(function () {
-            for ($i = 0; $i < 10000; $i++) {
+            for ($i = 0; $i < 10000000; $i++) {
                 'nope';
             }
             return 'i2';
         }, 'MODULE_2_INIT');
 
         $this->tasks[] = $this->thread(function () {
-            for ($i = 0; $i < 10000; $i++) {
+            for ($i = 0; $i < 10000000; $i++) {
                 'nope';
             }
             return 'i3';

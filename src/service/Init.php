@@ -43,10 +43,13 @@ final class Init extends Worker
                 TaskRes::NAME,
                 TaskRes::class,
                 function (TaskRes $context) {
-                    $this->core->receiveTask(
-                        $context->getRunId(),
-                        $context->getResult()
-                    );
+                    try {
+                        $task = $this->taskManager->getRunTask($context->getRunId());
+                        $task->setResult($context->getResult());
+                    } catch (\Throwable $e) {
+                        $this->stop();
+                        throw $e;
+                    }
                 }
             ),
         ]);
@@ -57,14 +60,15 @@ final class Init extends Worker
         $this->app = new $this->worker_app_class($this->taskManager);
         $this->app->run();
         $this->app->end();
+        $this->stop();
     }
-
 
     public function addTask(Task $task)
     {
         $this->dispatcher->create(TaskRun::NAME, $this->sc)
             ->onError(function () use ($task) {
-                throw new \Exception('Failed run Task ' . $task->getName());
+                //todo
+                $task->setResult($this->taskManager->runCallback($task->getName()));
             })
             ->run(TaskRun::serializeTask($task));
     }
@@ -115,7 +119,6 @@ final class Init extends Worker
                     usleep(10000);
                 }
             }
-            $init->sc->send('HELLO');
             $init->start();
             Log::log('Init started');
             register_shutdown_function(function () use ($init) {

@@ -130,7 +130,7 @@ final class Controller extends Singleton
                 TaskRun::NAME,
                 TaskRun::class,
                 function (TaskRun $context) {
-                    $this->core->tRun($context->getPeer()->getDsc(), $context->getName());
+                    $this->core->tRun($context->getRunId(), $context->getPeer()->getDsc(), $context->getName());
                 }
             ),
             new EntityCommand(
@@ -225,7 +225,7 @@ final class Controller extends Singleton
             $peer->set(self::KSTATE, self::PEER_NEW);
             $peer->onRead(function ($data) use ($peer) {
                 Log::log('I RECEIVED  :) from ' . $peer->getDsc() . $peer->getAddress());
-                var_dump($data);
+                Log::log(var_export($data, true));
                 if ($data === 'HELLO' && $peer->get(self::KSTATE) !== self::PEER_ACCEPTED) {
                     $peer->set(self::KSTATE, self::PEER_ACCEPTED);
                     $peer->send('ACCEPT');

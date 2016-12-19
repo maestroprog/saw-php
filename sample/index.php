@@ -12,6 +12,9 @@ $config = require __DIR__ . '/config.php';
 
 out('input start');
 try {
+    /**
+     * @var \maestroprog\saw\service\Init $init
+     */
     $init = \maestroprog\saw\service\Init::create($config);
 } catch (Throwable $e) {
     header('HTTP/1.1 503 Service Unavailable');
@@ -24,9 +27,7 @@ try {
 out('input end');
 
 $time2 = microtime(true);
-
-$init->run();
-
+$init->work();
 $mtrue = microtime(true);
 $time22 = $mtrue - $time2;
 $time3 = $mtrue - $time;

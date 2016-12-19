@@ -24,7 +24,7 @@ trait Executor
             $cmd = str_replace('\\', '\\\\', $cmd);
             pclose(popen($e = "start " . $cmd, "r"));
         } else {
-            exec($e = $cmd . " > /dev/null 2>&1 &");
+            exec($e = $cmd . " > /dev/null &");
         }
         Log::log($e);
     }
