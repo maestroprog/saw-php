@@ -97,6 +97,7 @@ abstract class Command
             'command' => $this->getCommand(),
             'state' => $this->state,
             'id' => $this->id,
+            'code' => $this->code,
             'data' => $data])
         ) {
             throw new \Exception('Fail run command ' . $this->getCommand());

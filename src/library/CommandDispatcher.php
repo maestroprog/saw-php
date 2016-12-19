@@ -70,11 +70,18 @@ final class CommandDispatcher extends Singleton
         }
         $commandEntity = $this->know[$command];
         /** @var $command Command */
-        if (!isset($this->created[$data['id']]) || $data['state'] !== Command::STATE_RES) {
+        if ($data['state'] == Command::STATE_RES) {
+            if (!
+            isset($this->created[$data['id']])
+            ) {
+                echo 'AAAAAAAAAAAAAAAA';
+                sleep(10);
+                exit;
+            }
+            $command = $this->created[$data['id']];
+        } else {
             $class = $commandEntity->getClass();
             $command = new $class($data['id'], $peer, $data['state'], $data['code']);
-        } else {
-            $command = $this->created[$data['id']];
         }
         $command->handle($data['data']);
         // смотрим, в каком состоянии находится поступившая к нам команда

@@ -226,7 +226,7 @@ final class Controller extends Singleton
             $peer->onRead(function ($data) use ($peer) {
                 Log::log('I RECEIVED  :) from ' . $peer->getDsc() . $peer->getAddress());
                 var_dump($data);
-                if ($data === 'HELLO') {
+                if ($data === 'HELLO' && $peer->get(self::KSTATE) !== self::PEER_ACCEPTED) {
                     $peer->set(self::KSTATE, self::PEER_ACCEPTED);
                     $peer->send('ACCEPT');
                 } elseif ($peer->get(self::KSTATE) !== self::PEER_ACCEPTED) {

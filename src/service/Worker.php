@@ -121,21 +121,21 @@ class Worker extends Singleton
                     $result = $this->core->runTask($context->getName());
                     $task = new Task($context->getRunId(), $context->getName(), $context->getFromDsc());
                     $task->setResult($result);
-                    $this->dispatcher->create(TaskRes::NAME, $this->sc)
+                   /* $this->dispatcher->create(TaskRes::NAME, $this->sc)
                         ->onError(function () {
                             //todo
                         })
-                        ->run(TaskRes::serializeTask($task));
+                        ->run(TaskRes::serializeTask($task));*/
                 }
             ),
             new EntityCommand(
                 TaskRes::NAME,
                 TaskRes::class,
                 function (TaskRes $context) {
-                    $this->core->receiveTask(
+                    /*$this->core->receiveTask(
                         $context->getRunId(),
                         $context->getResult()
-                    );
+                    );*/
                 }
             ),
         ]);

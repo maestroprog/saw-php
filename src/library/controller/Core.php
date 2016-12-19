@@ -129,12 +129,13 @@ final class Core
     {
         static $tid = 0; // task ID
         if (!isset($this->taskAssoc[$name])) {
-            $this->taskAssoc[$name] = $tid++;
+            $this->taskAssoc[$name] = $tid;
         }
         if (!$this->workers[$dsc]->isKnowTask($tid)) {
             $this->workers[$dsc]->addKnowTask($this->taskAssoc[$name]);
             $this->tasksKnow[$name][$dsc] = true;
         }
+        $tid++;
     }
 
     /**
@@ -191,7 +192,7 @@ final class Core
                 continue;
             }
             $worker = $this->wMinT($task->getName(), function (Worker $worker) {
-                return $worker->getState() != Worker::STOP;
+                return $worker->getState() !== Worker::STOP;
             });
             if ($worker >= 0) {
                 $workerPeer = $this->server->getPeerByDsc($worker);
@@ -201,11 +202,12 @@ final class Core
                         ->onError(function () use ($task) {
                             //todo
                         })
+                        ->onSuccess(function () use ($worker, $rid, $task) {
+                            $this->workers[$worker]->addTask($task);
+                            $this->taskRun[$rid] = $task;
+                            unset($this->taskNew[$rid]);
+                        })
                         ->run(TaskRun::serializeTask($task));
-
-                    $this->workers[$worker]->addTask($task);
-                    $this->taskRun[$rid] = $task;
-                    unset($this->taskNew[$rid]);
                 } catch (\Throwable $e) {
                     throw new \Exception('Cannot balanced Task ' . $task->getRunId(), 0, $e);
                 }
