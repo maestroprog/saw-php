@@ -22,7 +22,7 @@ class App extends \maestroprog\saw\library\Application
 
     public function end()
     {
-        if ($this->taskManager->sync($this->tasks, 10)) {
+        if ($this->taskManager->sync($this->tasks, 0.5)) {
 
             foreach ($this->tasks as $task) {
                 var_dump($task->getResult());
@@ -35,24 +35,45 @@ class App extends \maestroprog\saw\library\Application
     public function run()
     {
         $this->tasks[] = $this->thread(function () {
-            for ($i = 0; $i < 10000000; $i++) {
+            for ($i = 0; $i < 1000000; $i++) {
                 'nope';
             }
             return 'i';
         }, 'MODULE_1_INIT');
 
         $this->tasks[] = $this->thread(function () {
-            for ($i = 0; $i < 10000000; $i++) {
+            for ($i = 0; $i < 1000000; $i++) {
                 'nope';
             }
             return 'i2';
         }, 'MODULE_2_INIT');
 
         $this->tasks[] = $this->thread(function () {
-            for ($i = 0; $i < 10000000; $i++) {
+            for ($i = 0; $i < 1000000; $i++) {
                 'nope';
             }
             return 'i3';
         }, 'MODULE_3_INIT');
+
+        $this->tasks[] = $this->thread(function () {
+            for ($i = 0; $i < 1000000; $i++) {
+                'nope';
+            }
+            return 'i3';
+        }, 'MODULE_4_INIT');
+
+        $this->tasks[] = $this->thread(function () {
+            for ($i = 0; $i < 1000000; $i++) {
+                'nope';
+            }
+            return 'i3';
+        }, 'MODULE_5_INIT');
+
+        $this->tasks[] = $this->thread(function () {
+            for ($i = 0; $i < 1000000; $i++) {
+                'nope';
+            }
+            return 'i3';
+        }, 'MODULE_6_INIT');
     }
 }

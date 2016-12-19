@@ -82,7 +82,6 @@ set_exception_handler(function (Throwable $e) {
         $e->getLine(),
         ''//print_r($e->getTrace(), true)
     ));
-    sleep(20);
 });
 
 set_error_handler(function ($errno, $errstr, $errfile, $errline, array $errcontext) {
