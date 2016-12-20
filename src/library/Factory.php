@@ -29,7 +29,7 @@ final class Factory extends Singleton
         return $this->dispatcher;
     }
 
-    public function createTaskManager(Worker $controller): TaskManager
+    public function createTaskManager(TaskRunner $controller): TaskManager
     {
         return TaskManager::getInstance()->setController($controller);
     }

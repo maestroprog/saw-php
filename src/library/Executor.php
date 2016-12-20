@@ -22,7 +22,7 @@ trait Executor
         $cmd = sprintf('%s -f %s', $this->php_binary_path, $cmd);
         if (PHP_OS === "WINNT") {
             $cmd = str_replace('\\', '\\\\', $cmd);
-            pclose(popen($e = "start " . $cmd, "r"));
+            pclose(popen($e = "start /B " . $cmd, "r"));
         } else {
             exec($e = $cmd . " > /dev/null &");
         }

@@ -60,7 +60,7 @@ class TaskManager extends Singleton
      */
     public function sync(array $tasks, float $timeout = 0.1): bool
     {
-        return $this->controller->sync($tasks, $timeout);
+        return $this->controller->syncTask($tasks, $timeout);
     }
 
     /**
@@ -83,7 +83,7 @@ class TaskManager extends Singleton
         return $this->run[$rid] ?? null;
     }
 
-    public function setController(Worker $controller)
+    public function setController(TaskRunner $controller)
     {
         $this->controller = $controller;
         return $this;

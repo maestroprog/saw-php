@@ -90,14 +90,28 @@ final class Core
     }
 
     /**
-     * Прямой запуск выполнения задачи.
-     *
-     * @param string $name
-     * @return mixed
+     * @var Task[]
      */
-    public function runTask(string $name)
+    private $runQueue = [];
+
+    /**
+     * Постановка задачи в очередь на выполнение.
+     *
+     * @param Task $task
+     */
+    public function runTask(Task $task)
+    {
+        $this->runQueue[] = $task;
+    }
+
+    public function runCallback(string $name)
     {
         return $this->taskManager->runCallback($name);
+    }
+
+    public function & getRunQueue(): array
+    {
+        return $this->runQueue;
     }
 
     /**

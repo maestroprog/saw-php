@@ -66,6 +66,18 @@ class Worker
         $this->runTasks[$task->getRunId()] = $task;
     }
 
+    public function getTask(int $runId): Task
+    {
+        return $this->runTasks[$runId] ?? null;
+    }
+
+    public function removeTask(Task $task)
+    {
+        if (isset($this->runTasks[$task->getRunId()])) {
+            unset($this->runTasks[$task->getRunId()]);
+        }
+    }
+
     public function getCountTasks()
     {
         return count($this->runTasks);

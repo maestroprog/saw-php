@@ -139,6 +139,7 @@ final class Controller extends Singleton
                 function (TaskRes $context) {
                     $this->core->tRes(
                         $context->getRunId(),
+                        $context->getPeer()->getDsc(),
                         $context->getFromDsc(),
                         $context->getResult()
                     );
