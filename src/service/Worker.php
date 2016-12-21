@@ -163,6 +163,7 @@ final class Worker extends Singleton implements TaskRunner
 
     public function work()
     {
+        $this->sc->setBlock();
         while ($this->work) {
             $this->sc->read();
 
