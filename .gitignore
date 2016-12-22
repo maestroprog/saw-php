@@ -2,3 +2,5 @@
 /*.sock
 *.log
 phpunit.phar
+composer.lock
+/vendor

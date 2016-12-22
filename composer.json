@@ -1,0 +1,5 @@
+{
+    "require": {
+        "maestroprog/esockets": "dev-master"
+    }
+}
