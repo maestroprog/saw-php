@@ -8,6 +8,7 @@
 
 namespace maestroprog\saw\service;
 
+use maestroprog\saw\library\TaskRunner;
 use maestroprog\saw\library\worker\Core;
 use maestroprog\saw\command\TaskAdd;
 use maestroprog\saw\command\TaskRes;
@@ -30,7 +31,7 @@ use maestroprog\saw\entity\Command as EntityCommand;
  * Используется для выполнения отдельных задач.
  * Работает в качестве демона в нескольких экземплярах.
  */
-class Worker extends Singleton
+final class Worker extends Singleton implements TaskRunner
 {
     public $work = true;
 
@@ -118,14 +119,8 @@ class Worker extends Singleton
                 TaskRun::class,
                 function (TaskRun $context) {
                     // выполняем задачу
-                    $result = $this->core->runTask($context->getName());
                     $task = new Task($context->getRunId(), $context->getName(), $context->getFromDsc());
-                    $task->setResult($result);
-                     $this->dispatcher->create(TaskRes::NAME, $this->sc)
-                         ->onError(function () {
-                             //todo
-                         })
-                         ->run(TaskRes::serializeTask($task));
+                    $this->core->runTask($task);
                 }
             ),
             new EntityCommand(
@@ -168,8 +163,21 @@ class Worker extends Singleton
 
     public function work()
     {
+        $this->sc->setBlock();
         while ($this->work) {
             $this->sc->read();
+
+            if (count($this->core->getRunQueue())) {
+                /** @var Task $task */
+                $task = array_shift($this->core->getRunQueue());
+                $task->setResult($this->core->runCallback($task->getName()));
+                $this->dispatcher->create(TaskRes::NAME, $this->sc)
+                    ->onError(function () {
+                        //todo
+                    })
+                    ->run(TaskRes::serializeTask($task));
+            }
+
             usleep(INTERVAL);
         }
     }
@@ -185,7 +193,7 @@ class Worker extends Singleton
      * @param Task[] $tasks
      * @return bool
      */
-    public function sync(array $tasks, float $timeout = 0.1)
+    public function syncTask(array $tasks, float $timeout = 0.1): bool
     {
         $time = microtime(true);
         do {
@@ -212,11 +220,6 @@ class Worker extends Singleton
         return $ok;
     }
 
-    /**
-     * Добавляет задачу на выполнение.
-     *
-     * @param Task $task
-     */
     public function addTask(Task $task)
     {
         $this->core->addTask($task);
@@ -234,7 +237,7 @@ class Worker extends Singleton
      * @param TaskManager $taskManager
      * @return $this
      */
-    public function setTask(TaskManager $taskManager)
+    public function setTaskManager(TaskManager $taskManager)
     {
         $this->core->setTaskManager($taskManager);
         return $this;
@@ -303,7 +306,7 @@ class Worker extends Singleton
                 $init->stop();
                 Log::log('closed');
             });
-            return $init->setTask(Factory::getInstance()->createTaskManager($init));
+            return $init->setTaskManager(Factory::getInstance()->createTaskManager($init));
         } else {
             throw new \Exception('Cannot initialize Worker');
         }

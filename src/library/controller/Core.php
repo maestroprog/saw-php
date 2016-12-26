@@ -152,12 +152,14 @@ final class Core
         $rid++;
     }
 
-    public function tRes(int $rid, int $dsc, &$result)
+    public function tRes(int $rid, int $workerDsc, int $dsc, &$result)
     {
         $peer = $this->server->getPeerByDsc($dsc);
         // @todo empty name!
-        $task = new Task($rid, '', $dsc, Task::END);
+        $worker = $this->getWorkerByDsc($workerDsc);
+        $task = $worker->getTask($rid);
         $task->setResult($result);
+        $worker->removeTask($task); // release worker
         $this->dispatcher->create(TaskRes::NAME, $peer)
             ->onError(function () {
                 //todo
@@ -206,20 +208,24 @@ final class Core
                             //todo
                         })
                         ->onSuccess(function () use ($worker, $rid, $task) {
-                            $this->workers[$worker]->addTask($task);
-                            $this->taskRun[$rid] = $task;
+                            //$this->taskRun[$rid] = $task;
                         })
                         ->run(TaskRun::serializeTask($task));
                     // т.к. выполнение задачи на стороне воркера произойдет раньше,
                     // чем возврат ответа с успешным запуском
-                    // почистим массив. в дальшнейшем этот механизм надо пересмотреть todo
-                    // нельзя начинать выполнение раньше отправки ответа об успешном запуске?
+                    // почистим массив, и запомним что поставили воркеру эту задачу
+                    $this->workers[$worker]->addTask($task);
                     unset($this->taskNew[$rid]);
                 } catch (\Throwable $e) {
                     throw new \Exception('Cannot balanced Task ' . $task->getRunId(), 0, $e);
                 }
             }
         }
+    }
+
+    private function getWorkerByDsc(int $dsc): Worker
+    {
+        return $this->workers[$dsc] ?? null;
     }
 
     /**

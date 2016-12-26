@@ -139,6 +139,7 @@ final class Controller extends Singleton
                 function (TaskRes $context) {
                     $this->core->tRes(
                         $context->getRunId(),
+                        $context->getPeer()->getDsc(),
                         $context->getFromDsc(),
                         $context->getResult()
                     );
@@ -178,6 +179,7 @@ final class Controller extends Singleton
         if (extension_loaded('pcntl')) {
             pcntl_signal(SIGINT, function ($sig) {
                 $this->work = false;
+                $this->ss->disconnect();
             });
             $this->dispatch_signals = true;
         }
@@ -200,14 +202,18 @@ final class Controller extends Singleton
     public function work()
     {
         while ($this->work) {
-            $this->ss->listen(); // слушаем кто присоединился
-            $this->ss->read(); // читаем входящие запросы
             $this->core->wBalance(); // балансируем воркеры
             $this->core->tBalance(); // раскидываем задачки
             if ($this->dispatch_signals) {
                 pcntl_signal_dispatch();
             }
-            usleep(INTERVAL);
+            if ($this->ss->select()) {
+                $this->ss->listen(); // слушаем кто присоединился
+                $this->ss->read(); // читаем входящие запросы
+            }
+            echo 'it' , PHP_EOL;
+
+            usleep(INTERVAL * 10);
         }
     }
 
@@ -221,6 +227,7 @@ final class Controller extends Singleton
     protected function onConnectPeer()
     {
         return function (Peer $peer) {
+            //$peer->setBlock();
             Log::log('peer connected ' . $peer->getAddress());
             $peer->set(self::KSTATE, self::PEER_NEW);
             $peer->onRead(function ($data) use ($peer) {
