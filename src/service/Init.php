@@ -8,7 +8,7 @@
 
 namespace maestroprog\saw\service;
 
-use maestroprog\esockets\TcpClient;
+use Esockets\TcpClient;
 use maestroprog\saw\command\TaskRes;
 use maestroprog\saw\command\TaskRun;
 use maestroprog\saw\entity\Command;
@@ -16,7 +16,7 @@ use maestroprog\saw\entity\Task;
 use maestroprog\saw\library\Application;
 use maestroprog\saw\library\CommandDispatcher;
 use maestroprog\saw\library\Executor;
-use maestroprog\esockets\debug\Log;
+use Esockets\debug\Log;
 use maestroprog\saw\library\Factory;
 use maestroprog\saw\library\Singleton;
 use maestroprog\saw\library\TaskManager;

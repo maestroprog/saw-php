@@ -8,7 +8,7 @@
 
 namespace maestroprog\saw\library;
 
-use maestroprog\esockets\base\Net;
+use Esockets\base\Net;
 use maestroprog\saw\library\dispatcher\Command;
 use maestroprog\saw\entity\Command as EntityCommand;
 

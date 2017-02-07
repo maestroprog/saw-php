@@ -8,7 +8,7 @@
 
 namespace maestroprog\saw\library;
 
-use maestroprog\esockets\debug\Log;
+use Esockets\debug\Log;
 
 trait Executor
 {

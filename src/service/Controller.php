@@ -19,9 +19,9 @@ use maestroprog\saw\library\dispatcher\Command;
 use maestroprog\saw\library\CommandDispatcher;
 use maestroprog\saw\library\Factory;
 use maestroprog\saw\library\Singleton;
-use maestroprog\esockets\Peer;
-use maestroprog\esockets\TcpServer;
-use maestroprog\esockets\debug\Log;
+use Esockets\Peer;
+use Esockets\TcpServer;
+use Esockets\debug\Log;
 
 /**
  * Связующее звено между входным скриптом,

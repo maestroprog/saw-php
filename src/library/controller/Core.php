@@ -8,8 +8,8 @@
 
 namespace maestroprog\saw\library\controller;
 
-use maestroprog\esockets\debug\Log;
-use maestroprog\esockets\TcpServer;
+use Esockets\debug\Log;
+use Esockets\TcpServer;
 use maestroprog\saw\command\TaskRes;
 use maestroprog\saw\command\TaskRun;
 use maestroprog\saw\entity\Task;

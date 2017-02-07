@@ -6,8 +6,6 @@
  * Time: 16:22
  */
 
-use \maestroprog\saw\library\TaskManager;
-
 class App extends \maestroprog\saw\library\Application
 {
     /**

@@ -22,8 +22,8 @@ use maestroprog\saw\library\Factory;
 use maestroprog\saw\library\Singleton;
 use maestroprog\saw\library\Application;
 use maestroprog\saw\library\TaskManager;
-use maestroprog\esockets\TcpClient;
-use maestroprog\esockets\debug\Log;
+use Esockets\TcpClient;
+use Esockets\debug\Log;
 use maestroprog\saw\entity\Command as EntityCommand;
 
 /**

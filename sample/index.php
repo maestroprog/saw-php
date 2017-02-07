@@ -13,9 +13,9 @@ $config = require __DIR__ . '/config.php';
 out('input start');
 try {
     /**
-     * @var \maestroprog\saw\service\Init $init
+     * @var maestroprog\saw\service\Init $init
      */
-    $init = \maestroprog\saw\service\Init::create($config);
+    $init = maestroprog\saw\service\Init::create($config);
 } catch (Throwable $e) {
     header('HTTP/1.1 503 Service Unavailable');
     echo sprintf('<p style="color:red">%s</p>', $e->getMessage());

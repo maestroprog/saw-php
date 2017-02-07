@@ -17,14 +17,14 @@ define('SAW_ENVIRONMENT', 'Worker');
 $config = require __DIR__ . '/../config.php';
 
 try {
-    $worker = \maestroprog\saw\service\Worker::create($config);
+    $worker = maestroprog\saw\service\Worker::create($config);
 } catch (Throwable $e) {
-    \maestroprog\esockets\debug\Log::log($e->getMessage());
+    Esockets\debug\Log::log($e->getMessage());
     exit(1);
 }
 
-\maestroprog\esockets\debug\Log::log('work start');
+Esockets\debug\Log::log('work start');
 $worker->work();
-\maestroprog\esockets\debug\Log::log('work end');
+Esockets\debug\Log::log('work end');
 
 exit(0);

@@ -8,9 +8,9 @@
 
 namespace maestroprog\saw\library\dispatcher;
 
-use maestroprog\esockets\base\Net;
-use maestroprog\esockets\debug\Log;
-use maestroprog\esockets\Peer;
+use Esockets\base\Net;
+use Esockets\debug\Log;
+use Esockets\Peer;
 
 abstract class Command
 {

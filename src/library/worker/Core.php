@@ -8,7 +8,7 @@
 
 namespace maestroprog\saw\library\worker;
 
-use maestroprog\esockets\TcpClient;
+use Esockets\TcpClient;
 use maestroprog\saw\entity\Task;
 use maestroprog\saw\library\Application;
 use maestroprog\saw\library\TaskManager;

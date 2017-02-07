@@ -1,5 +1,13 @@
 {
     "require": {
-        "maestroprog/esockets": "dev-master"
-    }
+        "maestroprog/esockets": "dev-1.0-alpha"
+    },
+    "minimum-stability": "dev",
+
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/maestroprog/workmanager"
+        }
+    ]
 }

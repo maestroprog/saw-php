@@ -17,10 +17,10 @@ error_reporting(E_ALL);
 ini_set('log_errors', true);
 ini_set('error_log', __DIR__ . '/messages.log');
 
-require __DIR__ . '/../autoload.php';
-require __DIR__ . '/../vendors/maestroprog/esockets/autoload.php';
+require __DIR__ . '/../src/bootstrap.php';
+require __DIR__ . '/../vendor/autoload.php';
 
-\maestroprog\esockets\debug\Log::setEnv(SAW_ENVIRONMENT);
+Esockets\debug\Log::setEnv(SAW_ENVIRONMENT);
 
 function out($message)
 {
@@ -95,9 +95,9 @@ return [
         'socket_port' => 59090,
     ],
     'params' => [
-        'php_binary_path' => PHP_OS === 'WINNT' ? 'd:\OpenServer\modules\php\PHP-7-x64\php.exe' : 'php',
-        'controller_path' => __DIR__ . DS . 'workers' . DS . 'controller.php',
-        'worker_path' => __DIR__ . DS . 'workers' . DS . 'worker.php',
+        'php_binary_path' => PHP_OS === 'WINNT' ? 'd:\OpenServer\modules\php\PHP-7.0\php.exe' : 'php',
+        'controller_path' => __DIR__ . DS . 'daemon' . DS . 'controller.php',
+        'worker_path' => __DIR__ . DS . 'daemon' . DS . 'worker.php',
         'worker_multiplier' => 4,
         'worker_max' => 8,
         'worker_app' => __DIR__ . DS . 'App.php',
