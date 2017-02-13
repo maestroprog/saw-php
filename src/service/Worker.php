@@ -10,11 +10,11 @@ namespace maestroprog\saw\service;
 
 use maestroprog\saw\library\TaskRunner;
 use maestroprog\saw\library\worker\Core;
-use maestroprog\saw\command\TaskAdd;
-use maestroprog\saw\command\TaskRes;
-use maestroprog\saw\command\TaskRun;
-use maestroprog\saw\command\WorkerAdd;
-use maestroprog\saw\command\WorkerDelete;
+use maestroprog\saw\Command\TaskAdd;
+use maestroprog\saw\Command\TaskRes;
+use maestroprog\saw\Command\TaskRun;
+use maestroprog\saw\Command\WorkerAdd;
+use maestroprog\saw\Command\WorkerDelete;
 use maestroprog\saw\entity\Task;
 use maestroprog\saw\library\dispatcher\Command;
 use maestroprog\saw\library\CommandDispatcher;

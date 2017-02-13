@@ -9,8 +9,8 @@
 namespace maestroprog\saw\service;
 
 use Esockets\TcpClient;
-use maestroprog\saw\command\TaskRes;
-use maestroprog\saw\command\TaskRun;
+use maestroprog\saw\Command\TaskRes;
+use maestroprog\saw\Command\TaskRun;
 use maestroprog\saw\entity\Command;
 use maestroprog\saw\entity\Task;
 use maestroprog\saw\library\Application;

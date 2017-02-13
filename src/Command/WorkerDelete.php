@@ -6,7 +6,7 @@
  * Time: 22:41
  */
 
-namespace maestroprog\saw\command;
+namespace maestroprog\saw\Command;
 
 use maestroprog\saw\library\dispatcher\Command;
 

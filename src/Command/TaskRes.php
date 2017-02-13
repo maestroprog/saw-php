@@ -6,7 +6,7 @@
  * Time: 13:14
  */
 
-namespace maestroprog\saw\command;
+namespace maestroprog\saw\Command;
 
 use maestroprog\saw\entity\Task;
 use maestroprog\saw\library\dispatcher\Command;

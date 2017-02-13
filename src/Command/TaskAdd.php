@@ -2,24 +2,26 @@
 /**
  * Created by PhpStorm.
  * User: yarullin
- * Date: 29.11.16
- * Time: 10:58
+ * Date: 12.12.16
+ * Time: 21:08
  */
 
-namespace maestroprog\saw\command;
+namespace maestroprog\saw\Command;
 
 use maestroprog\saw\library\dispatcher\Command;
 
 /**
- * Команда воркера "Воркер стартовал".
+ * Команда "Задача добавлена".
  * От воркера отправляется контроллеру для извещения.
  * От контроллера такая команда не отправляется (пока такое не предусмотрено).
  *
- * Результат выполнения - успешное/неуспешное добавление воркера в список известных.
+ * Результат выполнения команды - успешное/неуспешное добавление в известные команды.
  */
-class WorkerAdd extends Command
+class TaskAdd extends Command
 {
-    const NAME = 'wadd';
+    const NAME = 'tadd';
+
+    protected $needData = ['name'];
 
     public function getCommand(): string
     {
