@@ -9,7 +9,7 @@
 namespace maestroprog\saw\library;
 
 use maestroprog\saw\entity\Command;
-use maestroprog\saw\service\Worker;
+use maestroprog\saw\Standalone\Worker;
 
 /**
  * Фабрика воркеров.

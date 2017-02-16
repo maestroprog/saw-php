@@ -6,7 +6,7 @@
  * Time: 21:44
  */
 
-namespace maestroprog\saw\service;
+namespace maestroprog\saw\Standalone;
 
 use maestroprog\saw\library\controller\Core;
 use maestroprog\saw\Command\TaskAdd;

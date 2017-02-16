@@ -9,8 +9,8 @@
 namespace maestroprog\saw\library;
 
 use maestroprog\saw\entity\Task;
-use maestroprog\saw\service\Init;
-use maestroprog\saw\service\Worker;
+use maestroprog\saw\Connector\Main;
+use maestroprog\saw\Standalone\Worker;
 
 /**
  * Менеджер задач для воркера.
@@ -24,7 +24,7 @@ use maestroprog\saw\service\Worker;
 class TaskManager extends Singleton
 {
     /**
-     * @var Worker|Init
+     * @var Worker|Main
      */
     protected $controller;
 

@@ -6,13 +6,13 @@
  * Time: 17:02
  */
 
-use maestroprog\saw\service\Init;
+use maestroprog\saw\Connector\Main;
 
 define('SAW_ENVIRONMENT', 'Debug');
 $config = require __DIR__ . '/../config.php';
 
 try {
-    $init = Init::getInstance();
+    $init = Main::getInstance();
     if ($init->init($config)) {
         Esockets\debug\Log::log('configured. input...');
         if (!($init->connect() or $init->start())) {

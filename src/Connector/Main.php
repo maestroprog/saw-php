@@ -6,7 +6,7 @@
  * Time: 22:48
  */
 
-namespace maestroprog\saw\service;
+namespace maestroprog\saw\Connector;
 
 use Esockets\TcpClient;
 use maestroprog\saw\Command\TaskRes;
@@ -24,9 +24,9 @@ use maestroprog\saw\library\TaskRunner;
 use maestroprog\saw\library\worker\Core;
 
 /**
- * Воркер, использующийся входным скриптом.
+ * Коннектор, использующийся точкой входа, для подключения к контроллеру.
  */
-final class Init extends Singleton implements TaskRunner
+final class Main extends Singleton implements TaskRunner
 {
     use Executor;
 
@@ -241,10 +241,10 @@ final class Init extends Singleton implements TaskRunner
 
     /**
      * @param array $config
-     * @return Init|Worker
+     * @return Main|Worker
      * @throws \Exception
      */
-    public static function create(array $config): Init
+    public static function create(array $config): Main
     {
         $init = self::getInstance();
         if (!$init->init($config)) {

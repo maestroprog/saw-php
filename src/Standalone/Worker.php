@@ -6,7 +6,7 @@
  * Time: 21:56
  */
 
-namespace maestroprog\saw\service;
+namespace maestroprog\saw\Standalone;
 
 use maestroprog\saw\library\TaskRunner;
 use maestroprog\saw\library\worker\Core;
