@@ -6,7 +6,7 @@
  * Time: 16:22
  */
 
-class App extends \maestroprog\saw\library\Application
+class App extends \maestroprog\saw\Heading\Application
 {
     /**
      * @var \maestroprog\saw\entity\Task[]

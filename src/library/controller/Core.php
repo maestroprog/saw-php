@@ -6,7 +6,7 @@
  * Time: 20:22
  */
 
-namespace maestroprog\saw\library\controller;
+namespace maestroprog\saw\Heading\controller;
 
 use Esockets\debug\Log;
 use Esockets\TcpServer;
@@ -14,8 +14,8 @@ use maestroprog\saw\Command\TaskRes;
 use maestroprog\saw\Command\TaskRun;
 use maestroprog\saw\entity\Task;
 use maestroprog\saw\entity\controller\Worker;
-use maestroprog\saw\library\CommandDispatcher;
-use maestroprog\saw\library\Executor;
+use maestroprog\saw\Heading\CommandDispatcher;
+use maestroprog\saw\Heading\Executor;
 
 final class Core
 {

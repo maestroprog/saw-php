@@ -6,7 +6,7 @@
  * Time: 21:14
  */
 
-namespace maestroprog\saw\library;
+namespace maestroprog\saw\Heading;
 
 use maestroprog\saw\entity\Task;
 use maestroprog\saw\Connector\Main;

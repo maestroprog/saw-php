@@ -8,7 +8,7 @@
 
 namespace maestroprog\saw\Command;
 
-use maestroprog\saw\library\dispatcher\Command;
+use maestroprog\saw\Heading\dispatcher\Command;
 
 /**
  * Общая команда "воркер остановлен".

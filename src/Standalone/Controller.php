@@ -8,17 +8,17 @@
 
 namespace maestroprog\saw\Standalone;
 
-use maestroprog\saw\library\controller\Core;
+use maestroprog\saw\Heading\controller\Core;
 use maestroprog\saw\Command\TaskAdd;
 use maestroprog\saw\Command\TaskRes;
 use maestroprog\saw\Command\TaskRun;
 use maestroprog\saw\Command\WorkerAdd;
 use maestroprog\saw\Command\WorkerDelete;
 use maestroprog\saw\entity\Command as EntityCommand;
-use maestroprog\saw\library\dispatcher\Command;
-use maestroprog\saw\library\CommandDispatcher;
-use maestroprog\saw\library\Factory;
-use maestroprog\saw\library\Singleton;
+use maestroprog\saw\Heading\dispatcher\Command;
+use maestroprog\saw\Heading\CommandDispatcher;
+use maestroprog\saw\Heading\Factory;
+use maestroprog\saw\Heading\Singleton;
 use Esockets\Peer;
 use Esockets\TcpServer;
 use Esockets\debug\Log;

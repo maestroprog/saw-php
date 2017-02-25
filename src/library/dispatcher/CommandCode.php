@@ -6,7 +6,7 @@
  * Time: 0:51
  */
 
-namespace maestroprog\saw\library\dispatcher;
+namespace maestroprog\saw\Heading\dispatcher;
 
 
 trait CommandCode

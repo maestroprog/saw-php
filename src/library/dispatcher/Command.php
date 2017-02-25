@@ -6,7 +6,7 @@
  * Time: 10:25
  */
 
-namespace maestroprog\saw\library\dispatcher;
+namespace maestroprog\saw\Heading\dispatcher;
 
 use Esockets\base\Net;
 use Esockets\debug\Log;

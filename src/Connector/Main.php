@@ -13,15 +13,15 @@ use maestroprog\saw\Command\TaskRes;
 use maestroprog\saw\Command\TaskRun;
 use maestroprog\saw\entity\Command;
 use maestroprog\saw\entity\Task;
-use maestroprog\saw\library\Application;
-use maestroprog\saw\library\CommandDispatcher;
-use maestroprog\saw\library\Executor;
+use maestroprog\saw\Heading\Application;
+use maestroprog\saw\Heading\CommandDispatcher;
+use maestroprog\saw\Heading\Executor;
 use Esockets\debug\Log;
-use maestroprog\saw\library\Factory;
-use maestroprog\saw\library\Singleton;
-use maestroprog\saw\library\TaskManager;
-use maestroprog\saw\library\TaskRunner;
-use maestroprog\saw\library\worker\Core;
+use maestroprog\saw\Heading\Factory;
+use maestroprog\saw\Heading\Singleton;
+use maestroprog\saw\Heading\TaskManager;
+use maestroprog\saw\Heading\TaskRunner;
+use maestroprog\saw\Heading\worker\Core;
 
 /**
  * Коннектор, использующийся точкой входа, для подключения к контроллеру.

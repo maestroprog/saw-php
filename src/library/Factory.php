@@ -6,7 +6,7 @@
  * Time: 16:27
  */
 
-namespace maestroprog\saw\library;
+namespace maestroprog\saw\Heading;
 
 use maestroprog\saw\entity\Command;
 use maestroprog\saw\Standalone\Worker;

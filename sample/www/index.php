@@ -7,10 +7,20 @@
  */
 
 use maestroprog\saw\Connector\Main;
+use maestroprog\saw\Saw;
+
+ini_set('display_errors', false);
+error_reporting(E_ALL);
+ini_set('log_errors', true);
+ini_set('error_log', __DIR__ . '/messages.log');
 
 $time = microtime(true);
+require_once '../../src/bootstrap.php';
+require_once '../../vendor/autoload.php';
 
-$config = require __DIR__ . '/config.php';
+Saw::getInstance()
+    ->init(require __DIR__ . '/../config/common.php')
+    ->run();
 
 out('input start');
 try {

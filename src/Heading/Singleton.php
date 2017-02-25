@@ -6,7 +6,7 @@
  * Time: 19:51
  */
 
-namespace maestroprog\saw\library;
+namespace maestroprog\saw\Heading;
 
 class Singleton
 {
@@ -29,16 +29,13 @@ class Singleton
 
     private function __clone()
     {
-        // TODO: Implement __clone() method.
     }
 
     private function __sleep()
     {
-        // TODO: Implement __sleep() method.
     }
 
     private function __wakeup()
     {
-        // TODO: Implement __wakeup() method.
     }
 }

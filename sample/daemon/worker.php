@@ -16,7 +16,7 @@ if (PHP_SAPI !== 'cli') {
 
 define('SAW_ENVIRONMENT', 'Worker');
 
-$config = require __DIR__ . '/../config.php';
+$config = require __DIR__ . '/../common.php';
 
 try {
     $worker = Worker::create($config);

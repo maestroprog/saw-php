@@ -6,10 +6,10 @@
  * Time: 11:23
  */
 
-namespace maestroprog\saw\library;
+namespace maestroprog\saw\Heading;
 
 use Esockets\base\Net;
-use maestroprog\saw\library\dispatcher\Command;
+use maestroprog\saw\Heading\dispatcher\Command;
 use maestroprog\saw\entity\Command as EntityCommand;
 
 /**

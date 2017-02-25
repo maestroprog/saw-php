@@ -33,10 +33,10 @@ final class Command
     }
 
     /**
-     * @param $context \maestroprog\saw\library\dispatcher\Command
+     * @param $context \maestroprog\saw\Heading\dispatcher\Command
      * @return mixed
      */
-    public function exec(\maestroprog\saw\library\dispatcher\Command $context)
+    public function exec(\maestroprog\saw\Heading\dispatcher\Command $context)
     {
         return $this->isExecutable() ? call_user_func($this->executor, $context) : (var_dump($this->getName()));
     }

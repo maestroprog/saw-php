@@ -6,7 +6,7 @@
  * Time: 1:30
  */
 
-namespace maestroprog\saw\library;
+namespace maestroprog\saw\Heading;
 
 use Esockets\debug\Log;
 

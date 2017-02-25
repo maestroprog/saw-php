@@ -6,7 +6,7 @@
  * Time: 14:50
  */
 
-namespace maestroprog\saw\library;
+namespace maestroprog\saw\Heading;
 
 use maestroprog\saw\entity\Task;
 
@@ -39,7 +39,7 @@ abstract class Application
 
     /**
      * Запускает выполнение кода.
-     * Внутри функции обязательно должны идти вызовы @see \maestroprog\saw\library\TaskManager::run();
+     * Внутри функции обязательно должны идти вызовы @see \maestroprog\saw\Heading\TaskManager::run();
      *
      * @return mixed
      */

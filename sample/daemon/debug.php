@@ -9,7 +9,7 @@
 use maestroprog\saw\Connector\Main;
 
 define('SAW_ENVIRONMENT', 'Debug');
-$config = require __DIR__ . '/../config.php';
+$config = require __DIR__ . '/../common.php';
 
 try {
     $init = Main::getInstance();

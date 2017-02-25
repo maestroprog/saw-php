@@ -6,12 +6,12 @@
  * Time: 14:52
  */
 
-namespace maestroprog\saw\library\worker;
+namespace maestroprog\saw\Heading\worker;
 
 use Esockets\TcpClient;
 use maestroprog\saw\entity\Task;
-use maestroprog\saw\library\Application;
-use maestroprog\saw\library\TaskManager;
+use maestroprog\saw\Heading\Application;
+use maestroprog\saw\Heading\TaskManager;
 
 /**
  * Ядро воркера.

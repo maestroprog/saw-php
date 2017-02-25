@@ -6,7 +6,7 @@
  * Time: 22:53
  */
 
-namespace maestroprog\saw\library;
+namespace maestroprog\saw\Heading;
 
 
 use maestroprog\saw\entity\Task;
