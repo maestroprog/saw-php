@@ -8,7 +8,7 @@
 
 namespace maestroprog\saw;
 
-use maestroprog\saw\Application\Application;
+use maestroprog\saw\Application\ApplicationInterface;
 use maestroprog\saw\Application\Basic;
 use maestroprog\saw\Heading\Singleton;
 
@@ -25,7 +25,7 @@ final class Saw extends Singleton
         return $this;
     }
 
-    public function getApp(string $applicationId): Application
+    public function getApp(string $applicationId): ApplicationInterface
     {
         if (!class_exists($applicationClass)) {
             throw new \Exception(
@@ -41,7 +41,7 @@ final class Saw extends Singleton
         }
     }
 
-    public function runApp(Application $application): Application
+    public function runApp(ApplicationInterface $application): ApplicationInterface
     {
         $application->run();
     }

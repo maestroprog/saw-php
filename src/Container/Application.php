@@ -9,7 +9,7 @@
 namespace maestroprog\saw\Container;
 
 
-use maestroprog\saw\Application\Application as App;
+use maestroprog\saw\Application\ApplicationInterface as App;
 
 final class Application
 {
