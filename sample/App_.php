@@ -1,15 +1,9 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Руслан
- * Date: 05.11.2016
- * Time: 16:22
- */
 
-class App extends \maestroprog\saw\Heading\Application
+class App extends \Saw\Heading\Application
 {
     /**
-     * @var \maestroprog\saw\entity\Task[]
+     * @var \Saw\Entity\Task[]
      */
     private $tasks = [];
 

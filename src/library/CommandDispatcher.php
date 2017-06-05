@@ -1,16 +1,10 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: yarullin
- * Date: 29.11.16
- * Time: 11:23
- */
 
-namespace maestroprog\saw\Heading;
+namespace Saw\Heading;
 
 use Esockets\base\Net;
-use maestroprog\saw\Heading\dispatcher\Command;
-use maestroprog\saw\entity\Command as EntityCommand;
+use Saw\Heading\dispatcher\Command;
+use Saw\Entity\Command as EntityCommand;
 
 /**
  * Диспетчер команд.

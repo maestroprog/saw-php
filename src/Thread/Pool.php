@@ -1,15 +1,13 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: maestroprog
- * Date: 01.03.2017
- * Time: 0:23
- */
 
-namespace maestroprog\saw\Thread;
-
+namespace Saw\Thread;
 
 abstract class Pool
 {
+    protected $threads = [];
 
+    public function add(Thread $thread)
+    {
+        $this->threads[$thread->getId()] = $thread;
+    }
 }

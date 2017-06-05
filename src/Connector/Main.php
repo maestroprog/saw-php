@@ -1,35 +1,27 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Руслан
- * Date: 13.10.2016
- * Time: 22:48
- */
 
-namespace maestroprog\saw\Connector;
+namespace Saw\Connector;
 
 use Esockets\TcpClient;
-use maestroprog\saw\Command\TaskRes;
-use maestroprog\saw\Command\TaskRun;
-use maestroprog\saw\entity\Command;
-use maestroprog\saw\entity\Task;
-use maestroprog\saw\Heading\Application;
-use maestroprog\saw\Heading\CommandDispatcher;
-use maestroprog\saw\Heading\Executor;
+use Saw\Command\TaskRes;
+use Saw\Command\TaskRun;
+use Saw\Entity\Command;
+use Saw\Entity\Task;
+use Saw\Heading\Application;
+use Saw\Heading\CommandDispatcher;
+use Saw\Heading\Executor;
 use Esockets\debug\Log;
-use maestroprog\saw\Heading\Factory;
-use maestroprog\saw\Heading\Singleton;
-use maestroprog\saw\Heading\TaskManager;
-use maestroprog\saw\Heading\TaskRunner;
-use maestroprog\saw\Heading\worker\Core;
+use Saw\Heading\SawFactory;
+use Saw\Heading\Singleton;
+use Saw\Heading\TaskManager;
+use Saw\Heading\TaskRunner;
+use Saw\Heading\worker\WorkerCore;
 
 /**
  * Коннектор, использующийся точкой входа, для подключения к контроллеру.
  */
 final class Main extends Singleton implements TaskRunner
 {
-    use Executor;
-
     public $work = true;
 
     public $worker_app;
@@ -52,7 +44,7 @@ final class Main extends Singleton implements TaskRunner
     protected $app;
 
     /**
-     * @var Core only for Worker
+     * @var WorkerCore only for Worker
      */
     protected $core;
 
@@ -114,7 +106,7 @@ final class Main extends Singleton implements TaskRunner
      */
     public function start()
     {
-        $this->dispatcher = Factory::getInstance()->createDispatcher([
+        $this->dispatcher = SawFactory::getInstance()->createDispatcher([
             new Command(TaskRun::NAME, TaskRun::class),
             new Command(
                 TaskRes::NAME,
@@ -285,7 +277,7 @@ final class Main extends Singleton implements TaskRunner
                 //$init->stop();//todo
                 Log::log('closed');
             });
-            return $init->setTaskManager(Factory::getInstance()->createTaskManager($init));
+            return $init->setTaskManager(SawFactory::getInstance()->createTaskManager($init));
         } catch (\Exception $e) {
             Log::log(sprintf('Saw connect or start failed with error: %s', $e->getMessage()));
             throw new \Exception('Framework starting fail', 0, $e);

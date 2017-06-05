@@ -21,7 +21,7 @@
     "email": "maestroprog@gmail.com"
   },
   "require": {
-    "maestroprog/esockets": "dev-1.0-alpha"
+    "maestroprog/esockets": "v2.0-alpha"
   },
   "minimum-stability": "dev",
   "repositories": [
@@ -32,7 +32,7 @@
   ],
   "autoload": {
     "psr-4": {
-      "maestroprog\\saw\\": "src/"
+      "Saw": "src/"
     }
   }
 }

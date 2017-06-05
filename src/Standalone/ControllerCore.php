@@ -1,23 +1,17 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: yarullin
- * Date: 09.12.16
- * Time: 20:22
- */
 
-namespace maestroprog\saw\Heading\controller;
+namespace Saw\Heading\controller;
 
 use Esockets\debug\Log;
 use Esockets\TcpServer;
-use maestroprog\saw\Command\TaskRes;
-use maestroprog\saw\Command\TaskRun;
-use maestroprog\saw\entity\Task;
-use maestroprog\saw\entity\controller\Worker;
-use maestroprog\saw\Heading\CommandDispatcher;
-use maestroprog\saw\Heading\Executor;
+use Saw\Command\TaskRes;
+use Saw\Command\TaskRun;
+use Saw\Entity\Task;
+use Saw\Entity\controller\Worker;
+use Saw\Heading\CommandDispatcher;
+use Saw\Heading\Executor;
 
-final class Core
+final class ControllerCore
 {
     use Executor;
     /**

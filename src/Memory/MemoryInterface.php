@@ -1,18 +1,14 @@
 <?php
+
+namespace Saw\Memory;
+
 /**
- * Created by PhpStorm.
- * User: maestroprog
- * Date: 17.03.2017
- * Time: 22:41
+ * Описывает базовые возможности работы с памятью.
  */
-
-namespace maestroprog\saw\Memory;
-
-
 interface MemoryInterface
 {
     /**
-     * Ищет в памяти переменную.
+     * Проверяет существование переменной в памяти.
      *
      * @param $varName
      * @return bool

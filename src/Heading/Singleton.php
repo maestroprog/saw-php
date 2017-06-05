@@ -1,30 +1,24 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Руслан
- * Date: 29.10.2016
- * Time: 19:51
- */
 
-namespace maestroprog\saw\Heading;
+namespace Saw\Heading;
 
 class Singleton
 {
-    protected static $instance;
-
-    private function __construct()
-    {
-    }
+    protected static $instance = [];
 
     /**
-     * @return static
+     * @return self
      */
-    public static function getInstance()
+    public static function getInstance(): self
     {
         if (!isset(static::$instance[static::class])) {
             static::$instance[static::class] = new static();
         }
         return static::$instance[static::class];
+    }
+
+    private function __construct()
+    {
     }
 
     private function __clone()

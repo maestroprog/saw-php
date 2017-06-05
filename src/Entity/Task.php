@@ -1,12 +1,6 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: yarullin
- * Date: 28.11.16
- * Time: 20:12
- */
 
-namespace maestroprog\saw\entity;
+namespace Saw\Entity;
 
 class Task
 {

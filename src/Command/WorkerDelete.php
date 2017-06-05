@@ -1,14 +1,8 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: yarullin
- * Date: 30.11.16
- * Time: 22:41
- */
 
-namespace maestroprog\saw\Command;
+namespace Saw\Command;
 
-use maestroprog\saw\Heading\dispatcher\Command;
+use Saw\Heading\dispatcher\Command;
 
 /**
  * Общая команда "воркер остановлен".

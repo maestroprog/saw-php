@@ -1,12 +1,6 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: yarullin
- * Date: 29.11.16
- * Time: 10:25
- */
 
-namespace maestroprog\saw\Heading\dispatcher;
+namespace Saw\Heading\dispatcher;
 
 use Esockets\base\Net;
 use Esockets\debug\Log;

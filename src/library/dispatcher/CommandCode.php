@@ -1,13 +1,6 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Руслан
- * Date: 02.12.2016
- * Time: 0:51
- */
 
-namespace maestroprog\saw\Heading\dispatcher;
-
+namespace Saw\Heading\dispatcher;
 
 trait CommandCode
 {

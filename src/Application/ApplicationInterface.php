@@ -1,17 +1,9 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: maestroprog
- * Date: 25.02.2017
- * Time: 15:28
- */
 
-namespace maestroprog\saw\Application;
+namespace Saw\Application;
 
-
-use maestroprog\saw\Dto\Result;
-use maestroprog\saw\Thread\MultiThreadingInterface;
-use maestroprog\saw\Thread\Thread;
+use Saw\Dto\Result;
+use Saw\Thread\MultiThreadingInterface;
 
 interface ApplicationInterface extends MultiThreadingInterface
 {
@@ -34,7 +26,8 @@ interface ApplicationInterface extends MultiThreadingInterface
     /**
      * Выполняется, после получения нового запроса.
      * Метод должен выполнять инициализацию приложения
-     * для выполнения нового запроса.
+     * - загружать все необходимые данные
+     * для дальнейшей обработки нового запроса.
      *
      * Метод не выполняется на воркерах.
      *
@@ -44,6 +37,7 @@ interface ApplicationInterface extends MultiThreadingInterface
 
     /**
      * Описывает основной поток выполнения приложения.
+     * Этот метод должен содержать запуск остальных потоков приложения.
      *
      * @return mixed
      */
@@ -66,5 +60,4 @@ interface ApplicationInterface extends MultiThreadingInterface
      * @return Result
      */
     public function end(): Result;
-
 }

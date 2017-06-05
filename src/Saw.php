@@ -1,16 +1,10 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: maestroprog
- * Date: 25.02.2017
- * Time: 18:04
- */
 
-namespace maestroprog\saw;
+namespace Saw;
 
-use maestroprog\saw\Application\ApplicationInterface;
-use maestroprog\saw\Application\Basic;
-use maestroprog\saw\Heading\Singleton;
+use Saw\Application\ApplicationInterface;
+use Saw\Application\Basic;
+use Saw\Heading\Singleton;
 
 /**
  * Класс-синглтон, реализующий загрузку фреймворка Saw.
@@ -29,28 +23,27 @@ final class Saw extends Singleton
     {
         if (!class_exists($applicationClass)) {
             throw new \Exception(
-                sprintf('Application class "%s" is missing.', $applicationClass),
+                sprintf('ApplicationContainer class "%s" is missing.', $applicationClass),
                 self::ERROR_CLASS_NOT_EXISTS
             );
         }
         if (!$applicationClass instanceof Basic) {
             throw new \Exception(
-                sprintf('Application class "%s" is wrong.', $applicationClass),
+                sprintf('ApplicationContainer class "%s" is wrong.', $applicationClass),
                 self::ERROR_WRONG_CLASS
             );
+        }
+    }
+
+    public function createApp(string $applicationClass): ApplicationInterface
+    {
+        if (!class_exists($applicationClass)) {
+
         }
     }
 
     public function runApp(ApplicationInterface $application): ApplicationInterface
     {
         $application->run();
-    }
-
-    private function __construct()
-    {
-    }
-
-    private function __clone()
-    {
     }
 }

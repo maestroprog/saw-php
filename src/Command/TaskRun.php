@@ -1,15 +1,9 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: yarullin
- * Date: 12.12.16
- * Time: 21:12
- */
 
-namespace maestroprog\saw\Command;
+namespace Saw\Command;
 
-use maestroprog\saw\entity\Task;
-use maestroprog\saw\Heading\dispatcher\Command;
+use Saw\Entity\Task;
+use Saw\Heading\dispatcher\Command;
 
 /**
  * Общая команда "Задача запущена".

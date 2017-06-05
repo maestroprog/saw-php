@@ -1,16 +1,9 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: maestroprog
- * Date: 25.02.2017
- * Time: 15:27
- */
 
-namespace maestroprog\saw\Application;
+namespace Saw\Application;
 
-
-use maestroprog\saw\Dto\Result;
-use maestroprog\saw\Thread\Thread;
+use Saw\Dto\Result;
+use Saw\Thread\Thread;
 
 class Basic implements ApplicationInterface
 {
@@ -18,9 +11,8 @@ class Basic implements ApplicationInterface
 
     public function __construct(string $id, array $config)
     {
-
+        $this->id = $id;
     }
-
 
     final public function getId(): string
     {
@@ -37,7 +29,7 @@ class Basic implements ApplicationInterface
         $this->runThreads();
     }
 
-    abstract public function runThreads();
+    abstract public function runThreads(): bool;
 
     public function run()
     {
@@ -50,13 +42,11 @@ class Basic implements ApplicationInterface
 
     public function end(): Result
     {
-        return ;
+        return;
     }
 
-    public function thread(string $uniqueId, \Closure $code): Thread
+    public function thread(string $uniqueId, callable $code): Thread
     {
         // TODO: Implement thread() method.
     }
-
-
 }

@@ -1,13 +1,6 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: yarullin
- * Date: 09.12.16
- * Time: 20:39
- */
 
-namespace maestroprog\saw\entity;
-
+namespace Saw\Entity;
 
 final class Command
 {
@@ -33,10 +26,10 @@ final class Command
     }
 
     /**
-     * @param $context \maestroprog\saw\Heading\dispatcher\Command
+     * @param $context \Saw\Heading\dispatcher\Command
      * @return mixed
      */
-    public function exec(\maestroprog\saw\Heading\dispatcher\Command $context)
+    public function exec(\Saw\Heading\dispatcher\Command $context)
     {
         return $this->isExecutable() ? call_user_func($this->executor, $context) : (var_dump($this->getName()));
     }

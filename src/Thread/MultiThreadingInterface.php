@@ -1,25 +1,9 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: maestroprog
- * Date: 01.03.2017
- * Time: 0:10
- */
 
-namespace maestroprog\saw\Thread;
-
+namespace Saw\Thread;
 
 interface MultiThreadingInterface
 {
-    /**
-     * Заускает созданные потоки на выполнение.
-     * Вернет true, если запуск удался, а false
-     * можно интерпретировать как неудачу.
-     *
-     * @return bool
-     */
-    public function runThreads(): bool;
-
     /**
      * Создает новый поток с уникальным идентификатором,
      * и заданным колбеком.
@@ -40,6 +24,15 @@ interface MultiThreadingInterface
      * @return Thread
      */
     public function threadArguments(string $uniqueId, callable $code, array $arguments): Thread;
+
+    /**
+     * Заускает созданные потоки на выполнение.
+     * Вернет true, если запуск удался, а false
+     * можно интерпретировать как неудачу.
+     *
+     * @return bool
+     */
+    public function runThreads(): bool;
 
     /**
      * Дожидается завершения выполнения указанного потока.

@@ -1,14 +1,8 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Руслан
- * Date: 22.12.2016
- * Time: 5:07
- */
 
 spl_autoload_register(function ($class) {
     // project-specific namespace prefix
-    $prefix = 'maestroprog\\saw\\';
+    $prefix = 'Saw\\';
 
     // base directory for the namespace prefix
     $base_dir = __DIR__ . DIRECTORY_SEPARATOR;

@@ -1,24 +1,18 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Руслан
- * Date: 20.09.2015
- * Time: 21:44
- */
 
-namespace maestroprog\saw\Standalone;
+namespace Saw\Standalone;
 
-use maestroprog\saw\Heading\controller\Core;
-use maestroprog\saw\Command\TaskAdd;
-use maestroprog\saw\Command\TaskRes;
-use maestroprog\saw\Command\TaskRun;
-use maestroprog\saw\Command\WorkerAdd;
-use maestroprog\saw\Command\WorkerDelete;
-use maestroprog\saw\entity\Command as EntityCommand;
-use maestroprog\saw\Heading\dispatcher\Command;
-use maestroprog\saw\Heading\CommandDispatcher;
-use maestroprog\saw\Heading\Factory;
-use maestroprog\saw\Heading\Singleton;
+use Saw\Heading\controller\ControllerCore;
+use Saw\Command\TaskAdd;
+use Saw\Command\TaskRes;
+use Saw\Command\TaskRun;
+use Saw\Command\WorkerAdd;
+use Saw\Command\WorkerDelete;
+use Saw\Entity\Command as EntityCommand;
+use Saw\Heading\dispatcher\Command;
+use Saw\Heading\CommandDispatcher;
+use Saw\Heading\SawFactory;
+use Saw\Heading\Singleton;
 use Esockets\Peer;
 use Esockets\TcpServer;
 use Esockets\debug\Log;
@@ -78,7 +72,7 @@ final class Controller extends Singleton
     private $ss;
 
     /**
-     * @var Core
+     * @var ControllerCore
      */
     private $core;
 
@@ -104,7 +98,7 @@ final class Controller extends Singleton
             return false;
         }
         $this->configure($config);
-        $this->dispatcher = Factory::getInstance()->createDispatcher([
+        $this->dispatcher = SawFactory::getInstance()->createDispatcher([
             new EntityCommand(
                 WorkerAdd::NAME,
                 WorkerAdd::class,
@@ -146,7 +140,7 @@ final class Controller extends Singleton
                 }
             ),
         ]);
-        $this->core = new Core(
+        $this->core = new ControllerCore(
             $this->ss,
             $this->dispatcher,
             $this->php_binary_path,

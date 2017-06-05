@@ -1,14 +1,8 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: yarullin
- * Date: 29.11.16
- * Time: 10:58
- */
 
-namespace maestroprog\saw\Command;
+namespace Saw\Command;
 
-use maestroprog\saw\Heading\dispatcher\Command;
+use Saw\Heading\dispatcher\Command;
 
 /**
  * Команда воркера "Воркер стартовал".

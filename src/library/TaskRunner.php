@@ -1,15 +1,8 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Руслан
- * Date: 19.12.2016
- * Time: 22:53
- */
 
-namespace maestroprog\saw\Heading;
+namespace Saw\Heading;
 
-
-use maestroprog\saw\entity\Task;
+use Saw\Entity\Task;
 
 interface TaskRunner
 {

@@ -1,13 +1,6 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: maestroprog
- * Date: 02.03.2017
- * Time: 6:07
- */
 
-namespace maestroprog\saw\Thread;
-
+namespace Saw\Thread;
 
 interface MultiplexingInterface
 {

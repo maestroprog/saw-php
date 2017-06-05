@@ -1,12 +1,6 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Руслан
- * Date: 05.11.2015
- * Time: 17:02
- */
 
-use maestroprog\saw\Connector\Main;
+use Saw\Connector\Main;
 
 define('SAW_ENVIRONMENT', 'Debug');
 $config = require __DIR__ . '/../common.php';

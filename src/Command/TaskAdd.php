@@ -1,14 +1,8 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: yarullin
- * Date: 12.12.16
- * Time: 21:08
- */
 
-namespace maestroprog\saw\Command;
+namespace Saw\Command;
 
-use maestroprog\saw\Heading\dispatcher\Command;
+use Saw\Heading\dispatcher\Command;
 
 /**
  * Команда "Задача добавлена".

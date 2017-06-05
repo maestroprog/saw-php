@@ -1,13 +1,6 @@
 <?php
-/**
- * Saw entry worker script.
- * Created by PhpStorm.
- * User: Руслан
- * Date: 29.10.2016
- * Time: 18:54
- */
 
-use maestroprog\saw\Standalone\Worker;
+use Saw\Standalone\Worker;
 
 if (PHP_SAPI !== 'cli') {
     header('HTTP/1.1 503 Service Unavailable');

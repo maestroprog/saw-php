@@ -1,16 +1,10 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Руслан
- * Date: 20.09.2015
- * Time: 21:14
- */
 
-namespace maestroprog\saw\Heading;
+namespace Saw\Heading;
 
-use maestroprog\saw\entity\Task;
-use maestroprog\saw\Connector\Main;
-use maestroprog\saw\Standalone\Worker;
+use Saw\Entity\Task;
+use Saw\Connector\Main;
+use Saw\Standalone\Worker;
 
 /**
  * Менеджер задач для воркера.

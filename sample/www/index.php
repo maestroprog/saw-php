@@ -1,13 +1,7 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Руслан
- * Date: 20.09.2015
- * Time: 17:48
- */
 
-use maestroprog\saw\Connector\Main;
-use maestroprog\saw\Saw;
+use Saw\Connector\Main;
+use Saw\Saw;
 
 ini_set('display_errors', false);
 error_reporting(E_ALL);
@@ -22,7 +16,6 @@ Saw::getInstance()
     ->init(require __DIR__ . '/../config/common.php')
     ->run();
 
-out('input start');
 try {
     /**
      * @var Main $init
@@ -36,7 +29,6 @@ try {
     }
     exit;
 }
-out('input end');
 
 $time2 = microtime(true);
 $init->work();

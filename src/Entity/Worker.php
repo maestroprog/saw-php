@@ -1,14 +1,8 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: yarullin
- * Date: 28.11.16
- * Time: 20:18
- */
 
-namespace maestroprog\saw\entity\controller;
+namespace Saw\Entity\controller;
 
-use maestroprog\saw\entity\Task;
+use Saw\Entity\Task;
 
 /**
  * Сущность воркера, которой оперирует контроллер.

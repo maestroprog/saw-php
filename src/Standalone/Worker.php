@@ -1,30 +1,24 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Руслан
- * Date: 20.09.2015
- * Time: 21:56
- */
 
-namespace maestroprog\saw\Standalone;
+namespace Saw\Standalone;
 
-use maestroprog\saw\Heading\TaskRunner;
-use maestroprog\saw\Heading\worker\Core;
-use maestroprog\saw\Command\TaskAdd;
-use maestroprog\saw\Command\TaskRes;
-use maestroprog\saw\Command\TaskRun;
-use maestroprog\saw\Command\WorkerAdd;
-use maestroprog\saw\Command\WorkerDelete;
-use maestroprog\saw\entity\Task;
-use maestroprog\saw\Heading\dispatcher\Command;
-use maestroprog\saw\Heading\CommandDispatcher;
-use maestroprog\saw\Heading\Factory;
-use maestroprog\saw\Heading\Singleton;
-use maestroprog\saw\Heading\Application;
-use maestroprog\saw\Heading\TaskManager;
+use Saw\Heading\TaskRunner;
+use Saw\Heading\worker\WorkerCore;
+use Saw\Command\TaskAdd;
+use Saw\Command\TaskRes;
+use Saw\Command\TaskRun;
+use Saw\Command\WorkerAdd;
+use Saw\Command\WorkerDelete;
+use Saw\Entity\Task;
+use Saw\Heading\dispatcher\Command;
+use Saw\Heading\CommandDispatcher;
+use Saw\Heading\SawFactory;
+use Saw\Heading\Singleton;
+use Saw\Heading\Application;
+use Saw\Heading\TaskManager;
 use Esockets\TcpClient;
 use Esockets\debug\Log;
-use maestroprog\saw\entity\Command as EntityCommand;
+use Saw\Entity\Command as EntityCommand;
 
 /**
  * Воркер, использующийся воркер-скриптом.
@@ -55,7 +49,7 @@ final class Worker extends Singleton implements TaskRunner
     protected $app;
 
     /**
-     * @var Core only for Worker
+     * @var WorkerCore only for Worker
      */
     protected $core;
 
@@ -97,8 +91,8 @@ final class Worker extends Singleton implements TaskRunner
      */
     public function start()
     {
-        $this->core = new Core($this->sc, $this->worker_app_class);
-        $this->dispatcher = Factory::getInstance()->createDispatcher([
+        $this->core = new WorkerCore($this->sc, $this->worker_app_class);
+        $this->dispatcher = SawFactory::getInstance()->createDispatcher([
             new EntityCommand(
                 WorkerAdd::NAME,
                 WorkerAdd::class,
@@ -306,7 +300,7 @@ final class Worker extends Singleton implements TaskRunner
                 $init->stop();
                 Log::log('closed');
             });
-            return $init->setTaskManager(Factory::getInstance()->createTaskManager($init));
+            return $init->setTaskManager(SawFactory::getInstance()->createTaskManager($init));
         } else {
             throw new \Exception('Cannot initialize Worker');
         }

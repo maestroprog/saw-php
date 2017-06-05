@@ -1,27 +1,24 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: yarullin
- * Date: 18.11.16
- * Time: 16:27
- */
 
-namespace maestroprog\saw\Heading;
+namespace Saw\Heading;
 
-use maestroprog\saw\entity\Command;
-use maestroprog\saw\Standalone\Worker;
+use Saw\Entity\Command;
+use Saw\Standalone\Worker;
 
-/**
- * Фабрика воркеров.
- */
-final class Factory extends Singleton
+final class SawFactory extends Singleton
 {
+    public static function getThreadPool()
+    {
+
+    }
+
     private $dispatcher;
 
     /**
      * @param Command[] $knowCommands
      * @return CommandDispatcher
      * @throws \Exception
+     * @todo @deprecated
      */
     public function createDispatcher(array $knowCommands): CommandDispatcher
     {
@@ -29,6 +26,11 @@ final class Factory extends Singleton
         return $this->dispatcher;
     }
 
+    /**
+     * @param TaskRunner $controller
+     * @return TaskManager
+     * @todo @deprecated
+     */
     public function createTaskManager(TaskRunner $controller): TaskManager
     {
         return TaskManager::getInstance()->setController($controller);

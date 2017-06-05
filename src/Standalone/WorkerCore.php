@@ -1,23 +1,17 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Руслан
- * Date: 10.12.2016
- * Time: 14:52
- */
 
-namespace maestroprog\saw\Heading\worker;
+namespace Saw\Heading\worker;
 
 use Esockets\TcpClient;
-use maestroprog\saw\entity\Task;
-use maestroprog\saw\Heading\Application;
-use maestroprog\saw\Heading\TaskManager;
+use Saw\Entity\Task;
+use Saw\Heading\Application;
+use Saw\Heading\TaskManager;
 
 /**
  * Ядро воркера.
  * Само по себе нужно только для изоляции приложения.
  */
-final class Core
+final class WorkerCore
 {
     private $peer;
 
@@ -66,7 +60,7 @@ final class Core
         }
         $this->app = new $this->appClass($this->taskManager);
         if (!$this->app instanceof Application) {
-            throw new \Exception('Worker application must be instance of maestroprog\saw\library\Application');
+            throw new \Exception('Worker application must be instance of Saw\library\Application');
         }
         $this->app->run();
     }
