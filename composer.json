@@ -1,0 +1,38 @@
+{
+  "name": "maestroprog/saw",
+  "description": "Async php framework",
+  "version": "0.2-dev",
+  "type": "library",
+  "keywords": [
+    "framework",
+    "async",
+    "thread"
+  ],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Ruslan Yarullin",
+      "email": "maestroprog@gmail.com",
+      "homepage": "http://yr0.ru/",
+      "role": "developer"
+    }
+  ],
+  "support": {
+    "email": "maestroprog@gmail.com"
+  },
+  "require": {
+    "maestroprog/esockets": "v2.0-alpha"
+  },
+  "minimum-stability": "dev",
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/maestroprog/workmanager"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Saw\\": "src/"
+    }
+  }
+}
