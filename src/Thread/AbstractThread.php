@@ -2,12 +2,14 @@
 
 namespace Saw\Thread;
 
-abstract class Thread
+abstract class AbstractThread
 {
-    /**
-     * @var callable Содержит код потока.
-     */
-    private $code;
+    const STATE_NEW = 0; // поток создан
+    const STATE_RUN = 1; // поток выполняется
+    const STATE_END = 2; // выполнение потока завершено
+    const STATE_ERR = 3; // ошибка при выполнении потока
+
+    private $id;
 
     /**
      * @var string Уникальный идентификатор кода.
@@ -17,22 +19,51 @@ abstract class Thread
     /**
      * @var array Аргументы, передаваемые коду (функции).
      */
-    private $arguments = [];
+    protected $arguments = [];
 
-    public function __construct(callable $code, string $uniqueId)
+    private $state = self::STATE_NEW;
+    private $result;
+
+    public function __construct(int $id, string $uniqueId)
     {
-        $this->code = $code;
+        $this->id = $id;
         $this->uniqueId = $uniqueId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUniqueId(): string
+    {
+        return $this->uniqueId;
     }
 
     /**
      * Назначает аргументы для функции, в которой выполняется код потока.
      *
      * @param array $arguments
+     * @return self
      */
-    public function setArguments(array $arguments)
+    public function setArguments(array $arguments): self
     {
         $this->arguments = $arguments;
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getArguments(): array
+    {
+        return $this->arguments;
     }
 
     /**
@@ -63,14 +94,6 @@ abstract class Thread
      */
 
     /**
-     * @return string
-     */
-    public function getId()
-    {
-        return $this->uniqueId;
-    }
-
-    /**
      * Выполняет код потока.
      * @todo тут должны быть какие-нибудь исключения.
      * @todo кстати, это абстрактный метод!
@@ -78,22 +101,15 @@ abstract class Thread
      * @param void
      * @return void
      */
-    public function run()
+    abstract public function run();
+
+    public function getCurrentState(): int
     {
-        try {
-            call_user_func_array($this->code, $this->arguments);
-        } catch (\Throwable $throwable) {
-            // todo
-        }
+        return $this->state;
     }
 
-    public function getCurrentState()
+    public function getResult(): string
     {
-
-    }
-
-    public function getResult()
-    {
-
+        return $this->result;
     }
 }

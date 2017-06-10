@@ -2,8 +2,6 @@
 
 namespace Saw\Command;
 
-use Saw\Heading\dispatcher\Command;
-
 /**
  * Общая команда "воркер остановлен".
  * От воркера отправляется контроллеру для извещения.
@@ -12,7 +10,7 @@ use Saw\Heading\dispatcher\Command;
  * Результат выполнения - успешный/неуспешный останов воркера;
  * успешное/неуспешое удаление воркера из числа известных.
  */
-class WorkerDelete extends Command
+class WorkerDelete extends AbstractCommand
 {
     const NAME = 'wdel';
 

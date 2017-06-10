@@ -1,5 +1,9 @@
 <?php
 
+define('SAW_DIR', __DIR__);
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
 spl_autoload_register(function ($class) {
     // project-specific namespace prefix
     $prefix = 'Saw\\';

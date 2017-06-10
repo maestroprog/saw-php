@@ -2,88 +2,50 @@
 
 namespace Saw\Standalone;
 
-use Saw\Heading\TaskRunner;
-use Saw\Heading\worker\WorkerCore;
-use Saw\Command\TaskAdd;
-use Saw\Command\TaskRes;
-use Saw\Command\TaskRun;
+use Esockets\Client;
+use Saw\Application\ApplicationContainer;
+use Saw\Command\AbstractCommand;
+use Saw\Command\CommandHandler as EntityCommand;
+use Saw\Command\ThreadKnow;
+use Saw\Command\ThreadResult;
+use Saw\Command\ThreadRun;
 use Saw\Command\WorkerAdd;
 use Saw\Command\WorkerDelete;
-use Saw\Entity\Task;
-use Saw\Heading\dispatcher\Command;
-use Saw\Heading\CommandDispatcher;
-use Saw\Heading\SawFactory;
-use Saw\Heading\Singleton;
-use Saw\Heading\Application;
-use Saw\Heading\TaskManager;
-use Esockets\TcpClient;
 use Esockets\debug\Log;
-use Saw\Entity\Command as EntityCommand;
+use Saw\Saw;
+use Saw\Service\CommandDispatcher;
+use Saw\Thread\AbstractThread;
 
 /**
  * Воркер, использующийся воркер-скриптом.
  * Используется для выполнения отдельных задач.
  * Работает в качестве демона в нескольких экземплярах.
  */
-final class Worker extends Singleton implements TaskRunner
+final class Worker
 {
     public $work = true;
-
-    public $worker_app;
-
-    public $worker_app_class;
-
-    /**
-     * @var TcpClient socket connection
-     */
-    protected $sc;
+    private $client;
+    private $applicationContainer;
 
     /**
      * @var CommandDispatcher
      */
-    protected $dispatcher;
-
-    /**
-     * @var Application
-     */
-    protected $app;
-
-    /**
-     * @var WorkerCore only for Worker
-     */
+    private $dispatcher;
     protected $core;
 
-    /**
-     * Инициализация
-     *
-     * @param array $config
-     * @return bool
-     */
-    public function init(array &$config): bool
+    public function __construct(Client $client, ApplicationContainer $applicationContainer)
     {
-        // настройка сети
-        if (isset($config['net'])) {
-            $this->sc = new TcpClient($config['net']);
+        if (!$client->isConnected()) {
+            throw new PizcedException(); // todo
+        }
+        $this->client = $client;
+        $this->applicationContainer = $applicationContainer;
+        $this->client->onReceive($this->onRead());
 
-            $this->sc->onRead($this->onRead());
-
-            $this->sc->onDisconnect(function () {
-                Log::log('i disconnected!');
-                $this->work = false;
-            });
-        } else {
-            trigger_error('Net configuration not found', E_USER_NOTICE);
-            return false;
-        }
-        $this->configure($config);
-        if (empty($this->worker_app) || !file_exists($this->worker_app)) {
-            throw new \Exception('Worker application configuration not found');
-        }
-        require_once $this->worker_app;
-        if (!class_exists($this->worker_app_class)) {
-            throw new \Exception('Worker application must be configured with "worker_app_class"');
-        }
-        return true;
+        $this->client->onDisconnect(function () {
+            Log::log('i disconnected!');
+            $this->work = false;
+        });
     }
 
     /**
@@ -91,36 +53,35 @@ final class Worker extends Singleton implements TaskRunner
      */
     public function start()
     {
-        $this->core = new WorkerCore($this->sc, $this->worker_app_class);
-        $this->dispatcher = SawFactory::getInstance()->createDispatcher([
+        $this->dispatcher = Saw::factory()->createDispatcher([
             new EntityCommand(
                 WorkerAdd::NAME,
                 WorkerAdd::class,
-                function (Command $context) {
+                function (AbstractCommand $context) {
                     $this->core->run();
                 }
             ),
             new EntityCommand(
                 WorkerDelete::NAME,
                 WorkerDelete::class,
-                function (Command $context) {
+                function (AbstractCommand $context) {
                     $this->stop();
                 }
             ),
-            new EntityCommand(TaskAdd::NAME, TaskAdd::class),
+            new EntityCommand(ThreadKnow::NAME, ThreadKnow::class),
             new EntityCommand(
-                TaskRun::NAME,
-                TaskRun::class,
-                function (TaskRun $context) {
+                ThreadRun::NAME,
+                ThreadRun::class,
+                function (ThreadRun $context) {
                     // выполняем задачу
                     $task = new Task($context->getRunId(), $context->getName(), $context->getFromDsc());
                     $this->core->runTask($task);
                 }
             ),
             new EntityCommand(
-                TaskRes::NAME,
-                TaskRes::class,
-                function (TaskRes $context) {
+                ThreadResult::NAME,
+                ThreadResult::class,
+                function (ThreadResult $context) {
                     //todo
                     $this->core->receiveTask(
                         $context->getRunId(),
@@ -131,48 +92,30 @@ final class Worker extends Singleton implements TaskRunner
         ]);
     }
 
-    private function configure(array &$config)
-    {
-        // настройка доп. параметров
-        if (isset($config['params'])) {
-            foreach ($config['params'] as $key => &$param) {
-                if (property_exists($this, $key)) {
-                    $this->$key = $param;
-                }
-                unset($param);
-            }
-        }
-    }
-
-    public function connect()
-    {
-        return $this->sc->connect();
-    }
-
     public function stop()
     {
         $this->work = false;
-        $this->sc->disconnect();
+        $this->client->disconnect();
     }
 
     public function work()
     {
-        $this->sc->setBlock();
+        $this->client->block();
         while ($this->work) {
-            $this->sc->read();
+            $this->client->read();
 
             if (count($this->core->getRunQueue())) {
                 /** @var Task $task */
                 $task = array_shift($this->core->getRunQueue());
                 $task->setResult($this->core->runCallback($task->getName()));
-                $this->dispatcher->create(TaskRes::NAME, $this->sc)
+                $this->dispatcher->create(ThreadResult::NAME, $this->sc)
                     ->onError(function () {
                         //todo
                     })
-                    ->run(TaskRes::serializeTask($task));
+                    ->run(ThreadResult::serializeTask($task));
             }
 
-            usleep(INTERVAL);
+            usleep(10000);
         }
     }
 
@@ -191,13 +134,13 @@ final class Worker extends Singleton implements TaskRunner
     {
         $time = microtime(true);
         do {
-            $this->sc->read();
+            $this->client->read();
             $ok = true;
             foreach ($tasks as $task) {
-                if ($task->getState() === Task::ERR) {
+                if ($task->getState() === AbstractThread::STATE_ERR) {
                     break;
                 }
-                if ($task->getState() !== Task::END) {
+                if ($task->getState() !== AbstractThread::STATE_END) {
                     $ok = false;
                 }
             }
@@ -217,24 +160,12 @@ final class Worker extends Singleton implements TaskRunner
     public function addTask(Task $task)
     {
         $this->core->addTask($task);
-        $this->dispatcher->create(TaskAdd::NAME, $this->sc)
+        $this->dispatcher->create(ThreadKnow::NAME, $this->sc)
             ->onError(function () use ($task) {
                 //todo
                 $this->addTask($task); // опять пробуем добавить команду
             })
             ->run(['name' => $task->getName()]);
-    }
-
-    /**
-     * Настраивает текущий таск-менеджер.
-     *
-     * @param TaskManager $taskManager
-     * @return $this
-     */
-    public function setTaskManager(TaskManager $taskManager)
-    {
-        $this->core->setTaskManager($taskManager);
-        return $this;
     }
 
     protected function onRead(): callable
@@ -245,23 +176,18 @@ final class Worker extends Singleton implements TaskRunner
 
             switch ($data) {
                 case 'HELLO':
-                    $this->sc->send('HELLO');
+                    $this->client->send('HELLO');
                     break;
                 case 'ACCEPT':
-                    /** временный костыль, т.к. @see Init наследуется от Worker-а */
-                    if (SAW_ENVIRONMENT === 'Worker') {
-                        $this->dispatcher
-                            ->create(WorkerAdd::NAME, $this->sc)
-                            ->onError(function () {
-                                $this->stop();
-                            })
-                            ->onSuccess(function () {
-                                $this->run();
-                            })
-                            ->run();
-                    } else {
-                        $this->run();
-                    }
+                    $this->dispatcher
+                        ->create(WorkerAdd::NAME, $this->client)
+                        ->onError(function () {
+                            $this->stop();
+                        })
+                        ->onSuccess(function () {
+                            $this->run();
+                        })
+                        ->run();
                     break;
                 case 'INVALID':
                     // todo

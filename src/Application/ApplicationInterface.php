@@ -5,17 +5,8 @@ namespace Saw\Application;
 use Saw\Dto\Result;
 use Saw\Thread\MultiThreadingInterface;
 
-interface ApplicationInterface extends MultiThreadingInterface
+interface ApplicationInterface
 {
-    /**
-     * Загружает приложение с заданным уникальным
-     * идентификатором, и конфигом.
-     *
-     * @param string $id
-     * @param array $config
-     */
-    public function __construct(string $id, array $config);
-
     /**
      * Возвращает уникальный идентификатор приложения.
      *
@@ -36,14 +27,6 @@ interface ApplicationInterface extends MultiThreadingInterface
     public function init();
 
     /**
-     * Описывает основной поток выполнения приложения.
-     * Этот метод должен содержать запуск остальных потоков приложения.
-     *
-     * @return mixed
-     */
-    public function main();
-
-    /**
      * Запускает работу приложения.
      *
      * @return mixed
@@ -56,8 +39,6 @@ interface ApplicationInterface extends MultiThreadingInterface
      * Собирает результаты выполнения потоков.
      * На основе полученных результатов конструирует общий
      * результат выполнения приложения, и возвращает его.
-     *
-     * @return Result
      */
-    public function end(): Result;
+    public function end();
 }

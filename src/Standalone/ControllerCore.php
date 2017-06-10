@@ -4,8 +4,8 @@ namespace Saw\Heading\controller;
 
 use Esockets\debug\Log;
 use Esockets\TcpServer;
-use Saw\Command\TaskRes;
-use Saw\Command\TaskRun;
+use Saw\Command\ThreadResult;
+use Saw\Command\ThreadRun;
 use Saw\Entity\Task;
 use Saw\Entity\controller\Worker;
 use Saw\Heading\CommandDispatcher;
@@ -154,14 +154,14 @@ final class ControllerCore
         $task = $worker->getTask($rid);
         $task->setResult($result);
         $worker->removeTask($task); // release worker
-        $this->dispatcher->create(TaskRes::NAME, $peer)
+        $this->dispatcher->create(ThreadResult::NAME, $peer)
             ->onError(function () {
                 //todo
             })
             ->onSuccess(function () {
                 //todo
             })
-            ->run(TaskRes::serializeTask($task));
+            ->run(ThreadResult::serializeTask($task));
         Log::log('I send res to ' . $peer->getDsc());
     }
 
@@ -195,8 +195,8 @@ final class ControllerCore
             if ($worker >= 0) {
                 $workerPeer = $this->server->getPeerByDsc($worker);
                 try {
-                    /** @var $command TaskRun */
-                    $this->dispatcher->create(TaskRun::NAME, $workerPeer)
+                    /** @var $command ThreadRun */
+                    $this->dispatcher->create(ThreadRun::NAME, $workerPeer)
                         ->onError(function () use ($task) {
                             Log::log('error run task ' . $task->getName());
                             //todo
@@ -204,7 +204,7 @@ final class ControllerCore
                         ->onSuccess(function () use ($worker, $rid, $task) {
                             //$this->taskRun[$rid] = $task;
                         })
-                        ->run(TaskRun::serializeTask($task));
+                        ->run(ThreadRun::serializeTask($task));
                     // т.к. выполнение задачи на стороне воркера произойдет раньше,
                     // чем возврат ответа с успешным запуском
                     // почистим массив, и запомним что поставили воркеру эту задачу

@@ -2,8 +2,6 @@
 
 namespace Saw\Command;
 
-use Saw\Heading\dispatcher\Command;
-
 /**
  * Команда воркера "Воркер стартовал".
  * От воркера отправляется контроллеру для извещения.
@@ -11,7 +9,7 @@ use Saw\Heading\dispatcher\Command;
  *
  * Результат выполнения - успешное/неуспешное добавление воркера в список известных.
  */
-class WorkerAdd extends Command
+class WorkerAdd extends AbstractCommand
 {
     const NAME = 'wadd';
 

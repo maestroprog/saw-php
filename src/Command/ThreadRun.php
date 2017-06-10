@@ -2,8 +2,7 @@
 
 namespace Saw\Command;
 
-use Saw\Entity\Task;
-use Saw\Heading\dispatcher\Command;
+use Saw\Thread\AbstractThread;
 
 /**
  * Общая команда "Задача запущена".
@@ -12,11 +11,11 @@ use Saw\Heading\dispatcher\Command;
  *
  * Результат выполнения команды - успешный/неуспешный запуск выполнения задачи.
  */
-class TaskRun extends Command
+class ThreadRun extends AbstractCommand
 {
     const NAME = 'trun';
 
-    protected $needData = ['name', 'run_id'];
+    protected $needData = ['run_id', 'unique_id'];
 
     public function getCommand(): string
     {
@@ -53,15 +52,15 @@ class TaskRun extends Command
      * Команда сама знает, что ей нужно знать о задаче
      * - поэтому дадим ей задачу, пускай возьмёт все, что ей нужно.
      *
-     * @param Task $task
+     * @param AbstractThread $thread
      * @return array
      */
-    public static function serializeTask(Task $task): array
+    public static function serializeTask(AbstractThread $thread): array
     {
         return [
-            'name' => $task->getName(),
-            'run_id' => $task->getRunId(),
-            'from_dsc' => $task->getPeerDsc(),
+            'run_id' => $thread->getId(),
+            'unique_id' => $thread->getUniqueId(),
+            'arguments' => $thread->getArguments(),
         ];
     }
 }

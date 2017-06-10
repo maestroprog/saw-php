@@ -1,12 +1,10 @@
 <?php
 
-namespace Saw\Heading\dispatcher;
+namespace Saw\Command;
 
-use Esockets\base\Net;
-use Esockets\debug\Log;
-use Esockets\Peer;
+use Esockets\Client;
 
-abstract class Command
+abstract class AbstractCommand
 {
     use CommandCode;
 
@@ -24,27 +22,12 @@ abstract class Command
 
     protected $needData = [];
 
-    /**
-     * @var int
-     */
     private $id;
-
-    /**
-     * @var Net
-     */
     private $peer;
-
-    /**
-     * @var int
-     */
     private $state;
-
-    /**
-     * @var int
-     */
     private $code;
 
-    public function __construct(int $id, Net $peer, int $state = self::STATE_NEW, int $code = self::RES_VOID)
+    public function __construct(int $id, Client $peer, int $state = self::STATE_NEW, int $code = self::RES_VOID)
     {
         $this->id = $id;
         $this->peer = $peer;
@@ -52,6 +35,12 @@ abstract class Command
         $this->code = $code;
     }
 
+    /**
+     * Todo doc
+     *
+     * @param int $state
+     * @param int $code
+     */
     final public function reset(int $state, int $code)
     {
         $this->state = $state;
@@ -74,9 +63,9 @@ abstract class Command
     }
 
     /**
-     * @return Net|Peer
+     * @return Client
      */
-    public function getPeer(): Net
+    public function getPeer(): Client
     {
         return $this->peer;
     }
@@ -158,11 +147,11 @@ abstract class Command
      * а именно - есть ли все необходимые данные для запуска задачи.
      *
      * todo final!
+     * @param array $data
      * @return bool
      */
-    protected function isValid(&$data): bool
+    protected function isValid(array $data): bool
     {
         return count(array_diff_key(array_flip($this->needData), $data)) === 0;
     }
-
 }

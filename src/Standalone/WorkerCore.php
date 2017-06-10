@@ -2,10 +2,7 @@
 
 namespace Saw\Heading\worker;
 
-use Esockets\TcpClient;
-use Saw\Entity\Task;
-use Saw\Heading\Application;
-use Saw\Heading\TaskManager;
+use Esockets\Client;
 
 /**
  * Ядро воркера.
@@ -14,38 +11,14 @@ use Saw\Heading\TaskManager;
 final class WorkerCore
 {
     private $peer;
-
-    /**
-     * @var TaskManager
-     */
-    private $taskManager;
-
-    private $appClass;
-
-    /**
-     * @var Application
-     */
     public $app;
 
     public function __construct(
-        TcpClient $peer,
+        Client $peer,
         string $workerAppClass
     )
     {
         $this->peer = $peer;
-        $this->appClass = $workerAppClass;
-    }
-
-    /**
-     * Настраивает текущий таск-менеджер.
-     *
-     * @param TaskManager $taskManager
-     * @return $this
-     */
-    public function setTaskManager(TaskManager $taskManager)
-    {
-        $this->taskManager = $taskManager;
-        return $this;
     }
 
     /**

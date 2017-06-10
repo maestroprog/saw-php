@@ -2,9 +2,6 @@
 
 namespace Saw\Command;
 
-use Saw\Entity\Task;
-use Saw\Heading\dispatcher\Command;
-
 /**
  * Общая команда "Результат выполнения задачи".
  * В любом случае отправляется для передачи результата выполнения задачи
@@ -12,7 +9,7 @@ use Saw\Heading\dispatcher\Command;
  *
  * Результат выполнения команды - успешный/неуспешный прием результата выполнения задачи.
  */
-class TaskRes extends Command
+class ThreadResult extends AbstractCommand
 {
     const NAME = 'tres';
 

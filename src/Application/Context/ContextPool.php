@@ -2,7 +2,7 @@
 
 namespace Saw\Application\Context;
 
-class ContextPool
+final class ContextPool
 {
     /**
      * Добавляет новый контекст в пул.
@@ -10,6 +10,11 @@ class ContextPool
      * @param ContextInterface $context
      */
     public function add(ContextInterface $context)
+    {
+
+    }
+
+    public function switchTo(string $contextId)
     {
 
     }

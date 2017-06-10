@@ -2,14 +2,14 @@
 
 namespace Saw\Heading;
 
-class Singleton
+abstract class Singleton
 {
     protected static $instance = [];
 
     /**
-     * @return self
+     * @return static|self
      */
-    public static function getInstance(): self
+    public static function instance(): self
     {
         if (!isset(static::$instance[static::class])) {
             static::$instance[static::class] = new static();

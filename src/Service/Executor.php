@@ -2,6 +2,8 @@
 
 namespace Saw\Service;
 
+use SebastianBergmann\GlobalState\RuntimeException;
+
 final class Executor
 {
     /**
@@ -9,23 +11,35 @@ final class Executor
      */
     public $phpBinaryPath = 'php';
 
-    public function __construct(string $phpBinaryPath)
+    public function __construct(string $phpBinaryPath = null)
     {
-        $this->phpBinaryPath = $phpBinaryPath;
+        if (!is_null($phpBinaryPath)) {
+            $this->phpBinaryPath = $phpBinaryPath;
+        }
     }
 
-    public function exec($cmd)
+    /**
+     * Выполняет команду, и возвращает ID запущенного процесса.
+     *
+     * @param $cmd
+     * @return int process id (pid)
+     */
+    public function exec($cmd): int
     {
         $cmd = sprintf('%s -f %s', $this->phpBinaryPath, $cmd);
         if (PHP_OS === 'WINNT') {
             $cmd = str_replace('\\', '\\\\', $cmd);
         }
         $pipes = [STDIN, STDOUT, STDERR];
-        $pid = proc_open($cmd, [], $pipes, null, null, null);
-        if (false === $pid) {
+        $resource = proc_open($cmd, [], $pipes, null, null, null);
+        if (false === $resource) {
             throw new \RuntimeException('Cannot be run ' . $cmd);
         }
-        return $pid;
+        $status = proc_get_status($resource);
+        if (!isset($status['pid'])) {
+            throw new RuntimeException('Cannot get pid of running ' . $cmd);
+        }
+        return $status['pid'];
     }
 
     /**

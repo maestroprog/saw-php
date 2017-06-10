@@ -2,6 +2,10 @@
 
 namespace Saw\Thread;
 
+/**
+ * Интерфейс поддержки мультиплексирования.
+ * Thread-ы его должны имплементировать.
+ */
 interface MultiplexingInterface
 {
     /**

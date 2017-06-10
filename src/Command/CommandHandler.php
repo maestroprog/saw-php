@@ -1,8 +1,8 @@
 <?php
 
-namespace Saw\Entity;
+namespace Saw\Command;
 
-final class Command
+final class CommandHandler
 {
     private $name;
     private $class;
@@ -25,11 +25,7 @@ final class Command
         $this->executor = $executor;
     }
 
-    /**
-     * @param $context \Saw\Heading\dispatcher\Command
-     * @return mixed
-     */
-    public function exec(\Saw\Heading\dispatcher\Command $context)
+    public function exec(AbstractCommand $context)
     {
         return $this->isExecutable() ? call_user_func($this->executor, $context) : (var_dump($this->getName()));
     }

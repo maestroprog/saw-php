@@ -1,6 +1,6 @@
 <?php
 
-namespace Saw\Heading\dispatcher;
+namespace Saw\Command;
 
 trait CommandCode
 {
@@ -36,7 +36,7 @@ trait CommandCode
      */
     public function isSuccess()
     {
-        return $this->code === Command::RES_SUCCESS;
+        return $this->code === AbstractCommand::RES_SUCCESS;
     }
 
     /**
@@ -44,7 +44,7 @@ trait CommandCode
      */
     public function isError()
     {
-        return $this->code === Command::RES_ERROR;
+        return $this->code === AbstractCommand::RES_ERROR;
     }
 
     /**

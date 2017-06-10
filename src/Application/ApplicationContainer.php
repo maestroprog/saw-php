@@ -30,4 +30,11 @@ final class ApplicationContainer
         }
         return $this->apps[$id];
     }
+
+    public function run()
+    {
+        foreach ($this->apps as $app) {
+            $app->run();
+        }
+    }
 }

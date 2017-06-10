@@ -2,26 +2,21 @@
 
 namespace Saw\Standalone;
 
+use Esockets\Server;
 use Saw\Heading\controller\ControllerCore;
-use Saw\Command\TaskAdd;
-use Saw\Command\TaskRes;
-use Saw\Command\TaskRun;
+use Saw\Command\ThreadKnow;
+use Saw\Command\ThreadResult;
+use Saw\Command\ThreadRun;
 use Saw\Command\WorkerAdd;
 use Saw\Command\WorkerDelete;
-use Saw\Entity\Command as EntityCommand;
-use Saw\Heading\dispatcher\Command;
-use Saw\Heading\CommandDispatcher;
-use Saw\Heading\SawFactory;
-use Saw\Heading\Singleton;
-use Esockets\Peer;
-use Esockets\TcpServer;
+use Saw\Command\CommandHandler as EntityCommand;
 use Esockets\debug\Log;
 
 /**
  * Связующее звено между входным скриптом,
  * обеспечивающее контроль за работой Worker-ов.
  */
-final class Controller extends Singleton
+final class Controller
 {
     /**
      * Константы возможных типов подключающихся клиентов
@@ -31,6 +26,7 @@ final class Controller extends Singleton
     const CLIENT_WORKER = 3; // воркер
     const CLIENT_CONTROLLER = 4; // контроллер. (зарезервировано)
     const CLIENT_DEBUG = 5; // отладчик
+
     /**
      * Константы возможных состояний подключения с клиентом
      */
@@ -45,31 +41,22 @@ final class Controller extends Singleton
     /**
      * @var bool вызывать pcntl_dispatch_signals()
      */
-    public $dispatch_signals = false;
-
-    public $php_binary_path = 'php';
-
-    public $worker_path = 'worker.php';
+    public $dispatchSignals = false;
 
     /**
      * @var int множитель задач
      */
-    public $worker_multiplier = 1;
+    public $workerMultiplier = 1;
 
     /**
      * @var int количество инстансов
      */
-    public $worker_max = 1;
+    public $workerMax = 1;
 
     /**
-     * @var TcpServer
+     * @var Server
      */
     protected $server;
-
-    /**
-     * @var TcpServer socket connection
-     */
-    private $ss;
 
     /**
      * @var ControllerCore
@@ -102,35 +89,35 @@ final class Controller extends Singleton
             new EntityCommand(
                 WorkerAdd::NAME,
                 WorkerAdd::class,
-                function (Command $context) {
+                function (AbstractCommand $context) {
                     return $this->core->wAdd($context->getPeer()->getDsc());
                 }
             ),
             new EntityCommand(
                 WorkerDelete::NAME,
                 WorkerDelete::class,
-                function (Command $context) {
+                function (AbstractCommand $context) {
                     $this->core->wDel($context->getPeer()->getDsc());
                 }
             ),
             new EntityCommand(
-                TaskAdd::NAME,
-                TaskAdd::class,
-                function (Command $context) {
+                ThreadKnow::NAME,
+                ThreadKnow::class,
+                function (AbstractCommand $context) {
                     $this->core->tAdd($context->getPeer()->getDsc(), $context->getData()['name']);
                 }
             ),
             new EntityCommand(
-                TaskRun::NAME,
-                TaskRun::class,
-                function (TaskRun $context) {
+                ThreadRun::NAME,
+                ThreadRun::class,
+                function (ThreadRun $context) {
                     $this->core->tRun($context->getRunId(), $context->getPeer()->getDsc(), $context->getName());
                 }
             ),
             new EntityCommand(
-                TaskRes::NAME,
-                TaskRes::class,
-                function (TaskRes $context) {
+                ThreadResult::NAME,
+                ThreadResult::class,
+                function (ThreadResult $context) {
                     $this->core->tRes(
                         $context->getRunId(),
                         $context->getPeer()->getDsc(),
@@ -145,8 +132,8 @@ final class Controller extends Singleton
             $this->dispatcher,
             $this->php_binary_path,
             $this->worker_path,
-            $this->worker_multiplier,
-            $this->worker_max
+            $this->workerMultiplier,
+            $this->workerMax
         );
         return true;
     }
@@ -175,7 +162,7 @@ final class Controller extends Singleton
                 $this->work = false;
                 $this->ss->disconnect();
             });
-            $this->dispatch_signals = true;
+            $this->dispatchSignals = true;
         }
 
         if (!$this->ss->connect()) {
@@ -198,14 +185,14 @@ final class Controller extends Singleton
         while ($this->work) {
             $this->core->wBalance(); // балансируем воркеры
             $this->core->tBalance(); // раскидываем задачки
-            if ($this->dispatch_signals) {
+            if ($this->dispatchSignals) {
                 pcntl_signal_dispatch();
             }
             if ($this->ss->select()) {
                 $this->ss->listen(); // слушаем кто присоединился
                 $this->ss->read(); // читаем входящие запросы
             }
-            echo 'it' , PHP_EOL;
+            echo 'it', PHP_EOL;
 
             usleep(INTERVAL * 10);
         }

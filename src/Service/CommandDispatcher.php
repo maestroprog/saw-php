@@ -1,15 +1,15 @@
 <?php
 
-namespace Saw\Heading;
+namespace Saw\Service;
 
-use Esockets\base\Net;
-use Saw\Heading\dispatcher\Command;
-use Saw\Entity\Command as EntityCommand;
+use Esockets\Client;
+use Saw\Command\AbstractCommand;
+use Saw\Command\CommandHandler as EntityCommand;
 
 /**
  * Диспетчер команд.
  */
-final class CommandDispatcher extends Singleton
+final class CommandDispatcher
 {
     /**
      * Команды, которые мы знаем.
@@ -25,7 +25,16 @@ final class CommandDispatcher extends Singleton
      */
     private $created = [];
 
+    private $client;
+
+    public function __construct(Client $client)
+    {
+        $this->client = $client;
+    }
+
     /**
+     * Добавляет новую команду в список известных команд.
+     *
      * @param EntityCommand[] $commands
      * @return CommandDispatcher
      * @throws \Exception
@@ -34,14 +43,21 @@ final class CommandDispatcher extends Singleton
     {
         foreach ($commands as $command) {
             if (isset($this->know[$command->getName()]) || !class_exists($command->getClass())) {
-                throw new \Exception(sprintf('Command %s cannot added', $command->getName()));
+                throw new \Exception(sprintf('AbstractCommand %s cannot added', $command->getName()));
             }
             $this->know[$command->getName()] = $command;
         }
         return $this;
     }
 
-    public function create(string $command, Net $client): Command
+    /**
+     * Создаёт новую команду для постановки задачи.
+     *
+     * @param string $command
+     * @return AbstractCommand
+     * @throws \Exception
+     */
+    public function create(string $command): AbstractCommand
     {
         if (!isset($this->know[$command])) {
             throw new \Exception(sprintf('I don\'t know command %s', $command));
@@ -51,20 +67,27 @@ final class CommandDispatcher extends Singleton
             throw new \Exception(sprintf('I don\'t know Class %s', $class));
         }
         static $id = 0;
-        $this->created[$id] = $command = new $class($id, $client);
+        $this->created[$id] = $command = new $class($id, $this->client);
         $id++;
         return $command;
     }
 
-    public function dispatch($data, Net $peer)
+    /**
+     * Обрабатывает поступившую команду.
+     *
+     * @param $data
+     * @param Client $peer
+     * @throws \Exception
+     */
+    public function dispatch($data, Client $peer)
     {
         $command = $data['command'];
         if (!isset($this->know[$command])) {
             throw new \Exception(sprintf('I don\'t know command %s', $command));
         }
         $commandEntity = $this->know[$command];
-        /** @var $command Command */
-        if ($data['state'] == Command::STATE_RES) {
+        /** @var $command AbstractCommand */
+        if ($data['state'] == AbstractCommand::STATE_RES) {
             $command = $this->created[$data['id']];
             $command->reset($data['state'], $data['code']);
         } else {
@@ -74,12 +97,12 @@ final class CommandDispatcher extends Singleton
         $command->handle($data['data']);
         // смотрим, в каком состоянии находится поступившая к нам команда
         switch ($command->getState()) {
-            case Command::STATE_NEW:
-                throw new \Exception('Команду даже не запустили!');
+            case AbstractCommand::STATE_NEW:
+                throw new \RuntimeException('Команду даже не запустили!');
                 // why??
                 // такого состояния не может быть..
                 break;
-            case Command::STATE_RUN:
+            case AbstractCommand::STATE_RUN:
                 // если команда поступила на выполнение -  выполняем
                 try {
                     if ($commandEntity->exec($command) !== false) {
@@ -87,13 +110,13 @@ final class CommandDispatcher extends Singleton
                     } else {
                         $command->error();
                     }
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     //todo
                     echo $e->getMessage();
                     exit;
                 }
                 break;
-            case Command::STATE_RES:
+            case AbstractCommand::STATE_RES:
                 $command->dispatch($data['data']);
                 unset($this->created[$command->getId()]);
                 break;
@@ -108,7 +131,7 @@ final class CommandDispatcher extends Singleton
             && isset($data['data']);
     }
 
-    public function remember(int $commandId): Command
+    public function remember(int $commandId): AbstractCommand
     {
         return $this->created[$commandId] ?? null;
     }

@@ -2,48 +2,100 @@
 
 namespace Saw;
 
+use Esockets\base\Configurator;
 use Saw\Application\ApplicationInterface;
-use Saw\Application\Basic;
-use Saw\Heading\Singleton;
+use Saw\Config\ApplicationConfig;
+use Saw\Config\DaemonConfig;
+use Saw\Service\ApplicationLoader;
 
 /**
- * Класс-синглтон, реализующий загрузку фреймворка Saw.
+ * Класс-синглтон, реализующий загрузку Saw приложения Saw.
  */
-final class Saw extends Singleton
+final class Saw
 {
-    const ERROR_CLASS_NOT_EXISTS = 1;
-    const ERROR_WRONG_CLASS = 2;
+    const ERROR_APPLICATION_CLASS_NOT_EXISTS = 1;
+    const ERROR_WRONG_APPLICATION_CLASS = 2;
 
+    private static $instance;
+
+    private $factory;
+    /**
+     * @var ApplicationLoader
+     */
+    private $applicationLoader;
+
+    public static function factory(): SawFactory
+    {
+        return self::instance()->factory;
+    }
+
+    /**
+     * @return self
+     */
+    public static function instance(): self
+    {
+        return self::$instance ?? self::$instance = new self();
+    }
+
+    private function __construct()
+    {
+        defined('INTERVAL') or define('INTERVAL', 10000);
+        defined('SAW_DIR') or define('SAW_DIR', __DIR__);
+    }
+
+    /**
+     * Инициализация фреймворка с заданным конфигом.
+     *
+     * @param array $config
+     * @return Saw
+     */
     public function init(array $config): self
     {
+        foreach (['factory', 'daemon', 'sockets', 'application',] as $check) {
+            if (!isset($config[$check]) || !is_array($config[$check])) {
+                $config[$check] = [];
+            }
+        }
+        $this->factory = new SawFactory(
+            $config['factory'],
+            new DaemonConfig($config['daemon']),
+            new Configurator($config['sockets'])
+        );
+
+        $this->applicationLoader = new ApplicationLoader(
+            new ApplicationConfig($config['application']),
+            $this->factory
+        );
+
         return $this;
     }
 
-    public function getApp(string $applicationId): ApplicationInterface
+    /**
+     * Инстанцирование приложения.
+     *
+     * @param string $appClass
+     * @return ApplicationInterface
+     */
+    public function instanceApp(string $appClass): ApplicationInterface
     {
-        if (!class_exists($applicationClass)) {
-            throw new \Exception(
-                sprintf('ApplicationContainer class "%s" is missing.', $applicationClass),
-                self::ERROR_CLASS_NOT_EXISTS
-            );
-        }
-        if (!$applicationClass instanceof Basic) {
-            throw new \Exception(
-                sprintf('ApplicationContainer class "%s" is wrong.', $applicationClass),
-                self::ERROR_WRONG_CLASS
-            );
-        }
+        return $this->applicationLoader->instanceApp($appClass);
     }
 
-    public function createApp(string $applicationClass): ApplicationInterface
+    /**
+     * for singleton pattern
+     */
+    private function __clone()
     {
-        if (!class_exists($applicationClass)) {
-
-        }
+        ;
     }
 
-    public function runApp(ApplicationInterface $application): ApplicationInterface
+    private function __sleep()
     {
-        $application->run();
+        ;
+    }
+
+    private function __wakeup()
+    {
+        ;
     }
 }

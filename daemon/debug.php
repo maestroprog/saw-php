@@ -1,12 +1,12 @@
 <?php
 
-use Saw\Connector\Main;
+use Saw\Connector\WebConnector;
 
 define('SAW_ENVIRONMENT', 'Debug');
 $config = require __DIR__ . '/../common.php';
 
 try {
-    $init = Main::getInstance();
+    $init = WebConnector::getInstance();
     if ($init->init($config)) {
         Esockets\debug\Log::log('configured. input...');
         if (!($init->connect() or $init->start())) {

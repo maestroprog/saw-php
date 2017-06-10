@@ -32,7 +32,7 @@
   ],
   "autoload": {
     "psr-4": {
-      "Saw": "src/"
+      "Saw\\": "src/"
     }
   }
 }

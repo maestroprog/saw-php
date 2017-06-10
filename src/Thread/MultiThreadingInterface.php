@@ -10,9 +10,9 @@ interface MultiThreadingInterface
      *
      * @param string $uniqueId
      * @param callable $code
-     * @return Thread
+     * @return AbstractThread
      */
-    public function thread(string $uniqueId, callable $code): Thread;
+    public function thread(string $uniqueId, callable $code): AbstractThread;
 
     /**
      * Так же создает новый поток, дополнительно принимая
@@ -21,9 +21,9 @@ interface MultiThreadingInterface
      * @param string $uniqueId
      * @param callable $code
      * @param array $arguments
-     * @return Thread
+     * @return AbstractThread
      */
-    public function threadArguments(string $uniqueId, callable $code, array $arguments): Thread;
+    public function threadArguments(string $uniqueId, callable $code, array $arguments): AbstractThread;
 
     /**
      * Заускает созданные потоки на выполнение.
@@ -41,15 +41,15 @@ interface MultiThreadingInterface
      * указав этот же поток, то произойдет таймаут ожидания.
      * В общем случае так делать не рекомендуется.
      *
-     * @param Thread $thread
+     * @param AbstractThread $thread
      * @return void
      */
-    public function synchronizeOne(Thread $thread);
+    public function synchronizeOne(AbstractThread $thread);
 
     /**
      * Выполняет синхронизацию указанных потоков.
      *
-     * @param Thread[] $threads
+     * @param AbstractThread[] $threads
      * @return void
      * @throws SynchronizeException
      * @throws \InvalidArgumentException Если указан несуществующий поток,
