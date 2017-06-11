@@ -3,24 +3,20 @@
 namespace Saw\Heading\controller;
 
 use Esockets\debug\Log;
-use Esockets\TcpServer;
+use Esockets\Server;
 use Saw\Command\ThreadResult;
 use Saw\Command\ThreadRun;
-use Saw\Entity\Task;
-use Saw\Entity\controller\Worker;
-use Saw\Heading\CommandDispatcher;
-use Saw\Heading\Executor;
+use Saw\Service\CommandDispatcher;
 
+/**
+ * Ядро контроллера.
+ * В обязанности ядра входит управление
+ * подсистемами воркеров, разделяемой памяти, и прочее.
+ */
 final class ControllerCore
 {
-    use Executor;
-    /**
-     * @var TcpServer
-     */
     private $server;
-
     private $dispatcher;
-
     private $workerPath;
 
     /**
@@ -34,7 +30,7 @@ final class ControllerCore
     private $workerMax;
 
     public function __construct(
-        TcpServer $server,
+        Server $server,
         CommandDispatcher $dispatcher,
         string $phpBinaryPath,
         string $workerPath,

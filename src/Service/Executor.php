@@ -2,7 +2,7 @@
 
 namespace Saw\Service;
 
-use SebastianBergmann\GlobalState\RuntimeException;
+use Saw\Dto\ProcessStatus;
 
 final class Executor
 {
@@ -22,35 +22,33 @@ final class Executor
      * Выполняет команду, и возвращает ID запущенного процесса.
      *
      * @param $cmd
-     * @return int process id (pid)
+     * @return ProcessStatus
      */
-    public function exec($cmd): int
+    public function exec($cmd): ProcessStatus
     {
         $cmd = sprintf('%s -f %s', $this->phpBinaryPath, $cmd);
         if (PHP_OS === 'WINNT') {
             $cmd = str_replace('\\', '\\\\', $cmd);
+        }
+        if (PHP_SAPI !== 'cli') {
+            define('STDIN', fopen('php://stdin', 'r'));
+            define('STDOUT', fopen('php://stdout', 'w'));
+            define('STDERR', fopen('php://stderr', 'w'));
         }
         $pipes = [STDIN, STDOUT, STDERR];
         $resource = proc_open($cmd, [], $pipes, null, null, null);
         if (false === $resource) {
             throw new \RuntimeException('Cannot be run ' . $cmd);
         }
-        $status = proc_get_status($resource);
-        if (!isset($status['pid'])) {
-            throw new RuntimeException('Cannot get pid of running ' . $cmd);
-        }
-        return $status['pid'];
+        return new ProcessStatus($resource);
     }
 
     /**
      * Прихлопывает запущенный процесс.
-     * @param resource $pid
+     * @param ProcessStatus $processStatus
      */
-    public function kill($pid)
+    public function kill(ProcessStatus $processStatus)
     {
-        if (!is_resource($pid)) {
-            throw new \InvalidArgumentException('Pid is not resource.');
-        }
-        proc_close($pid);
+        proc_close($processStatus->getResource());
     }
 }

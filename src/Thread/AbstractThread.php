@@ -108,8 +108,15 @@ abstract class AbstractThread
         return $this->state;
     }
 
+    public function hasResult(): bool
+    {
+        return is_null($this->result);
+    }
+
     public function getResult(): string
     {
         return $this->result;
     }
+
+
 }

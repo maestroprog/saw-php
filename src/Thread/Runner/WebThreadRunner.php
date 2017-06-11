@@ -2,20 +2,37 @@
 
 namespace Saw\Thread\Runner;
 
+use Esockets\Client;
+use Saw\Command\CommandHandler;
+use Saw\Command\ThreadResult;
 use Saw\Command\ThreadRun;
-use Saw\Connector\WebConnector;
+use Saw\Service\CommandDispatcher;
 use Saw\Thread\AbstractThread;
 use Saw\Thread\ThreadWithCode;
 
 class WebThreadRunner implements ThreadRunnerInterface
 {
-    private $connector;
+    private $client;
+    private $commandDispatcher;
 
     private $threads = [];
 
-    public function __construct(WebConnector $connector)
+    public function __construct(Client $client, CommandDispatcher $commandDispatcher)
     {
-        $this->connector = $connector;
+        $this->client = $client;
+        $this->commandDispatcher = $commandDispatcher;
+
+        $this->commandDispatcher
+            ->add([
+                new CommandHandler(ThreadRun::NAME, ThreadRun::class),
+                new CommandHandler(
+                    ThreadResult::NAME,
+                    ThreadResult::class,
+                    function (ThreadResult $context) {
+                        $this->setResultByRunId($context->getRunId(), $context->getResult());
+                    }
+                ),
+            ]);
     }
 
     public function thread(string $uniqueId, callable $code): AbstractThread
@@ -31,24 +48,59 @@ class WebThreadRunner implements ThreadRunnerInterface
 
     public function runThreads(): bool
     {
-        $dispatcher = $this->connector->getDispatcher();
         foreach ($this->threads as $thread) {
-            $dispatcher->create(ThreadRun::NAME)->run(ThreadRun::serializeTask($thread));
+            $this->commandDispatcher->create(ThreadRun::NAME, $this->client)
+                ->run(ThreadRun::serializeTask($thread));
         }
     }
 
     public function synchronizeOne(AbstractThread $thread)
     {
-        // TODO: Implement synchronizeOne() method.
+        while (!$thread->hasResult()) {
+            $this->client->live();
+        }
     }
 
+    /**
+     * @inheritdoc
+     */
     public function synchronizeThreads(array $threads)
     {
-        // TODO: Implement synchronizeThreads() method.
+        $synchronized = false;
+        do {
+            $this->client->live();
+            $synchronizeOk = true;
+            /**
+             * @var $thread AbstractThread
+             */
+            foreach ($threads as $thread) {
+                $synchronizeOk = $synchronizeOk && $thread->hasResult();
+                if (!$synchronizeOk) break;
+            }
+            if ($synchronizeOk) {
+                $synchronized = true;
+            }
+        } while (!$synchronized);
     }
 
     public function synchronizeAll()
     {
-        // TODO: Implement synchronizeAll() method.
+        $synchronized = false;
+        do {
+            $this->client->live();
+            $synchronizeOk = true;
+            foreach ($this->threads as $thread) {
+                $synchronizeOk = $synchronizeOk && $thread->hasResult();
+                if (!$synchronizeOk) break;
+            }
+            if ($synchronizeOk) {
+                $synchronized = true;
+            }
+        } while (!$synchronized);
+    }
+
+    public function setResultByRunId(int $id, $data)
+    {
+
     }
 }

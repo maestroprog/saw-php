@@ -4,11 +4,15 @@ namespace Saw;
 
 use Esockets\base\Configurator;
 use Esockets\Client;
-use maestroprog\saw\Service\ControllerStarter;
-use Saw\Command\CommandHandler;
+use Esockets\Server;
 use Saw\Config\DaemonConfig;
+use Saw\Connector\ControllerConnector;
+use Saw\Memory\SharedMemoryBySocket;
 use Saw\Service\CommandDispatcher;
+use Saw\Service\ControllerStarter;
 use Saw\Service\Executor;
+use Saw\Service\WorkerStarter;
+use Saw\Thread\Runner\WebThreadRunner;
 
 /**
  * Фабрика всех сервисов и обхектов для пилы.
@@ -22,9 +26,14 @@ final class SawFactory
     private $socketConfigurator;
 
     private $controllerClient;
-
-    private $dispatcher;
+    private $commandDispatcher;
     private $executor;
+    private $controllerStarter;
+    private $sharedMemory;
+    private $controllerConnector;
+    private $webThreadRunner;
+    private $workerStarter;
+    private $controllerServer;
 
     public function __construct(
         array $config,
@@ -40,9 +49,19 @@ final class SawFactory
         $this->socketConfigurator = $socketConfigurator;
     }
 
+    public function getDaemonConfig(): DaemonConfig
+    {
+        return $this->daemonConfig;
+    }
+
+    public function getSocketConfigurator(): Configurator
+    {
+        return $this->socketConfigurator;
+    }
+
     public function instanceArguments(array $arguments): array
     {
-        array_walk($arguments, function (&$argument) {
+        $arguments = array_map(function ($argument) {
             if (is_array($argument)) {
                 $arguments = [];
                 if (isset($argument['arguments'])) {
@@ -54,30 +73,32 @@ final class SawFactory
                     $argument = $arguments;
                 }
             } elseif (self::CALL_POINTER === substr($argument, 0, 1)) {
-                $argument = call_user_func([$this, substr($argument, 0, -1)]);
+                $argument = call_user_func([$this, substr($argument, 1)]);
             }
-        });
+            return $argument;
+        }, $arguments);
         return $arguments;
-    }
-
-    public function getControllerClient(): Client
-    {
-        $this->controllerClient or $this->controllerClient = $this->socketConfigurator->makeClient();
-        return $this->controllerClient;
     }
 
     public function getControllerStarter(): ControllerStarter
     {
-        return new ControllerStarter(
-            $this->getExecutor(),
-            $this->controllerClient,
-            $this->config['starter']
-        );
+        return $this->controllerStarter
+            ?? $this->controllerStarter = new ControllerStarter(
+                $this->getExecutor(),
+                $this->controllerClient,
+                $this->config['starter'],
+                $this->daemonConfig->getControllerPid()
+            );
     }
 
-    public function getWebThreadRunner()
+    public function getWorkerStarter(): WorkerStarter
     {
-
+        return $this->workerStarter
+            ?? $this->workerStarter = new WorkerStarter(
+                $this->getExecutor(),
+                $this->config['starter'],
+                $this->daemonConfig->getWorkerPid()
+            );
     }
 
     public function getExecutor(): Executor
@@ -92,15 +113,44 @@ final class SawFactory
         return $this->executor;
     }
 
-    /**
-     * @param Client $client
-     * @param CommandHandler[] $knowCommands
-     * @return CommandDispatcher
-     * @throws \Exception
-     */
-    public function createCommandDispatcher(Client $client, array $knowCommands): CommandDispatcher
+    public function getSharedMemory(): SharedMemoryBySocket
     {
-        return $this->dispatcher
-            ?? $this->dispatcher = (new CommandDispatcher($client))->add($knowCommands);
+        return $this->sharedMemory
+            ?? $this->sharedMemory = new SharedMemoryBySocket($this->getControllerConnector());
+    }
+
+    public function getControllerConnector(): ControllerConnector
+    {
+        return $this->controllerConnector
+            ?? $this->controllerConnector
+                = new ControllerConnector(
+                $this->getControllerClient(),
+                $this->daemonConfig->getControllerAddress(),
+                $this->getCommandDispatcher(),
+                $this->getControllerStarter()
+            );
+    }
+
+    public function getControllerClient(): Client
+    {
+        return $this->controllerClient ?? $this->controllerClient = $this->socketConfigurator->makeClient();
+    }
+
+    public function getControllerServer(): Server
+    {
+        return $this->controllerServer ?? $this->controllerServer = $this->socketConfigurator->makeServer();
+    }
+
+    public function getCommandDispatcher(): CommandDispatcher
+    {
+        return $this->commandDispatcher
+            ?? $this->commandDispatcher = new CommandDispatcher();
+    }
+
+    public function getWebThreadRunner(): WebThreadRunner
+    {
+        return $this->webThreadRunner
+            ?? $this->webThreadRunner
+                = new WebThreadRunner($this->getControllerClient(), $this->getCommandDispatcher());
     }
 }

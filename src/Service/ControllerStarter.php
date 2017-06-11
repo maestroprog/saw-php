@@ -1,11 +1,10 @@
 <?php
 
-namespace maestroprog\saw\Service;
+namespace Saw\Service;
 
 use Esockets\base\AbstractAddress;
 use Esockets\base\exception\ConnectionException;
 use Esockets\Client;
-use Saw\Service\Executor;
 use Esockets\debug\Log;
 
 /**
@@ -42,7 +41,7 @@ final class ControllerStarter
         $before_run = microtime(true);
         $pid = $this->executor->exec($this->cmd);
         $after_run = microtime(true);
-        if (false === file_put_contents($this->pidFile, $pid)) {
+        if (false === file_put_contents($this->pidFile, $pid->getPid())) {
             throw new \RuntimeException('Cannot save the pid in pid file.');
         }
         usleep(10000); // await for run controller Saw
@@ -61,10 +60,16 @@ final class ControllerStarter
                 break;
             } catch (ConnectionException $e) {
                 if ($try++ > 10) {
+                    unlink($this->pidFile);
                     throw new \RuntimeException('Attempts were unsuccessfully');
                 }
                 usleep(10000);
             }
         }
+    }
+
+    public function isExistsPidFile(): bool
+    {
+        return file_exists($this->pidFile);
     }
 }

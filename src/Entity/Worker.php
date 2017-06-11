@@ -1,8 +1,8 @@
 <?php
 
-namespace Saw\Entity\controller;
+namespace Saw\Entity;
 
-use Saw\Entity\Task;
+use Saw\Dto\ProcessStatus;
 
 /**
  * Сущность воркера, которой оперирует контроллер.
@@ -35,8 +35,18 @@ class Worker
      */
     private $runTasks = [];
 
-    public function __construct(int $state = self::NEW)
+    /**
+     * @var resource
+     */
+    private $processResource;
+
+    /**
+     * @param ProcessStatus $processResource
+     * @param int $state
+     */
+    public function __construct(ProcessStatus $processResource, int $state = self::NEW)
     {
+        $this->processResource = $processResource;
         $this->state = $state;
     }
 

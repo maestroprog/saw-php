@@ -37,6 +37,7 @@ final class ApplicationLoader
                 $this->applicationConfig->getApplicationIdByClass($applicationClass)
             );
         } catch (\RuntimeException $e) {
+            var_dump($e->getMessage());
             $arguments = [];
         }
 

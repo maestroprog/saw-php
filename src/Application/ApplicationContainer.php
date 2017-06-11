@@ -31,6 +31,9 @@ final class ApplicationContainer
         return $this->apps[$id];
     }
 
+    /**
+     * Запускает все приложения в контейнере.
+     */
     public function run()
     {
         foreach ($this->apps as $app) {

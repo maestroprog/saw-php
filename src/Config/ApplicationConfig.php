@@ -22,6 +22,7 @@ final class ApplicationConfig
                     Saw::ERROR_WRONG_APPLICATION_CLASS
                 );
             }
+            $this->applications[$appId] = $appConfig;
         }
     }
 

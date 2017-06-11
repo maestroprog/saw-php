@@ -25,11 +25,8 @@ final class CommandDispatcher
      */
     private $created = [];
 
-    private $client;
-
-    public function __construct(Client $client)
+    public function __construct()
     {
-        $this->client = $client;
     }
 
     /**
@@ -54,10 +51,11 @@ final class CommandDispatcher
      * Создаёт новую команду для постановки задачи.
      *
      * @param string $command
+     * @param Client $client
      * @return AbstractCommand
      * @throws \Exception
      */
-    public function create(string $command): AbstractCommand
+    public function create(string $command, Client $client): AbstractCommand
     {
         if (!isset($this->know[$command])) {
             throw new \Exception(sprintf('I don\'t know command %s', $command));
@@ -67,8 +65,7 @@ final class CommandDispatcher
             throw new \Exception(sprintf('I don\'t know Class %s', $class));
         }
         static $id = 0;
-        $this->created[$id] = $command = new $class($id, $this->client);
-        $id++;
+        $this->created[$id] = $command = AbstractCommand::create($class, ++$id, $client);
         return $command;
     }
 
@@ -92,7 +89,7 @@ final class CommandDispatcher
             $command->reset($data['state'], $data['code']);
         } else {
             $class = $commandEntity->getClass();
-            $command = new $class($data['id'], $peer, $data['state'], $data['code']);
+            $command = AbstractCommand::instance($class, $data['id'], $peer, $data['state'], $data['code']);
         }
         $command->handle($data['data']);
         // смотрим, в каком состоянии находится поступившая к нам команда

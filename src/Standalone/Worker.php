@@ -104,7 +104,7 @@ final class Worker
         while ($this->work) {
             $this->client->read();
 
-            if (count($this->core->getRunQueue())) {
+            if (count($this->core->getunQueue())) {
                 /** @var Task $task */
                 $task = array_shift($this->core->getRunQueue());
                 $task->setResult($this->core->runCallback($task->getName()));
@@ -114,58 +114,12 @@ final class Worker
                     })
                     ->run(ThreadResult::serializeTask($task));
             }
-
-            usleep(10000);
         }
     }
 
     public function run()
     {
-        $this->core->run();
-    }
-
-    /**
-     * Метод под нужды таскера - запускает ожидание завершения выполнения указанных в массиве задач.
-     *
-     * @param Task[] $tasks
-     * @return bool
-     */
-    public function syncTask(array $tasks, float $timeout = 0.1): bool
-    {
-        $time = microtime(true);
-        do {
-            $this->client->read();
-            $ok = true;
-            foreach ($tasks as $task) {
-                if ($task->getState() === AbstractThread::STATE_ERR) {
-                    break;
-                }
-                if ($task->getState() !== AbstractThread::STATE_END) {
-                    $ok = false;
-                }
-            }
-            if ($ok) {
-                break;
-            }
-            if (microtime(true) - $time > $timeout) {
-                // default wait timeout 1 sec
-                break;
-            }
-            usleep(INTERVAL);
-        } while (true);
-
-        return $ok;
-    }
-
-    public function addTask(Task $task)
-    {
-        $this->core->addTask($task);
-        $this->dispatcher->create(ThreadKnow::NAME, $this->sc)
-            ->onError(function () use ($task) {
-                //todo
-                $this->addTask($task); // опять пробуем добавить команду
-            })
-            ->run(['name' => $task->getName()]);
+        $this->applicationContainer->run();
     }
 
     protected function onRead(): callable
@@ -175,9 +129,6 @@ final class Worker
             Log::log(var_export($data, true));
 
             switch ($data) {
-                case 'HELLO':
-                    $this->client->send('HELLO');
-                    break;
                 case 'ACCEPT':
                     $this->dispatcher
                         ->create(WorkerAdd::NAME, $this->client)
@@ -191,44 +142,18 @@ final class Worker
                     break;
                 case 'INVALID':
                     // todo
+                    throw new \RuntimeException('Is an invalid worker.');
                     break;
                 case 'BYE':
                     $this->work = false;
                     break;
                 default:
                     if (is_array($data) && $this->dispatcher->valid($data)) {
-                        $this->dispatcher->dispatch($data, $this->sc);
+                        $this->dispatcher->dispatch($data, $this->client);
                     } else {
-                        $this->sc->send('INVALID');
+                        $this->client->send('INVALID');
                     }
             }
         };
-    }
-
-    /**
-     * @param array $config
-     * @return Worker
-     * @throws \Exception
-     */
-    public static function create(array $config): Worker
-    {
-        $init = self::getInstance();
-        if ($init->init($config)) {
-            Log::log('configured. input...');
-            try {
-                $init->connect();
-                $init->start();
-            } catch (\Exception $e) {
-                Log::log(sprintf('Worker connect or start failed with error: %s', $e->getMessage()));
-                throw new \Exception('Worker starting fail');
-            }
-            register_shutdown_function(function () use ($init) {
-                $init->stop();
-                Log::log('closed');
-            });
-            return $init->setTaskManager(SawFactory::getInstance()->createTaskManager($init));
-        } else {
-            throw new \Exception('Cannot initialize Worker');
-        }
     }
 }

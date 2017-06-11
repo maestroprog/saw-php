@@ -27,7 +27,28 @@ abstract class AbstractCommand
     private $state;
     private $code;
 
-    public function __construct(int $id, Client $peer, int $state = self::STATE_NEW, int $code = self::RES_VOID)
+    public static function create(string $class, int $id, Client $peer): self
+    {
+        if (!self::isValidClass($class)) {
+            throw new \InvalidArgumentException('Invalid command class.');
+        }
+        return new $class($id, $peer);
+    }
+
+    public static function instance(string $class, int $id, Client $peer, int $state, int $code): self
+    {
+        if (!self::isValidClass($class)) {
+            throw new \InvalidArgumentException('Invalid command class.');
+        }
+        return new $class($id, $peer, $state, $code);
+    }
+
+    final private static function isValidClass(string $class): bool
+    {
+        return is_subclass_of($class, AbstractCommand::class);
+    }
+
+    protected function __construct(int $id, Client $peer, int $state = self::STATE_NEW, int $code = self::RES_VOID)
     {
         $this->id = $id;
         $this->peer = $peer;

@@ -22,23 +22,6 @@ final class WorkerCore
     }
 
     /**
-     * Запускает приложение, которое привязано к воркеру.
-     *
-     * @throws \Exception
-     */
-    public function run()
-    {
-        if (!$this->taskManager) {
-            throw new \Exception('Cannot run worker!');
-        }
-        $this->app = new $this->appClass($this->taskManager);
-        if (!$this->app instanceof Application) {
-            throw new \Exception('Worker application must be instance of Saw\library\Application');
-        }
-        $this->app->run();
-    }
-
-    /**
      * @var array
      */
     private $knowTasks = [];
