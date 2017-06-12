@@ -1,6 +1,6 @@
 <?php
 
-namespace Saw\Heading\worker;
+namespace Saw\Standalone;
 
 use Esockets\Client;
 

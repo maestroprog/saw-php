@@ -41,9 +41,6 @@ final class ControllerStarter
         $before_run = microtime(true);
         $pid = $this->executor->exec($this->cmd);
         $after_run = microtime(true);
-        if (false === file_put_contents($this->pidFile, $pid->getPid())) {
-            throw new \RuntimeException('Cannot save the pid in pid file.');
-        }
         usleep(10000); // await for run controller Saw
         $try = 0;
         while (true) {
@@ -59,7 +56,7 @@ final class ControllerStarter
                 Log::log('before run time: ' . $before_run);
                 break;
             } catch (ConnectionException $e) {
-                if ($try++ > 10) {
+                if ($try++ > 10 && $this->isExistsPidFile()) {
                     unlink($this->pidFile);
                     throw new \RuntimeException('Attempts were unsuccessfully');
                 }

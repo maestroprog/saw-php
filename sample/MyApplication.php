@@ -7,6 +7,7 @@ namespace {
 
     class MyApplication extends BasicMultiThreaded
     {
+        const ID = 'saw.sample.www';
         /**
          * @var AbstractThread
          */

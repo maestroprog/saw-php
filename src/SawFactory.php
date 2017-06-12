@@ -5,6 +5,8 @@ namespace Saw;
 use Esockets\base\Configurator;
 use Esockets\Client;
 use Esockets\Server;
+use Saw\Application\Context\ContextPool;
+use Saw\Config\ControllerConfig;
 use Saw\Config\DaemonConfig;
 use Saw\Connector\ControllerConnector;
 use Saw\Memory\SharedMemoryBySocket;
@@ -12,6 +14,7 @@ use Saw\Service\CommandDispatcher;
 use Saw\Service\ControllerStarter;
 use Saw\Service\Executor;
 use Saw\Service\WorkerStarter;
+use Saw\Standalone\ControllerCore;
 use Saw\Thread\Runner\WebThreadRunner;
 
 /**
@@ -34,11 +37,15 @@ final class SawFactory
     private $webThreadRunner;
     private $workerStarter;
     private $controllerServer;
+    private $controllerCore;
+
+    private $controllerConfig;
 
     public function __construct(
         array $config,
         DaemonConfig $daemonConfig,
-        Configurator $socketConfigurator
+        Configurator $socketConfigurator,
+        ControllerConfig $controllerConfig
     )
     {
         if (!isset($config['starter'])) {
@@ -47,6 +54,7 @@ final class SawFactory
         $this->config = $config;
         $this->daemonConfig = $daemonConfig;
         $this->socketConfigurator = $socketConfigurator;
+        $this->controllerConfig = $controllerConfig;
     }
 
     public function getDaemonConfig(): DaemonConfig
@@ -86,7 +94,9 @@ final class SawFactory
             ?? $this->controllerStarter = new ControllerStarter(
                 $this->getExecutor(),
                 $this->controllerClient,
-                $this->config['starter'],
+                $this->daemonConfig->hasControllerPath()
+                    ? $this->daemonConfig->getControllerPath()
+                    : $this->config['starter'],
                 $this->daemonConfig->getControllerPid()
             );
     }
@@ -138,7 +148,11 @@ final class SawFactory
 
     public function getControllerServer(): Server
     {
-        return $this->controllerServer ?? $this->controllerServer = $this->socketConfigurator->makeServer();
+        $this->controllerServer or $this->controllerServer = $this->socketConfigurator->makeServer();
+        if (!$this->controllerServer->isConnected()) {
+            $this->controllerServer->connect($this->getDaemonConfig()->getListenAddress());
+        }
+        return $this->controllerServer;
     }
 
     public function getCommandDispatcher(): CommandDispatcher
@@ -152,5 +166,21 @@ final class SawFactory
         return $this->webThreadRunner
             ?? $this->webThreadRunner
                 = new WebThreadRunner($this->getControllerClient(), $this->getCommandDispatcher());
+    }
+
+    public function getControllerCore(): ControllerCore
+    {
+        return $this->controllerCore
+            ?? $this->controllerCore = new ControllerCore(
+                $this->getControllerServer(),
+                $this->getCommandDispatcher(),
+                $this->getWorkerStarter(),
+                $this->controllerConfig
+            );
+    }
+
+    public function getContextPool(): ContextPool
+    {
+        return new ContextPool();
     }
 }

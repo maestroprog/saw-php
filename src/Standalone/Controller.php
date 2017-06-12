@@ -12,7 +12,6 @@ use Saw\Command\ThreadResult;
 use Saw\Command\ThreadRun;
 use Saw\Command\WorkerAdd;
 use Saw\Command\WorkerDelete;
-use Saw\Heading\controller\ControllerCore;
 use Saw\Service\CommandDispatcher;
 
 /**
@@ -49,20 +48,23 @@ final class Controller
      */
     public $workerMax = 1;
 
-    private $server;
-    private $commandDispatcher;
-
     private $core;
+    private $server;
+
+    private $commandDispatcher;
+    private $myPidFile;
 
     public function __construct(
+        ControllerCore $core,
         Server $server,
         CommandDispatcher $commandDispatcher,
         string $myPidFile
     )
     {
+        $this->core = $core;
         $this->server = $server;
-        $this->commandDispatcher = $commandDispatcher->add
-        ([
+        $this->myPidFile = $myPidFile;
+        $this->commandDispatcher = $commandDispatcher->add([
             new EntityCommand(
                 WorkerAdd::NAME,
                 WorkerAdd::class,
@@ -104,20 +106,11 @@ final class Controller
                 }
             ),
         ]);
-        $this->core = new ControllerCore(
-            $this->server,
-            $this->commandDispatcher,
-            $this->php_binary_path,
-            $this->worker_path,
-            $this->workerMultiplier,
-            $this->workerMax
-        );
     }
 
     /**
      * Старт контроллера.
      *
-     * @return bool
      * @throws \Exception
      */
     public function start()
@@ -129,14 +122,17 @@ final class Controller
             $this->dispatchSignals = true;
         }
 
+        if (false === file_put_contents($this->myPidFile, getmypid())) {
+            throw new \RuntimeException('Cannot save the pid in pid file.');
+        }
         if (!$this->server->isConnected()) {
             throw new \Exception('Cannot start: not connected');
         }
         $this->server->onFound($this->onConnectPeer());
-        register_shutdown_function(function () {
+        /*todo register_shutdown_function(function () {
             $this->stop();
-        });
-        return true;
+        });*/
+        $this->work();
     }
 
     /**
@@ -145,11 +141,11 @@ final class Controller
     public function work()
     {
         while ($this->work) {
-            $this->core->wBalance(); // балансируем воркеры
+            /*$this->core->wBalance(); // балансируем воркеры
             $this->core->tBalance(); // раскидываем задачки
             if ($this->dispatchSignals) {
                 pcntl_signal_dispatch();
-            }
+            }*/
             $this->server->find();
         }
     }

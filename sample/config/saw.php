@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../MyApplication.php';
+
 return [
     'saw' => [
         'debug' => true,
@@ -16,24 +18,25 @@ return [
     'controller' => [
 //    'external_address' => '192.168.1.66', // внешний адрес, нужен при создании кластера
         'worker_multiplier' => 4,
-        'worker_max' => 8,
+        'worker_max_count' => 8,
         /* todo 'mediator' => [
             'enabled' => true, // включить поддержку посредника
             'auto_run' => true,
         ],*/
     ],
     'application' => [
-        'saw.sample.www' => [
+        MyApplication::ID => [
             'class' => MyApplication::class,
             'arguments' => [
-                'id' => 'saw.sample.www',
+                'id' => MyApplication::ID,
                 'threadRunner' => '!getWebThreadRunner',
                 'applicationMemory' => [
                     'method' => 'getSharedMemory',
                     'arguments' => [
-                        'applicationId' => 'saw.sample.www',
+                        'applicationId' => MyApplication::ID,
                     ]
                 ],
+                'contextPool' => '!getContextPool',
             ],
         ],
     ],

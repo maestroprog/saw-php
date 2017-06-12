@@ -28,6 +28,7 @@ final class Executor
     {
         $cmd = sprintf('%s -f %s', $this->phpBinaryPath, $cmd);
         if (PHP_OS === 'WINNT') {
+            $cmd = str_replace('/', '\\', $cmd);
             $cmd = str_replace('\\', '\\\\', $cmd);
         }
         if (PHP_SAPI !== 'cli') {

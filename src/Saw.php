@@ -5,6 +5,7 @@ namespace Saw;
 use Esockets\base\Configurator;
 use Saw\Application\ApplicationInterface;
 use Saw\Config\ApplicationConfig;
+use Saw\Config\ControllerConfig;
 use Saw\Config\DaemonConfig;
 use Saw\Service\ApplicationLoader;
 use Saw\Standalone\Controller;
@@ -69,7 +70,8 @@ final class Saw
         $this->factory = new SawFactory(
             $config['factory'],
             new DaemonConfig($config['daemon']),
-            new Configurator($config['sockets'])
+            new Configurator($config['sockets']),
+            new ControllerConfig($config['controller'])
         );
 
         $this->applicationLoader = new ApplicationLoader(
@@ -106,6 +108,7 @@ final class Saw
     public function instanceController()
     {
         return new Controller(
+            $this->factory->getControllerCore(),
             $this->factory->getControllerServer(),
             $this->factory->getCommandDispatcher(),
             $this->factory->getDaemonConfig()->getControllerPid()

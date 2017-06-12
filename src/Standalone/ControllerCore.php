@@ -1,12 +1,14 @@
 <?php
 
-namespace Saw\Heading\controller;
+namespace Saw\Standalone;
 
 use Esockets\debug\Log;
 use Esockets\Server;
 use Saw\Command\ThreadResult;
 use Saw\Command\ThreadRun;
+use Saw\Config\ControllerConfig;
 use Saw\Service\CommandDispatcher;
+use Saw\Service\WorkerStarter;
 
 /**
  * Ядро контроллера.
@@ -16,7 +18,7 @@ use Saw\Service\CommandDispatcher;
 final class ControllerCore
 {
     private $server;
-    private $dispatcher;
+    private $commandDispatcher;
     private $workerPath;
 
     /**
@@ -31,19 +33,13 @@ final class ControllerCore
 
     public function __construct(
         Server $server,
-        CommandDispatcher $dispatcher,
-        string $phpBinaryPath,
-        string $workerPath,
-        int $workerMultiplier,
-        int $workerMax
+        CommandDispatcher $commandDispatcher,
+        WorkerStarter $workerStarter,
+        ControllerConfig $config
     )
     {
         $this->server = $server;
-        $this->dispatcher = $dispatcher;
-        $this->php_binary_path = $phpBinaryPath;
-        $this->workerPath = $workerPath;
-        $this->workerMultiplier = $workerMultiplier;
-        $this->workerMax = $workerMax;
+        $this->commandDispatcher = $commandDispatcher;
     }
 
     /**
@@ -150,7 +146,7 @@ final class ControllerCore
         $task = $worker->getTask($rid);
         $task->setResult($result);
         $worker->removeTask($task); // release worker
-        $this->dispatcher->create(ThreadResult::NAME, $peer)
+        $this->commandDispatcher->create(ThreadResult::NAME, $peer)
             ->onError(function () {
                 //todo
             })
@@ -192,7 +188,7 @@ final class ControllerCore
                 $workerPeer = $this->server->getPeerByDsc($worker);
                 try {
                     /** @var $command ThreadRun */
-                    $this->dispatcher->create(ThreadRun::NAME, $workerPeer)
+                    $this->commandDispatcher->create(ThreadRun::NAME, $workerPeer)
                         ->onError(function () use ($task) {
                             Log::log('error run task ' . $task->getName());
                             //todo
