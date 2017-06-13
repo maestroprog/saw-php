@@ -50,7 +50,7 @@ final class ControllerConnector implements SenderInterface
             }
             $this->client->connect($this->connectAddress);
         } catch (ConnectionException $e) {
-            $this->controllerStarter->start($this->connectAddress);
+            $this->controllerStarter->start();
         }
     }
 

@@ -117,6 +117,4 @@ abstract class AbstractThread
     {
         return $this->result;
     }
-
-
 }

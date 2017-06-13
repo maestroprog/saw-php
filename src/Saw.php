@@ -9,6 +9,7 @@ use Saw\Config\ControllerConfig;
 use Saw\Config\DaemonConfig;
 use Saw\Service\ApplicationLoader;
 use Saw\Standalone\Controller;
+use Saw\Standalone\Worker;
 
 /**
  * Класс-синглтон, реализующий загрузку Saw приложения Saw.
@@ -94,6 +95,11 @@ final class Saw
         return $this;
     }
 
+    public function getApplicationLoader(): ApplicationLoader
+    {
+        return $this->applicationLoader;
+    }
+
     /**
      * Инстанцирование приложения.
      *
@@ -105,13 +111,27 @@ final class Saw
         return $this->applicationLoader->instanceApp($appClass);
     }
 
-    public function instanceController()
+    /**
+     * Создаёт новый инстанс объекта контроллера.
+     *
+     * @return Controller
+     */
+    public function instanceController(): Controller
     {
         return new Controller(
             $this->factory->getControllerCore(),
             $this->factory->getControllerServer(),
             $this->factory->getCommandDispatcher(),
             $this->factory->getDaemonConfig()->getControllerPid()
+        );
+    }
+
+    public function instanceWorker(): Worker
+    {
+        return new Worker(
+            $this->factory->getWorkerCore(),
+            $this->factory->getControllerClient(),
+            $this->factory->getCommandDispatcher()
         );
     }
 

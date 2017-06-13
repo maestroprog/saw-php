@@ -11,7 +11,6 @@ return [
         'controller_pid' => __DIR__ . '/controller.pid',
 //        'mediator_path' => __DIR__ . '/../../daemon/mediator.php',
         'worker_path' => __DIR__ . '/../../daemon/worker.php',
-        'worker_pid' => __DIR__ . '/worker.pid',
         'listen_address' => new \Esockets\socket\Ipv4Address('0.0.0.0', 59090),
         'controller_address' => new \Esockets\socket\Ipv4Address('127.0.0.1', 59090),
     ],

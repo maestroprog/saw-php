@@ -3,18 +3,12 @@
 namespace Saw\Standalone;
 
 use Esockets\Client;
-use Saw\Application\ApplicationContainer;
+use Esockets\debug\Log;
 use Saw\Command\AbstractCommand;
 use Saw\Command\CommandHandler as EntityCommand;
-use Saw\Command\ThreadKnow;
-use Saw\Command\ThreadResult;
-use Saw\Command\ThreadRun;
 use Saw\Command\WorkerAdd;
 use Saw\Command\WorkerDelete;
-use Esockets\debug\Log;
-use Saw\Saw;
 use Saw\Service\CommandDispatcher;
-use Saw\Thread\AbstractThread;
 
 /**
  * Воркер, использующийся воркер-скриптом.
@@ -23,29 +17,26 @@ use Saw\Thread\AbstractThread;
  */
 final class Worker
 {
-    public $work = true;
+    private $core;
     private $client;
-    private $applicationContainer;
+    private $commandDispatcher;
+
+    private $work = true;
 
     /**
-     * @var CommandDispatcher
+     * @var bool включить вызов pcntl_dispatch_signals()
      */
-    private $dispatcher;
-    protected $core;
+    private $dispatchSignals = false;
 
-    public function __construct(Client $client, ApplicationContainer $applicationContainer)
+    public function __construct(
+        WorkerCore $core,
+        Client $client,
+        CommandDispatcher $commandDispatcher
+    )
     {
-        if (!$client->isConnected()) {
-            throw new PizcedException(); // todo
-        }
+        $this->core = $core;
         $this->client = $client;
-        $this->applicationContainer = $applicationContainer;
-        $this->client->onReceive($this->onRead());
-
-        $this->client->onDisconnect(function () {
-            Log::log('i disconnected!');
-            $this->work = false;
-        });
+        $this->commandDispatcher = $commandDispatcher;
     }
 
     /**
@@ -53,12 +44,36 @@ final class Worker
      */
     public function start()
     {
-        $this->dispatcher = Saw::factory()->createDispatcher([
+        if (extension_loaded('pcntl')) {
+            pcntl_signal(SIGINT, function ($sig) {
+                $this->commandDispatcher
+                    ->create(WorkerDelete::NAME, $this->client)
+                    ->onSuccess(function () {
+                        $this->stop();
+                    })
+                    ->onError(function () {
+                        throw new \RuntimeException('Cannot delete this worker from controller.');
+                    })
+                    ->run();
+            });
+            $this->dispatchSignals = true;
+        }
+
+        if (!$this->client->isConnected()) {
+            throw new \RuntimeException('Cannot start when not connected.');
+        }
+        $this->client->onReceive($this->onRead());
+        $this->client->onDisconnect(function () {
+            Log::log('i disconnected!');
+            $this->work = false;
+        });
+
+        $this->commandDispatcher->add([
             new EntityCommand(
                 WorkerAdd::NAME,
                 WorkerAdd::class,
                 function (AbstractCommand $context) {
-                    $this->core->run();
+                    $this->core->run(); // запуск приложений
                 }
             ),
             new EntityCommand(
@@ -67,29 +82,9 @@ final class Worker
                 function (AbstractCommand $context) {
                     $this->stop();
                 }
-            ),
-            new EntityCommand(ThreadKnow::NAME, ThreadKnow::class),
-            new EntityCommand(
-                ThreadRun::NAME,
-                ThreadRun::class,
-                function (ThreadRun $context) {
-                    // выполняем задачу
-                    $task = new Task($context->getRunId(), $context->getName(), $context->getFromDsc());
-                    $this->core->runTask($task);
-                }
-            ),
-            new EntityCommand(
-                ThreadResult::NAME,
-                ThreadResult::class,
-                function (ThreadResult $context) {
-                    //todo
-                    $this->core->receiveTask(
-                        $context->getRunId(),
-                        $context->getResult()
-                    );
-                }
-            ),
+            )
         ]);
+        $this->work();
     }
 
     public function stop()
@@ -100,26 +95,14 @@ final class Worker
 
     public function work()
     {
-        $this->client->block();
+//        $this->client->block(); todo check
         while ($this->work) {
-            $this->client->read();
-
-            if (count($this->core->getunQueue())) {
-                /** @var Task $task */
-                $task = array_shift($this->core->getRunQueue());
-                $task->setResult($this->core->runCallback($task->getName()));
-                $this->dispatcher->create(ThreadResult::NAME, $this->sc)
-                    ->onError(function () {
-                        //todo
-                    })
-                    ->run(ThreadResult::serializeTask($task));
+            if ($this->dispatchSignals) {
+                pcntl_signal_dispatch();
             }
+            $this->core->work();
+            $this->client->read();
         }
-    }
-
-    public function run()
-    {
-        $this->applicationContainer->run();
     }
 
     protected function onRead(): callable
@@ -130,26 +113,25 @@ final class Worker
 
             switch ($data) {
                 case 'ACCEPT':
-                    $this->dispatcher
+                    $this->commandDispatcher
                         ->create(WorkerAdd::NAME, $this->client)
                         ->onError(function () {
                             $this->stop();
                         })
                         ->onSuccess(function () {
-                            $this->run();
+                            $this->core->run();
                         })
                         ->run();
                     break;
                 case 'INVALID':
-                    // todo
                     throw new \RuntimeException('Is an invalid worker.');
                     break;
                 case 'BYE':
-                    $this->work = false;
+                    $this->stop();
                     break;
                 default:
-                    if (is_array($data) && $this->dispatcher->valid($data)) {
-                        $this->dispatcher->dispatch($data, $this->client);
+                    if (is_array($data) && $this->commandDispatcher->valid($data)) {
+                        $this->commandDispatcher->dispatch($data, $this->client);
                     } else {
                         $this->client->send('INVALID');
                     }

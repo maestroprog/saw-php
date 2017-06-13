@@ -4,7 +4,7 @@ namespace Saw\Thread\Pool;
 
 use Saw\Thread\AbstractThread;
 
-abstract class Pool
+abstract class AbstractThreadPool
 {
     /**
      * @var AbstractThread[]

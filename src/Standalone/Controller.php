@@ -5,13 +5,6 @@ namespace Saw\Standalone;
 use Esockets\Client;
 use Esockets\debug\Log;
 use Esockets\Server;
-use Saw\Command\AbstractCommand;
-use Saw\Command\CommandHandler as EntityCommand;
-use Saw\Command\ThreadKnow;
-use Saw\Command\ThreadResult;
-use Saw\Command\ThreadRun;
-use Saw\Command\WorkerAdd;
-use Saw\Command\WorkerDelete;
 use Saw\Service\CommandDispatcher;
 
 /**
@@ -28,31 +21,20 @@ final class Controller
     const CLIENT_CONTROLLER = 4; // контроллер. (зарезервировано)
     const CLIENT_DEBUG = 5; // отладчик
 
+    private $core;
+    private $server;
+    private $commandDispatcher;
+    private $myPidFile;
+
     /**
      * @var bool
      */
-    public $work = true;
+    private $work = true;
 
     /**
      * @var bool включить вызов pcntl_dispatch_signals()
      */
     private $dispatchSignals = false;
-
-    /**
-     * @var int множитель задач
-     */
-    public $workerMultiplier = 1;
-
-    /**
-     * @var int количество инстансов
-     */
-    public $workerMax = 1;
-
-    private $core;
-    private $server;
-
-    private $commandDispatcher;
-    private $myPidFile;
 
     public function __construct(
         ControllerCore $core,
@@ -64,48 +46,7 @@ final class Controller
         $this->core = $core;
         $this->server = $server;
         $this->myPidFile = $myPidFile;
-        $this->commandDispatcher = $commandDispatcher->add([
-            new EntityCommand(
-                WorkerAdd::NAME,
-                WorkerAdd::class,
-                function (AbstractCommand $context) {
-                    return $this->core->wAdd((int)$context->getPeer()->getConnectionResource()->getResource());
-                }
-            ),
-            new EntityCommand(
-                WorkerDelete::NAME,
-                WorkerDelete::class,
-                function (AbstractCommand $context) {
-                    $this->core->wDel((int)$context->getPeer()->getConnectionResource()->getResource());
-                }
-            ),
-            new EntityCommand(
-                ThreadKnow::NAME,
-                ThreadKnow::class,
-                function (AbstractCommand $context) {
-                    $this->core->tAdd((int)$context->getPeer()->getConnectionResource()->getResource(), $context->getData()['name']);
-                }
-            ),
-            new EntityCommand(
-                ThreadRun::NAME,
-                ThreadRun::class,
-                function (ThreadRun $context) {
-                    $this->core->tRun($context->getRunId(), (int)$context->getPeer()->getConnectionResource()->getResource(), $context->getName());
-                }
-            ),
-            new EntityCommand(
-                ThreadResult::NAME,
-                ThreadResult::class,
-                function (ThreadResult $context) {
-                    $this->core->tRes(
-                        $context->getRunId(),
-                        (int)$context->getPeer()->getConnectionResource()->getResource(),
-                        $context->getFromDsc(),
-                        $context->getResult()
-                    );
-                }
-            ),
-        ]);
+        $this->commandDispatcher = $commandDispatcher;
     }
 
     /**
@@ -141,11 +82,9 @@ final class Controller
     public function work()
     {
         while ($this->work) {
-            /*$this->core->wBalance(); // балансируем воркеры
-            $this->core->tBalance(); // раскидываем задачки
             if ($this->dispatchSignals) {
                 pcntl_signal_dispatch();
-            }*/
+            }
             $this->server->find();
         }
     }

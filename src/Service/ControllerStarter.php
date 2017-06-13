@@ -14,6 +14,7 @@ final class ControllerStarter
 {
     private $executor;
     private $client;
+    private $connectAddress;
     private $cmd;
     private $pidFile;
 
@@ -21,22 +22,29 @@ final class ControllerStarter
      * ControllerStarter constructor.
      * @param Executor $executor
      * @param Client $client
+     * @param AbstractAddress $connectAddress
      * @param string $cmd
      * @param string $pidFile
      */
-    public function __construct(Executor $executor, Client $client, string $cmd, string $pidFile)
+    public function __construct(
+        Executor $executor,
+        Client $client,
+        AbstractAddress $connectAddress,
+        string $cmd,
+        string $pidFile
+    )
     {
         $this->executor = $executor;
         $this->client = $client;
+        $this->connectAddress = $connectAddress;
         $this->cmd = $cmd;
         $this->pidFile = $pidFile;
     }
 
     /**
-     * @param AbstractAddress $address
      * @throws \RuntimeException
      */
-    public function start(AbstractAddress $address)
+    public function start()
     {
         $before_run = microtime(true);
         $pid = $this->executor->exec($this->cmd);
@@ -46,7 +54,7 @@ final class ControllerStarter
         while (true) {
             $try_run = microtime(true);
             try {
-                $this->client->connect($address);
+                $this->client->connect($this->connectAddress);
                 Log::log(sprintf(
                     'run: %f, exec: %f, connected: %f',
                     $before_run,

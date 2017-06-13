@@ -2,6 +2,7 @@
 
 namespace Saw\Entity;
 
+use Esockets\Client;
 use Saw\Dto\ProcessStatus;
 
 /**
@@ -14,6 +15,22 @@ class Worker
     const READY = 1; // воркер, готовый к выполнению задач
     const RUN = 2; // воркер, выполняющий задачу
     const STOP = 3; // воркер, остановивший работу
+    /**
+     * Задачи, которые знает воркер (по TID).
+     *
+     * @var int[]
+     */
+    private $knowTasks = [];
+
+    /**
+     * Задачи, которые выполняет воркер (по RID).
+     *
+     * @var Task[]
+     */
+    private $runTasks = [];
+
+    private $processResource;
+    private $client;
 
     /**
      * Состояние воркера.
@@ -23,31 +40,20 @@ class Worker
     private $state;
 
     /**
-     * Задачи, которые знает воркер (по TID).
-     *
-     * @var int[]
-     */
-    private $knowTasks = [];
-    /**
-     * Задачи, которые выполняет воркер (по RID).
-     *
-     * @var Task[]
-     */
-    private $runTasks = [];
-
-    /**
-     * @var resource
-     */
-    private $processResource;
-
-    /**
      * @param ProcessStatus $processResource
+     * @param Client $client
      * @param int $state
      */
-    public function __construct(ProcessStatus $processResource, int $state = self::NEW)
+    public function __construct(ProcessStatus $processResource, Client $client, int $state = self::NEW)
     {
         $this->processResource = $processResource;
+        $this->client = $client;
         $this->state = $state;
+    }
+
+    public function getId(): int
+    {
+        return (int)$this->client->getConnectionResource()->getResource();
     }
 
     public function getState(): int

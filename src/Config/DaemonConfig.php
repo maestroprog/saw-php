@@ -11,7 +11,6 @@ class DaemonConfig
         'controller_path' => 'controllerPath',
         'worker_path' => 'workerPath',
         'controller_pid' => 'controllerPid',
-        'worker_pid' => 'workerPid',
         'listen_address' => 'listenAddress',
         'controller_address' => 'controllerAddress',
     ];
@@ -19,7 +18,6 @@ class DaemonConfig
     private $controllerPath;
     private $workerPath;
     private $controllerPid = 'controller.pid';
-    private $workerPid = 'worker.pid';
     /**
      * @var AbstractAddress
      */
@@ -80,16 +78,6 @@ class DaemonConfig
     public function getControllerPid(): string
     {
         return $this->controllerPid;
-    }
-
-    /**
-     * Вернёт путь к pid файлу воркера.
-     *
-     * @return string
-     */
-    public function getWorkerPid(): string
-    {
-        return $this->workerPid;
     }
 
     public function getListenAddress(): AbstractAddress

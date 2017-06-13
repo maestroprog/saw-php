@@ -5,6 +5,7 @@ namespace Saw;
 use Esockets\base\Configurator;
 use Esockets\Client;
 use Esockets\Server;
+use Saw\Application\ApplicationContainer;
 use Saw\Application\Context\ContextPool;
 use Saw\Config\ControllerConfig;
 use Saw\Config\DaemonConfig;
@@ -15,6 +16,7 @@ use Saw\Service\ControllerStarter;
 use Saw\Service\Executor;
 use Saw\Service\WorkerStarter;
 use Saw\Standalone\ControllerCore;
+use Saw\Standalone\WorkerCore;
 use Saw\Thread\Runner\WebThreadRunner;
 
 /**
@@ -94,6 +96,7 @@ final class SawFactory
             ?? $this->controllerStarter = new ControllerStarter(
                 $this->getExecutor(),
                 $this->controllerClient,
+                $this->daemonConfig->getControllerAddress(),
                 $this->daemonConfig->hasControllerPath()
                     ? $this->daemonConfig->getControllerPath()
                     : $this->config['starter'],
@@ -106,8 +109,7 @@ final class SawFactory
         return $this->workerStarter
             ?? $this->workerStarter = new WorkerStarter(
                 $this->getExecutor(),
-                $this->config['starter'],
-                $this->daemonConfig->getWorkerPid()
+                $this->config['starter']
             );
     }
 
@@ -176,6 +178,26 @@ final class SawFactory
                 $this->getCommandDispatcher(),
                 $this->getWorkerStarter(),
                 $this->controllerConfig
+            );
+    }
+
+    private $workerCore;
+    private $applicationContainer;
+
+    public function getApplicationContainer(): ApplicationContainer
+    {
+        return $this->applicationContainer
+            ?? $this->applicationContainer = new ApplicationContainer();
+    }
+
+    public function getWorkerCore(): WorkerCore
+    {
+        return $this->workerCore
+            ?? $this->workerCore = new WorkerCore(
+                $this->getControllerClient(),
+                $this->getCommandDispatcher(),
+                $this->getApplicationContainer(),
+                Saw::instance()->getApplicationLoader()
             );
     }
 

@@ -2,12 +2,14 @@
 
 namespace Saw\Service;
 
-
 use Saw\Application\ApplicationInterface;
 use Saw\Config\ApplicationConfig;
-use Saw\Saw;
 use Saw\SawFactory;
 
+/**
+ * Загрузчик приложений.
+ * Используется для создания инстансов любых классов приложений, реализующих @see ApplicationInterface
+ */
 final class ApplicationLoader
 {
     private $applicationConfig;
@@ -19,10 +21,9 @@ final class ApplicationLoader
         $this->factory = $factory;
     }
 
-
     /**
      * Инстанцирует новый объект приложения.
-     * Используется воркером и скриптом index.php.
+     * Используется скриптом index.php.
      *
      * @param string $applicationClass
      * @return ApplicationInterface
@@ -37,7 +38,6 @@ final class ApplicationLoader
                 $this->applicationConfig->getApplicationIdByClass($applicationClass)
             );
         } catch (\RuntimeException $e) {
-            var_dump($e->getMessage());
             $arguments = [];
         }
 
@@ -46,22 +46,33 @@ final class ApplicationLoader
         return $class->newInstanceArgs($arguments);
     }
 
-    /**
-     * Получает объект приложения по его ID.
-     * Используется todo?
-     *
-     * @param string $applicationId
-     * @return ApplicationInterface
-     * @throws \Exception
-     */
-    public function getApp(string $applicationId): ApplicationInterface
+    public function instanceAppById(string $applicationId): ApplicationInterface
     {
         if (!$this->applicationConfig->isApplicationExists($applicationId)) {
-            throw new \RuntimeException(
-                sprintf('Unknown application.', $applicationClass),
-                Saw::ERROR_APPLICATION_CLASS_NOT_EXISTS
-            );
+            throw new \RuntimeException('Invalid application id: ' . $applicationId);
         }
-        $applicationClass = $this->applicationConfig->getApplicationClassById($applicationId);
+        try {
+            $arguments = $this->applicationConfig->getApplicationArguments($applicationId);
+        } catch (\RuntimeException $e) {
+            $arguments = [];
+        }
+
+        $class = new \ReflectionClass($this->applicationConfig->getApplicationClassById($applicationId));
+        $arguments = $this->factory->instanceArguments($arguments);
+        return $class->newInstanceArgs($arguments);
+    }
+
+    /**
+     * Создаёт инстансы для всех приложений, описанных в разделе "applications" конфига.
+     *
+     * @return ApplicationInterface[]
+     */
+    public function instanceAllApps(): array
+    {
+        $allAppIds = $this->applicationConfig->getAllApplicationIds();
+
+        return array_map(function (string $id) {
+            $this->instanceAppById($id);
+        }, $allAppIds);
     }
 }
