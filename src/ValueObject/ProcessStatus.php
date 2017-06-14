@@ -1,6 +1,6 @@
 <?php
 
-namespace Saw\Dto;
+namespace Saw\ValueObject;
 
 /**
  * Обёртка для resource возвращаемого функцией proc_open().

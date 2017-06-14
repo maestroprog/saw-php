@@ -6,6 +6,7 @@ use Saw\Application\Context\ContextPool;
 use Saw\Memory\SharedMemoryInterface;
 use Saw\Thread\AbstractThread;
 use Saw\Thread\MultiThreadingInterface;
+use Saw\Thread\Runner\ThreadRunnerInterface;
 
 abstract class BasicMultiThreaded implements ApplicationInterface, MultiThreadingInterface
 {
@@ -14,7 +15,7 @@ abstract class BasicMultiThreaded implements ApplicationInterface, MultiThreadin
 
     public function __construct(
         string $id,
-        MultiThreadingInterface $threadRunner,
+        ThreadRunnerInterface $threadRunner,
         SharedMemoryInterface $applicationMemory,
         ContextPool $contextPool
     )

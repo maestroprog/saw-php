@@ -2,7 +2,7 @@
 
 namespace Saw\Service;
 
-use Saw\Dto\ProcessStatus;
+use Saw\ValueObject\ProcessStatus;
 
 final class Executor
 {

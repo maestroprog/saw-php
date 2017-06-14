@@ -17,12 +17,10 @@ class ThreadWithCode extends AbstractThread
 
     public function run()
     {
-        {
-            try {
-                call_user_func_array($this->code, $this->arguments);
-            } catch (\Throwable $throwable) {
-                // todo
-            }
+        try {
+            call_user_func_array($this->code, $this->arguments);
+        } catch (\Throwable $throwable) {
+            // todo
         }
     }
 }

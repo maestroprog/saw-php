@@ -4,9 +4,9 @@ namespace Saw\Standalone;
 
 use Esockets\Client;
 use Saw\Application\ApplicationContainer;
+use Saw\Command\CommandHandler as EntityCommand;
 use Saw\Command\ThreadResult;
 use Saw\Command\ThreadRun;
-use Saw\Config\ApplicationConfig;
 use Saw\Service\ApplicationLoader;
 use Saw\Service\CommandDispatcher;
 use Saw\Standalone\Controller\CycleInterface;
@@ -19,8 +19,6 @@ final class WorkerCore implements CycleInterface
 {
     private $client;
     private $applicationContainer;
-
-    private $myId;
 
     public function __construct(
         Client $peer,
@@ -59,14 +57,12 @@ final class WorkerCore implements CycleInterface
     /**
      * Метод служит для запуска всех приложений внутри воркера.
      */
-    public
-    function run()
+    public function run()
     {
         $this->applicationContainer->run();//todo
     }
 
-    public
-    function work()
+    public function work()
     {
         if (count($this->getunQueue())) {
             /** @var Task $task */
@@ -84,8 +80,7 @@ final class WorkerCore implements CycleInterface
     /**
      * @var array
      */
-    private
-        $knowTasks = [];
+    private $knowTasks = [];
 
     /**
      * Оповещает контроллер о том, что данный воркер узнал новую задачу.
@@ -93,8 +88,7 @@ final class WorkerCore implements CycleInterface
      *
      * @param Task $task
      */
-    public
-    function addTask(Task $task)
+    public function addTask(Task $task)
     {
         if (!isset($this->knowTasks[$task->getName()])) {
             $this->knowTasks[$task->getName()] = 1;
@@ -104,28 +98,24 @@ final class WorkerCore implements CycleInterface
     /**
      * @var Task[]
      */
-    private
-        $runQueue = [];
+    private $runQueue = [];
 
     /**
      * Постановка задачи в очередь на выполнение.
      *
      * @param Task $task
      */
-    public
-    function runTask(Task $task)
+    public function runTask(Task $task)
     {
         $this->runQueue[] = $task;
     }
 
-    public
-    function runCallback(string $name)
+    public function runCallback(string $name)
     {
         return $this->taskManager->runCallback($name);
     }
 
-    public
-    function & getRunQueue(): array
+    public function & getRunQueue(): array
     {
         return $this->runQueue;
     }
@@ -136,8 +126,7 @@ final class WorkerCore implements CycleInterface
      * @param int $rid
      * @param $result
      */
-    public
-    function receiveTask(int $rid, &$result)
+    public function receiveTask(int $rid, &$result)
     {
         $task = $this->taskManager->getRunTask($rid);
         $task->setResult($result);

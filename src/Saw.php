@@ -10,6 +10,7 @@ use Saw\Config\DaemonConfig;
 use Saw\Service\ApplicationLoader;
 use Saw\Standalone\Controller;
 use Saw\Standalone\Worker;
+use Saw\ValueObject\SawEnv;
 
 /**
  * Класс-синглтон, реализующий загрузку Saw приложения Saw.
@@ -72,7 +73,8 @@ final class Saw
             $config['factory'],
             new DaemonConfig($config['daemon']),
             new Configurator($config['sockets']),
-            new ControllerConfig($config['controller'])
+            new ControllerConfig($config['controller']),
+            SawEnv::web()
         );
 
         $this->applicationLoader = new ApplicationLoader(
@@ -118,6 +120,7 @@ final class Saw
      */
     public function instanceController(): Controller
     {
+        $this->factory->setEnvironment(SawEnv::controller());
         return new Controller(
             $this->factory->getControllerCore(),
             $this->factory->getControllerServer(),
@@ -128,6 +131,7 @@ final class Saw
 
     public function instanceWorker(): Worker
     {
+        $this->factory->setEnvironment(SawEnv::worker());
         return new Worker(
             $this->factory->getWorkerCore(),
             $this->factory->getControllerClient(),

@@ -18,6 +18,7 @@ use Saw\Service\WorkerStarter;
 use Saw\Standalone\ControllerCore;
 use Saw\Standalone\WorkerCore;
 use Saw\Thread\Runner\WebThreadRunner;
+use Saw\ValueObject\SawEnv;
 
 /**
  * Фабрика всех сервисов и обхектов для пилы.
@@ -29,6 +30,8 @@ final class SawFactory
     private $config;
     private $daemonConfig;
     private $socketConfigurator;
+    private $controllerConfig;
+    private $environment;
 
     private $controllerClient;
     private $commandDispatcher;
@@ -41,13 +44,12 @@ final class SawFactory
     private $controllerServer;
     private $controllerCore;
 
-    private $controllerConfig;
-
     public function __construct(
         array $config,
         DaemonConfig $daemonConfig,
         Configurator $socketConfigurator,
-        ControllerConfig $controllerConfig
+        ControllerConfig $controllerConfig,
+        SawEnv $env
     )
     {
         if (!isset($config['starter'])) {
@@ -57,6 +59,17 @@ final class SawFactory
         $this->daemonConfig = $daemonConfig;
         $this->socketConfigurator = $socketConfigurator;
         $this->controllerConfig = $controllerConfig;
+        $this->environment = $env;
+    }
+
+    /**
+     * Устанавливает
+     *
+     * @param SawEnv $environment
+     */
+    public function setEnvironment(SawEnv $environment)
+    {
+        $this->environment = $environment;
     }
 
     public function getDaemonConfig(): DaemonConfig

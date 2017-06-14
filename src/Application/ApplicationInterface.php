@@ -2,7 +2,7 @@
 
 namespace Saw\Application;
 
-use Saw\Dto\Result;
+use Saw\ValueObject\Result;
 use Saw\Thread\MultiThreadingInterface;
 
 interface ApplicationInterface

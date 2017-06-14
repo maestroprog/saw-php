@@ -3,7 +3,7 @@
 namespace Saw\Entity;
 
 use Esockets\Client;
-use Saw\Dto\ProcessStatus;
+use Saw\ValueObject\ProcessStatus;
 
 /**
  * Сущность воркера, которой оперирует контроллер.
