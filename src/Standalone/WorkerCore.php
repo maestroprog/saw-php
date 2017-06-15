@@ -5,6 +5,7 @@ namespace Saw\Standalone;
 use Esockets\Client;
 use Saw\Application\ApplicationContainer;
 use Saw\Command\CommandHandler as EntityCommand;
+use Saw\Command\ThreadKnow;
 use Saw\Command\ThreadResult;
 use Saw\Command\ThreadRun;
 use Saw\Service\ApplicationLoader;

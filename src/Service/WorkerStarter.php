@@ -2,7 +2,7 @@
 
 namespace Saw\Service;
 
-use Saw\Entity\Worker;
+use Saw\ValueObject\ProcessStatus;
 
 /**
  * Сервис, организующий запуск воркера.
@@ -11,7 +11,6 @@ final class WorkerStarter
 {
     private $executor;
     private $cmd;
-    private $pidFile;
 
     /**
      * ControllerStarter constructor.
@@ -25,9 +24,14 @@ final class WorkerStarter
         $this->cmd = $cmd;
     }
 
-    public function start(): Worker
+    /**
+     * Запускает воркер.
+     * Вернёт объект @see ProcessStatus.
+     *
+     * @return ProcessStatus
+     */
+    public function start(): ProcessStatus
     {
-        $pid = $this->executor->exec($this->cmd);
-        return new Worker($pid);
+        return $this->executor->exec($this->cmd);
     }
 }

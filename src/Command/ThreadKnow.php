@@ -14,9 +14,4 @@ class ThreadKnow extends AbstractCommand
     const NAME = 'tadd';
 
     protected $needData = ['name'];
-
-    public function getCommand(): string
-    {
-        return self::NAME;
-    }
 }

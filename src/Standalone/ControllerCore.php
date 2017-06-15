@@ -4,7 +4,7 @@ namespace Saw\Standalone;
 
 use Esockets\Server;
 use Saw\Command\AbstractCommand;
-use Saw\Command\CommandHandler as EntityCommand;
+use Saw\Command\CommandHandler;
 use Saw\Command\ThreadKnow;
 use Saw\Command\ThreadResult;
 use Saw\Command\ThreadRun;
@@ -40,39 +40,25 @@ final class ControllerCore implements CycleInterface
         $this->server = $server;
         $this->commandDispatcher = $commandDispatcher;
 
-        $this->workerBalance = new WorkerBalance($workerStarter, $config->getWorkerMaxCount());
+        $this->workerBalance = new WorkerBalance($workerStarter, $commandDispatcher, $config->getWorkerMaxCount());
         $this->threadDistributor = new ThreadDistributor();
 
         $commandDispatcher->add([
-            new EntityCommand(
-                WorkerAdd::NAME,
-                WorkerAdd::class,
-                function (AbstractCommand $context) {
-                    return $this->workerBalance->addWorker((int)$context->getPeer()->getConnectionResource()->getResource());
-                }
-            ),
-            new EntityCommand(
-                WorkerDelete::NAME,
-                WorkerDelete::class,
-                function (AbstractCommand $context) {
-                    $this->workerBalance->removeWorker((int)$context->getPeer()->getConnectionResource()->getResource());
-                }
-            ),
-            new EntityCommand(
+            new CommandHandler(
                 ThreadKnow::NAME,
                 ThreadKnow::class,
                 function (AbstractCommand $context) {
                     $this->threadDistributor->tAdd((int)$context->getPeer()->getConnectionResource()->getResource(), $context->getData()['name']);
                 }
             ),
-            new EntityCommand(
+            new CommandHandler(
                 ThreadRun::NAME,
                 ThreadRun::class,
                 function (ThreadRun $context) {
                     $this->threadDistributor->tRun($context->getRunId(), (int)$context->getPeer()->getConnectionResource()->getResource(), $context->getName());
                 }
             ),
-            new EntityCommand(
+            new CommandHandler(
                 ThreadResult::NAME,
                 ThreadResult::class,
                 function (ThreadResult $context) {

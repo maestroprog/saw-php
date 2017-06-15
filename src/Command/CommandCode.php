@@ -12,9 +12,13 @@ trait CommandCode
     private $onError;
 
     /**
+     * Метод вызывается диспетчером команд,
+     * он реализует механизм вызова колбэков,
+     * назначаемых в @see CommandCode::onSuccess()
+     * и @see CommandCode::onError().
+     *
      * @param $result array
-     * @throws \Exception
-     * Запускает механизм... todo результат выполнения команды
+     * @throws \RuntimeException Исключение бросается в случае получения неизвестного статуса выполнения команды
      */
     public function dispatch(&$result)
     {
@@ -27,7 +31,7 @@ trait CommandCode
                 call_user_func($this->onError, $this, $result);
             }
         } else {
-            throw new \Exception('Why is not success and is not error?');
+            throw new \RuntimeException('Why is not success and is not error?');
         }
     }
 
@@ -49,7 +53,8 @@ trait CommandCode
 
     /**
      * Задает колбэк, вызывающийся при успешном выполнении команды.
-     * Колбек должен принимать
+     * Колбэк следует передавать на той стороне, которая посылала команду,
+     * и должна обработать результат выполнения команды.
      *
      * @param callable $callback
      * @return $this
@@ -62,6 +67,8 @@ trait CommandCode
 
     /**
      * Задает колбэк, вызывающийся при неудачном выполнении команды.
+     * Колбэк следует передавать на той стороне, которая посылала команду,
+     * и должна обработать результат выполнения команды.
      *
      * @param callable $callback
      * @return $this
@@ -75,6 +82,7 @@ trait CommandCode
 
     /**
      * Сообщает об успешном выполнении команды.
+     * Вызывается на той стороне, которая должна обработать поступившую команду.
      *
      * @throws \Exception
      */
@@ -86,6 +94,7 @@ trait CommandCode
 
     /**
      * Сообщает об ошибке выполнении команды.
+     * Вызывается на той стороне, которая должна обработать поступившую команду.
      *
      * @throws \Exception
      */

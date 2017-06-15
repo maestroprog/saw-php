@@ -64,8 +64,10 @@ final class ControllerStarter
                 Log::log('before run time: ' . $before_run);
                 break;
             } catch (ConnectionException $e) {
-                if ($try++ > 10 && $this->isExistsPidFile()) {
-                    unlink($this->pidFile);
+                if ($try++ > 10) {
+                    if ($this->isExistsPidFile()) {
+                        unlink($this->pidFile);
+                    }
                     throw new \RuntimeException('Attempts were unsuccessfully');
                 }
                 usleep(10000);

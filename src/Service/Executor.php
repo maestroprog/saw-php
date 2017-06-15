@@ -2,6 +2,7 @@
 
 namespace Saw\Service;
 
+use Esockets\debug\Log;
 use Saw\ValueObject\ProcessStatus;
 
 final class Executor
@@ -26,7 +27,7 @@ final class Executor
      */
     public function exec($cmd): ProcessStatus
     {
-        $cmd = sprintf('%s -f %s', $this->phpBinaryPath, $cmd);
+        $cmd = sprintf('%s %s', $this->phpBinaryPath, $cmd);
         if (PHP_OS === 'WINNT') {
             $cmd = str_replace('/', '\\', $cmd);
             $cmd = str_replace('\\', '\\\\', $cmd);
@@ -37,6 +38,7 @@ final class Executor
             define('STDERR', fopen('php://stderr', 'w'));
         }
         $pipes = [STDIN, STDOUT, STDERR];
+        Log::log($cmd);
         $resource = proc_open($cmd, [], $pipes, null, null, null);
         if (false === $resource) {
             throw new \RuntimeException('Cannot be run ' . $cmd);

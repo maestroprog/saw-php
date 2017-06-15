@@ -2,6 +2,7 @@
 
 namespace Saw\Standalone\Controller;
 
+use Esockets\base\AbstractConnectionResource;
 use Saw\Entity\Worker;
 
 class WorkerPool implements \Countable, \Iterator
@@ -17,6 +18,27 @@ class WorkerPool implements \Countable, \Iterator
             throw new \LogicException('Can not add an already added id.');
         }
         $this->workers[$workerId] = $workerId;
+    }
+
+    public function remove(Worker $worker)
+    {
+        if (!isset($this->workers[$worker->getId()])) {
+            throw new \LogicException('Can not remove an already removed.');
+        }
+        unset($this->workers[$worker->getId()]);
+    }
+
+    public function removeById(int $workerId)
+    {
+        if (!isset($this->workers[$workerId])) {
+            throw new \LogicException('Can not remove an already removed.');
+        }
+        unset($this->workers[$workerId]);
+    }
+
+    public function removeByConnectionResource(AbstractConnectionResource $connectionResource)
+    {
+
     }
 
     public function count()

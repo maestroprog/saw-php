@@ -86,6 +86,7 @@ final class Controller
                 pcntl_signal_dispatch();
             }
             $this->server->find();
+            $this->core->work();
         }
     }
 

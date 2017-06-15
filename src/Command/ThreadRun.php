@@ -17,11 +17,6 @@ class ThreadRun extends AbstractCommand
 
     protected $needData = ['run_id', 'unique_id'];
 
-    public function getCommand(): string
-    {
-        return self::NAME;
-    }
-
     public function handle(array $data)
     {
         parent::handle($data);

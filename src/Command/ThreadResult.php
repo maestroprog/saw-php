@@ -15,12 +15,6 @@ class ThreadResult extends AbstractCommand
 
     protected $needData = ['run_id', 'result'];
 
-    public function getCommand(): string
-    {
-        return self::NAME;
-    }
-
-
     public function handle(array $data)
     {
         parent::handle($data);

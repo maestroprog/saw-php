@@ -44,7 +44,7 @@ class Worker
      * @param Client $client
      * @param int $state
      */
-    public function __construct(ProcessStatus $processResource, Client $client, int $state = self::NEW)
+    public function __construct(ProcessStatus $processResource, Client $client, int $state = self::READY)
     {
         $this->processResource = $processResource;
         $this->client = $client;

@@ -52,8 +52,22 @@ final class SawFactory
         SawEnv $env
     )
     {
-        if (!isset($config['starter'])) {
-            $config['starter'] = '-r "require \'bootstrap.php\'"';
+        $workDir = __DIR__;
+        if (!isset($config['controller_starter'])) {
+            // todo config path
+            $config['controller_starter'] = <<<CMD
+-r "require_once '{$workDir}/src/bootstrap.php';
+\Saw\Saw::instance()->init(require __DIR__ . '/../sample/config/saw.php')->instanceController()->start();"
+CMD;
+        }
+        if (!isset($config['worker_starter'])) {
+            $config['worker_starter'] = <<<CMD
+-r "require_once __DIR__ . '/../src/bootstrap.php';
+\Saw\Saw::instance()
+    ->init(require __DIR__ . '/../sample/config/saw.php')
+    ->instanceWorker()
+    ->start();"
+CMD;
         }
         $this->config = $config;
         $this->daemonConfig = $daemonConfig;
@@ -111,8 +125,8 @@ final class SawFactory
                 $this->controllerClient,
                 $this->daemonConfig->getControllerAddress(),
                 $this->daemonConfig->hasControllerPath()
-                    ? $this->daemonConfig->getControllerPath()
-                    : $this->config['starter'],
+                    ? '-f ' . $this->daemonConfig->getControllerPath()
+                    : $this->config['controller_starter'],
                 $this->daemonConfig->getControllerPid()
             );
     }
@@ -122,7 +136,9 @@ final class SawFactory
         return $this->workerStarter
             ?? $this->workerStarter = new WorkerStarter(
                 $this->getExecutor(),
-                $this->config['starter']
+                $this->daemonConfig->hasWorkerPath()
+                    ? '-f ' . $this->daemonConfig->getWorkerPath()
+                    : $this->config['worker_starter']
             );
     }
 

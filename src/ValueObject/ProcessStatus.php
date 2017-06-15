@@ -28,7 +28,7 @@ final class ProcessStatus
     }
 
     /**
-     * Получает PID процесса.
+     * Вернёт PID процесса.
      *
      * @return int
      */
@@ -38,6 +38,28 @@ final class ProcessStatus
             throw new \RuntimeException('Cannot get pid.');
         }
         return $this->status['pid'];
+    }
+
+    /**
+     * Вернёт true, если процесс ещё работает.
+     *
+     * @return bool
+     */
+    public function isRunning(): bool
+    {
+        $this->update(); // обновляем инфу
+        return (bool)$this->status['running'];
+    }
+
+    /**
+     * Убивает процесс с использованием сигнала KILL.
+     * Вернёт статус уничтожения процесса.
+     * @param int $signal
+     * @return bool
+     */
+    public function kill(int $signal = 9): bool
+    {
+        return proc_terminate($this->resource, $signal);
     }
 
     /**

@@ -3,9 +3,14 @@
 namespace Saw\Standalone\Controller;
 
 use Esockets\debug\Log;
+use Saw\Command\CommandHandler;
 use Saw\Command\ThreadRun;
+use Saw\Command\WorkerAdd;
+use Saw\Command\WorkerDelete;
 use Saw\Entity\Worker;
+use Saw\Service\CommandDispatcher;
 use Saw\Service\WorkerStarter;
+use Saw\ValueObject\ProcessStatus;
 
 /**
  * Балансировщик воркеров.
@@ -13,47 +18,80 @@ use Saw\Service\WorkerStarter;
  */
 class WorkerBalance implements CycleInterface
 {
+    const WORKER_MIN = 2;
     private $workerStarter;
+    private $commandDispatcher;
     private $workerMaxCount;
     private $workerMultiplier;
 
     private $workerPool;
 
     /**
-     * Известные воркерам задачи.
-     *
-     * @var bool[][] $name => $dsc => true
-     */
-    private $tasksKnow = [];
-
-    /**
      * @var int Состояние запуска нового воркера.
      */
     private $running = 0;
 
+    /**
+     * @var ProcessStatus
+     */
+    private $workerRun;
+
 
     public function __construct(
         WorkerStarter $workerStarter,
+        CommandDispatcher $commandDispatcher,
         int $workerMaxCount
     )
     {
         $this->workerStarter = $workerStarter;
+        $this->commandDispatcher = $commandDispatcher;
         $this->workerMaxCount = $workerMaxCount;
         $this->workerPool = new WorkerPool();
+
+        $commandDispatcher->add([
+            new CommandHandler(WorkerAdd::NAME, WorkerAdd::class, function (WorkerAdd $context) {
+                if (is_null($this->workerRun) || !$this->workerRun instanceof ProcessStatus) {
+                    throw new \LogicException('Некорректный состояние запуска воркера.');
+                }
+                if ($context->getPid() !== $this->workerRun->getPid()) {
+                    // если pid запущенного процесса не соответсвует pid-у который сообщил воркер
+                    return false;
+                }
+                $this->workerPool->add(new Worker($this->workerRun, $context->getPeer()));
+                return true;
+            }),
+            new CommandHandler(
+                WorkerDelete::NAME,
+                WorkerDelete::class,
+                function (WorkerDelete $context) {
+                    $this->workerPool->removeById((int)$context->getPeer()->getConnectionResource()->getResource());
+                }
+            ),
+        ]);
     }
 
     /**
      * Предполагается, что этот метод будет запускать новые воркеры, когда это нужно.
+     * Воркеры запускаются по одному, после запуска контроллер ждёт новый воркер до 10 секунд.
      */
     public function work()
     {
-        if (count($this->workerPool) < $this->workerMaxCount && !$this->running) {
+        $forceRunWorker = false;
+
+        if (
+            (count($this->workerPool) < self::WORKER_MIN || $forceRunWorker)
+            && !$this->running
+        ) {
             // run new worker
-            $this->workerStarter->start();
+            $this->workerRun = $this->workerStarter->start();
             $this->running = time();
         } elseif ($this->running && $this->running < time() - 10) {
-            // timeout 10 sec
+            // timeout 10 sec - не удалось запустить воркер
             $this->running = 0;
+            if ($this->workerRun->isRunning()) {
+                // убиваем запущенный процесс, если он ещё работает
+                $this->workerRun->kill();
+            }
             Log::log('Can not run worker!');
         } else {
             // so good; всё ок

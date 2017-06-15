@@ -18,8 +18,21 @@ abstract class AbstractCommand
 
     const NAME = 'void';
 
+    /**
+     * Массив данных, поступиших в команде.
+     * Формируется в методе @see AbstractCommand::handle(),
+     * который можно переопределить.
+     *
+     * @var array
+     */
     protected $data = [];
 
+    /**
+     * Массив полей, присутствие которых необходимо для поступившей команды.
+     * Этот массив используется для валидации при отправке команды.
+     *
+     * @var array
+     */
     protected $needData = [];
 
     private $id;
@@ -68,6 +81,11 @@ abstract class AbstractCommand
         $this->code = $code;
     }
 
+    /**
+     * Вернёт ID поступившей команды.
+     *
+     * @return int
+     */
     public function getId(): int
     {
         return $this->id;
@@ -84,6 +102,8 @@ abstract class AbstractCommand
     }
 
     /**
+     * Вернёт клиента, от которого поступила команда/кому отправляется команда.
+     *
      * @return Client
      */
     public function getPeer(): Client
@@ -101,17 +121,17 @@ abstract class AbstractCommand
     final public function run($data = [])
     {
         if (!$this->isValid($data)) {
-            throw new \Exception('Invalid command ' . $this->getCommand());
+            throw new \Exception('Invalid command ' . $this->getCommandName());
         }
         $this->state = self::STATE_RUN;
         if (!$this->peer->send([
-            'command' => $this->getCommand(),
+            'command' => $this->getCommandName(),
             'state' => $this->state,
             'id' => $this->id,
             'code' => $this->code,
             'data' => $data])
         ) {
-            throw new \Exception('Fail run command ' . $this->getCommand());
+            throw new \Exception('Fail run command ' . $this->getCommandName());
         }
     }
 
@@ -119,19 +139,18 @@ abstract class AbstractCommand
      * Отправляет результат выполнения команды.
      *
      * @throws \Exception
-     * @throws \Throwable
      */
     final public function result()
     {
         $this->state = self::STATE_RES;
         if (!$this->peer->send([
-            'command' => $this->getCommand(),
+            'command' => $this->getCommandName(),
             'state' => $this->state,
             'id' => $this->id,
             'code' => $this->code,
             'data' => $this->getData()])
         ) {
-            throw new \Exception('Fail for send result of command ' . $this->getCommand());
+            throw new \Exception('Fail for send result of command ' . $this->getCommandName());
         }
     }
 
@@ -146,11 +165,17 @@ abstract class AbstractCommand
     }
 
     /**
-     * Возвращает имя команды.
+     * С помощью позщнего статического связывания возвращает имя команды,
+     * определённой в константе @see AbstractCommand::NAME текущего объекта,
+     * которую можно переопределить.
      *
      * @return string
      */
-    abstract public function getCommand(): string;
+
+    public function getCommandName(): string
+    {
+        return static::NAME;
+    }
 
     /**
      * Инициализирует кастомные данные, поступившие вместе с командой.

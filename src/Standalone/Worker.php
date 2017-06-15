@@ -5,7 +5,7 @@ namespace Saw\Standalone;
 use Esockets\Client;
 use Esockets\debug\Log;
 use Saw\Command\AbstractCommand;
-use Saw\Command\CommandHandler as EntityCommand;
+use Saw\Command\CommandHandler;
 use Saw\Command\WorkerAdd;
 use Saw\Command\WorkerDelete;
 use Saw\Service\CommandDispatcher;
@@ -69,14 +69,14 @@ final class Worker
         });
 
         $this->commandDispatcher->add([
-            new EntityCommand(
+            new CommandHandler(
                 WorkerAdd::NAME,
                 WorkerAdd::class,
                 function (AbstractCommand $context) {
                     $this->core->run(); // запуск приложений
                 }
             ),
-            new EntityCommand(
+            new CommandHandler(
                 WorkerDelete::NAME,
                 WorkerDelete::class,
                 function (AbstractCommand $context) {
@@ -121,7 +121,7 @@ final class Worker
                         ->onSuccess(function () {
                             $this->core->run();
                         })
-                        ->run();
+                        ->run(['pid' => getmypid()]);
                     break;
                 case 'INVALID':
                     throw new \RuntimeException('Is an invalid worker.');
