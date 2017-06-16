@@ -3,6 +3,8 @@
 namespace Saw\Entity;
 
 use Esockets\Client;
+use Saw\Thread\AbstractThread;
+use Saw\Thread\Pool\WorkerThreadPool;
 use Saw\ValueObject\ProcessStatus;
 
 /**
@@ -11,16 +13,16 @@ use Saw\ValueObject\ProcessStatus;
  */
 class Worker
 {
-    const NEW = 0; // новый воркер
     const READY = 1; // воркер, готовый к выполнению задач
     const RUN = 2; // воркер, выполняющий задачу
     const STOP = 3; // воркер, остановивший работу
+
     /**
      * Задачи, которые знает воркер (по TID).
      *
-     * @var int[]
+     * @var
      */
-    private $knowTasks = [];
+    private $knowThreads;
 
     /**
      * Задачи, которые выполняет воркер (по RID).
@@ -49,8 +51,15 @@ class Worker
         $this->processResource = $processResource;
         $this->client = $client;
         $this->state = $state;
+
+        $this->knowThreads = new WorkerThreadPool();
     }
 
+    /**
+     * Вернёт ID воркера.
+     *
+     * @return int
+     */
     public function getId(): int
     {
         return (int)$this->client->getConnectionResource()->getResource();
@@ -61,17 +70,28 @@ class Worker
         return $this->state;
     }
 
-    public function isKnowTask(int $tid): bool
+    /**
+     * Проверяет, знает ли воркер указанный поток.
+     *
+     * @param AbstractThread $thread
+     * @return bool
+     */
+    public function isThreadKnow(AbstractThread $thread): bool
     {
-        return in_array($tid, $this->knowTasks);
+        return $this->knowThreads->existsThreadByUniqueId($thread->getUniqueId());
     }
 
-    public function addKnowTask(int $tid)
+    /**
+     * Добавляет поток в список известных воркеру.
+     *
+     * @param AbstractThread $thread
+     */
+    public function addThreadToKnownList(AbstractThread $thread)
     {
-        $this->knowTasks[$tid] = $tid;
+        $this->knowThreads->add($thread);
     }
 
-    public function addTask(Task $task)
+    public function addThreadToRunList(AbstractThread $thread)
     {
         $this->runTasks[$task->getRunId()] = $task;
     }

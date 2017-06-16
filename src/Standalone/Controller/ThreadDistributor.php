@@ -2,32 +2,77 @@
 
 namespace Saw\Standalone\Controller;
 
+use Saw\Command\CommandHandler;
+use Saw\Command\ThreadKnow;
+use Saw\Command\ThreadResult;
+use Saw\Command\ThreadRun;
+use Saw\Entity\Worker;
+use Saw\Service\CommandDispatcher;
+use Saw\Thread\AbstractThread;
+use Saw\Thread\ControlledThread;
+use Saw\Thread\Pool\ControllerThreadPoolIndex;
+
 /**
  * Распределитель потоков по воркерам.
  */
 class ThreadDistributor implements CycleInterface
 {
+    private $commandDispatcher;
+    private $workerPool;
 
-    /**
-     * Очередь новых поступающих задач.
-     *
-     * @var Task[]
-     */
-    private $taskNew = [];
+    private $threadKnownIndex;
+    private $threadRunQueue;
 
-    /**
-     * Ассоциация названия задачи с его ID
-     *
-     * @var int[string] $name => $tid
-     */
-    private $taskAssoc = [];
+    public function __construct(CommandDispatcher $commandDispatcher, WorkerPool $workerPool)
+    {
+        $this->commandDispatcher = $commandDispatcher;
+        $this->workerPool = $workerPool;
 
-    /**
-     * Выполняемые воркерами задачи.
-     *
-     * @var Task[]
-     */
-    private $taskRun = [];
+        $this->threadKnownIndex = new ControllerThreadPoolIndex();
+        $this->threadRunQueue = new \SplQueue();
+
+        $commandDispatcher->add([
+            new CommandHandler(
+                ThreadKnow::NAME,
+                ThreadKnow::class,
+                function (ThreadKnow $context) {
+                    static $threadId = 0;
+                    $thread = new ControlledThread(++$threadId, $context->getUniqueId());
+                    $this->threadKnow(
+                        $this->workerPool->getById((int)$context->getPeer()->getConnectionResource()->getResource()),
+                        $thread
+                    );
+                }
+            ),
+            new CommandHandler(
+                ThreadRun::NAME,
+                ThreadRun::class,
+                function (ThreadRun $context) {
+                    static $runId = 0;
+                    $thread = (new ControlledThread(++$runId, $context->getUniqueId()))
+                        ->setArguments($context->getArguments());
+                    $this->threadRunQueue->add;
+                    $this->tRun(
+                        $context->getRunId(),
+                        (int)$context->getPeer()->getConnectionResource()->getResource(),
+                        $context->getName()
+                    );
+                }
+            ),
+            new CommandHandler(
+                ThreadResult::NAME,
+                ThreadResult::class,
+                function (ThreadResult $context) {
+                    $this->tRes(
+                        $context->getRunId(),
+                        (int)$context->getPeer()->getConnectionResource()->getResource(),
+                        $context->getFromDsc(),
+                        $context->getResult()
+                    );
+                }
+            ),
+        ]);
+    }
 
     /**
      * Предполагается, что этот метод будет запускать работу по перераспределению потоков по воркерам.
@@ -67,22 +112,16 @@ class ThreadDistributor implements CycleInterface
     }
 
     /**
-     * Функция добавляет задачу в список известных воркеру задач.
+     * Метод, который будет вызван,
+     * когда воркер сообщит о новом потоке, который он только что узнал.
      *
-     * @param int $dsc
-     * @param string $name
+     * @param Worker $worker
+     * @param AbstractThread $thread
      */
-    public function tAdd(int $dsc, string $name)
+    public function threadKnow(Worker $worker, AbstractThread $thread)
     {
-        static $tid = 0; // task ID
-        if (!isset($this->taskAssoc[$name])) {
-            $this->taskAssoc[$name] = $tid;
-        }
-        if (!$this->workers[$dsc]->isKnowTask($tid)) {
-            $this->workers[$dsc]->addKnowTask($this->taskAssoc[$name]);
-            $this->tasksKnow[$name][$dsc] = true;
-        }
-        $tid++;
+        $this->threadKnownIndex->add($worker, $thread);
+        $worker->addThreadToKnownList()
     }
 
     /**

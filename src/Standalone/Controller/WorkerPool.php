@@ -2,14 +2,11 @@
 
 namespace Saw\Standalone\Controller;
 
-use Esockets\base\AbstractConnectionResource;
 use Saw\Entity\Worker;
 
 class WorkerPool implements \Countable, \Iterator
 {
     private $workers;
-
-    private $iterationKey;
 
     public function add(Worker $worker)
     {
@@ -20,9 +17,22 @@ class WorkerPool implements \Countable, \Iterator
         $this->workers[$workerId] = $workerId;
     }
 
+    public function isExistsById(int $workerId): bool
+    {
+        return isset($this->workers[$workerId]);
+    }
+
+    public function getById(int $workerId): Worker
+    {
+        if (!$this->isExistsById($workerId)) {
+            throw new \LogicException('Cannot get unknown worker.');
+        }
+        return $this->workers[$workerId];
+    }
+
     public function remove(Worker $worker)
     {
-        if (!isset($this->workers[$worker->getId()])) {
+        if (!$this->isExistsById($worker->getId())) {
             throw new \LogicException('Can not remove an already removed.');
         }
         unset($this->workers[$worker->getId()]);
@@ -30,15 +40,10 @@ class WorkerPool implements \Countable, \Iterator
 
     public function removeById(int $workerId)
     {
-        if (!isset($this->workers[$workerId])) {
+        if (!$this->isExistsById($workerId)) {
             throw new \LogicException('Can not remove an already removed.');
         }
         unset($this->workers[$workerId]);
-    }
-
-    public function removeByConnectionResource(AbstractConnectionResource $connectionResource)
-    {
-
     }
 
     public function count()
@@ -53,21 +58,21 @@ class WorkerPool implements \Countable, \Iterator
 
     public function next()
     {
-        // TODO: Implement next() method.
+        return next($this->workers);
     }
 
     public function key()
     {
-        // TODO: Implement key() method.
+        return key($this->workers);
     }
 
     public function valid()
     {
-        // TODO: Implement valid() method.
+        return array_key_exists($this->key(), $this->workers);
     }
 
     public function rewind()
     {
-        // TODO: Implement rewind() method.
+        reset($this->workers);
     }
 }

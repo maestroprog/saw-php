@@ -12,9 +12,4 @@ class WorkerThreadPool extends AbstractThreadPool
             parent::add($thread);
         }
     }
-
-    public function getThreadByUniqueId(string $uniqueId): AbstractThread
-    {
-        return $this->threads[$this->threadUniqueIds[$uniqueId]];
-    }
 }

@@ -4,7 +4,7 @@ namespace Saw\Standalone;
 
 use Esockets\Client;
 use Saw\Application\ApplicationContainer;
-use Saw\Command\CommandHandler as EntityCommand;
+use Saw\Command\CommandHandler;
 use Saw\Command\ThreadKnow;
 use Saw\Command\ThreadResult;
 use Saw\Command\ThreadRun;
@@ -31,8 +31,8 @@ final class WorkerCore implements CycleInterface
         $this->client = $peer;
         $this->applicationContainer = $applicationContainer;
         $commandDispatcher->add([
-            new EntityCommand(ThreadKnow::NAME, ThreadKnow::class),
-            new EntityCommand(
+            new CommandHandler(ThreadKnow::NAME, ThreadKnow::class),
+            new CommandHandler(
                 ThreadRun::NAME,
                 ThreadRun::class,
                 function (ThreadRun $context) {
@@ -41,7 +41,7 @@ final class WorkerCore implements CycleInterface
                     $this->runTask($task);
                 }
             ),
-            new EntityCommand(
+            new CommandHandler(
                 ThreadResult::NAME,
                 ThreadResult::class,
                 function (ThreadResult $context) {

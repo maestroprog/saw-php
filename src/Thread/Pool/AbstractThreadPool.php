@@ -18,18 +18,13 @@ abstract class AbstractThreadPool
         $this->threadUniqueIds[$thread->getUniqueId()] = $thread->getId();
     }
 
-    public function existsThreadById(string $threadId): bool
-    {
-        return array_key_exists($threadId, $this->threads);
-    }
-
     public function existsThreadByUniqueId(string $uniqueId): bool
     {
         return array_key_exists($uniqueId, $this->threadUniqueIds);
     }
 
-    public function runThreadById(string $threadId)
+    public function getThreadByUniqueId(string $uniqueId): AbstractThread
     {
-        $this->threads[$threadId]->run();
+        return $this->threads[$this->threadUniqueIds[$uniqueId]];
     }
 }

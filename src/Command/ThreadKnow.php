@@ -13,5 +13,15 @@ class ThreadKnow extends AbstractCommand
 {
     const NAME = 'tadd';
 
-    protected $needData = ['name'];
+    protected $needData = ['unique_id'];
+
+    /**
+     * Вернёт уникальный ID потока.
+     *
+     * @return string
+     */
+    public function getUniqueId(): string
+    {
+        return $this->data['unique_id'];
+    }
 }

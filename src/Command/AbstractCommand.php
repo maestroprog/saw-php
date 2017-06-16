@@ -83,6 +83,7 @@ abstract class AbstractCommand
 
     /**
      * Вернёт ID поступившей команды.
+     * Не путать с ID Thread!
      *
      * @return int
      */

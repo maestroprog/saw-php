@@ -28,9 +28,9 @@ class ThreadRun extends AbstractCommand
         }
     }
 
-    public function getName(): string
+    public function getUniqueId(): string
     {
-        return $this->data['name'];
+        return $this->data['unique_id'];
     }
 
     public function getRunId(): int

@@ -2,9 +2,14 @@
 
 namespace Saw\Thread\Pool;
 
-class ControllerRunnableThreadPool extends AbstractThreadPool
+class RunnableThreadPool extends AbstractThreadPool
 {
     public function __construct()
     {
+    }
+
+    public function runThreadById(string $threadId)
+    {
+        $this->threads[$threadId]->run();
     }
 }

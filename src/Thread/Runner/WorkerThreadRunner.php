@@ -5,6 +5,7 @@ namespace Saw\Thread\Runner;
 
 use Esockets\Client;
 use Saw\Command\CommandHandler;
+use Saw\Command\ThreadKnow;
 use Saw\Command\ThreadResult;
 use Saw\Command\ThreadRun;
 use Saw\Service\CommandDispatcher;
@@ -47,6 +48,11 @@ final class WorkerThreadRunner implements ThreadRunnerInterface
         if (!$this->threadPool->existsThreadByUniqueId($uniqueId)) {
             $thread = new ThreadWithCode(++$threadId, $uniqueId, $code);
             $this->threadPool->add($thread);
+            $this->commandDispatcher->create(ThreadKnow::NAME, $this->client)
+                ->onError(function () {
+                    throw new \RuntimeException('Cannot notify controller.');
+                })
+                ->run(['unique_id' => $thread->getUniqueId()]);
         } else {
             $thread = $this->threadPool->getThreadByUniqueId($uniqueId);
         }

@@ -19,12 +19,13 @@ use Saw\ValueObject\ProcessStatus;
 class WorkerBalance implements CycleInterface
 {
     const WORKER_MIN = 2;
+    
     private $workerStarter;
     private $commandDispatcher;
-    private $workerMaxCount;
-    private $workerMultiplier;
-
     private $workerPool;
+    private $workerMaxCount;
+
+    private $workerMultiplier;
 
     /**
      * @var int Состояние запуска нового воркера.
@@ -40,13 +41,14 @@ class WorkerBalance implements CycleInterface
     public function __construct(
         WorkerStarter $workerStarter,
         CommandDispatcher $commandDispatcher,
+        WorkerPool $workerPool,
         int $workerMaxCount
     )
     {
         $this->workerStarter = $workerStarter;
         $this->commandDispatcher = $commandDispatcher;
+        $this->workerPool = $workerPool;
         $this->workerMaxCount = $workerMaxCount;
-        $this->workerPool = new WorkerPool();
 
         $commandDispatcher->add([
             new CommandHandler(WorkerAdd::NAME, WorkerAdd::class, function (WorkerAdd $context) {
@@ -96,12 +98,6 @@ class WorkerBalance implements CycleInterface
         } else {
             // so good; всё ок
         }
-    }
-
-
-    private function getWorkerByDsc(int $dsc): Worker
-    {
-        return $this->workers[$dsc] ?? null;
     }
 
     /**

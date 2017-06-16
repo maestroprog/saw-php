@@ -31,14 +31,18 @@ abstract class AbstractThread
     }
 
     /**
+     * Вернёт числовой идентификатор.
+     *
      * @return int
      */
-    public function getId()
+    public function getId(): int
     {
         return $this->id;
     }
 
     /**
+     * Вернёт уникальный идентификатор потока.
+     *
      * @return string
      */
     public function getUniqueId(): string
