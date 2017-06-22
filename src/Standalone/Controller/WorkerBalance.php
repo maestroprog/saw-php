@@ -19,7 +19,7 @@ use Saw\ValueObject\ProcessStatus;
 class WorkerBalance implements CycleInterface
 {
     const WORKER_MIN = 2;
-    
+
     private $workerStarter;
     private $commandDispatcher;
     private $workerPool;
@@ -168,11 +168,32 @@ class WorkerBalance implements CycleInterface
     /**
      * Получить одного из слабо нагруженных воркеров.
      *
-     * @param ThreadRun $thread Задача для которой необходимо найти воркера.
+     * @param ThreadRun $threadCommand Задача для которой необходимо найти воркера.
      * @return Worker
      */
-    public function getLowLoadedWorker(ThreadRun $thread): Worker
+    public function getLowLoadedWorker(ThreadRun $threadCommand): Worker
     {
-
+        $selectedDsc = -1;
+        foreach ($this->workerPool as $worker) {
+            /*if (!is_null($filter) && !$filter($worker)) {
+                // отфильтровали
+                continue;
+            }*/
+            /**
+             * @var $worker Worker
+             */
+            if (!$worker->isThreadKnow($threadCommand)) {
+                // не знает такую задачу
+                continue;
+            }
+            if (!isset($count)) {
+                $count = $worker->getCountRunThreads();
+                $selectedDsc = $dsc;
+            } elseif ($count > ($newCount = $worker->getCountRunThreads())) {
+                $count = $newCount;
+                $selectedDsc = $dsc;
+            }
+        }
+        return $selectedDsc;
     }
 }

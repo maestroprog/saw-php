@@ -11,6 +11,8 @@ use Saw\Command\ThreadRun;
 use Saw\Service\ApplicationLoader;
 use Saw\Service\CommandDispatcher;
 use Saw\Standalone\Controller\CycleInterface;
+use Saw\Thread\ControlledThread;
+use Saw\Thread\Pool\WorkerThreadPool;
 
 /**
  * Ядро воркера.
@@ -21,6 +23,8 @@ final class WorkerCore implements CycleInterface
     private $client;
     private $applicationContainer;
 
+    private $threadPool;
+
     public function __construct(
         Client $peer,
         CommandDispatcher $commandDispatcher,
@@ -30,6 +34,9 @@ final class WorkerCore implements CycleInterface
     {
         $this->client = $peer;
         $this->applicationContainer = $applicationContainer;
+
+        $this->threadPool = new WorkerThreadPool();
+
         $commandDispatcher->add([
             new CommandHandler(ThreadKnow::NAME, ThreadKnow::class),
             new CommandHandler(
@@ -37,8 +44,9 @@ final class WorkerCore implements CycleInterface
                 ThreadRun::class,
                 function (ThreadRun $context) {
                     // выполняем задачу
-                    $task = new Task($context->getRunId(), $context->getName(), $context->getFromDsc());
-                    $this->runTask($task);
+                    $thread = new ControlledThread($context->getRunId(), $context->getUniqueId());
+                    $thread->setArguments($context->getArguments());
+                    $this->runTask($thread);
                 }
             ),
             new CommandHandler(

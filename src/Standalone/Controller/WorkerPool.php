@@ -4,9 +4,14 @@ namespace Saw\Standalone\Controller;
 
 use Saw\Entity\Worker;
 
-class WorkerPool implements \Countable, \Iterator
+class WorkerPool implements \Countable, \IteratorAggregate
 {
     private $workers;
+
+    public function __construct()
+    {
+        $this->workers = new \ArrayObject();
+    }
 
     public function add(Worker $worker)
     {
@@ -46,33 +51,13 @@ class WorkerPool implements \Countable, \Iterator
         unset($this->workers[$workerId]);
     }
 
+    public function getIterator()
+    {
+        return $this->workers->getIterator();
+    }
+
     public function count()
     {
-        return count($this->workers);
-    }
-
-    public function current()
-    {
-
-    }
-
-    public function next()
-    {
-        return next($this->workers);
-    }
-
-    public function key()
-    {
-        return key($this->workers);
-    }
-
-    public function valid()
-    {
-        return array_key_exists($this->key(), $this->workers);
-    }
-
-    public function rewind()
-    {
-        reset($this->workers);
+        return $this->workers->count();
     }
 }

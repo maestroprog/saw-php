@@ -51,12 +51,7 @@ class ThreadDistributor implements CycleInterface
                     static $runId = 0;
                     $thread = (new ControlledThread(++$runId, $context->getUniqueId()))
                         ->setArguments($context->getArguments());
-                    $this->threadRunQueue->add;
-                    $this->tRun(
-                        $context->getRunId(),
-                        (int)$context->getPeer()->getConnectionResource()->getResource(),
-                        $context->getName()
-                    );
+                    $this->threadRunQueue->push($thread);
                 }
             ),
             new CommandHandler(
@@ -121,21 +116,7 @@ class ThreadDistributor implements CycleInterface
     public function threadKnow(Worker $worker, AbstractThread $thread)
     {
         $this->threadKnownIndex->add($worker, $thread);
-        $worker->addThreadToKnownList()
-    }
-
-    /**
-     * Функция добавляет задачу в очередь на выполнение для заданного воркера.
-     *
-     * @param int $runId
-     * @param int $dsc
-     * @param string $name
-     */
-    public function tRun(int $runId, int $dsc, string $name)
-    {
-        static $rid = 0; // task run ID
-        $this->taskNew[$rid] = new Task($runId, $name, $dsc);
-        $rid++;
+        $worker->addThreadToKnownList($thread);
     }
 
     public function tRes(int $rid, int $workerDsc, int $dsc, &$result)

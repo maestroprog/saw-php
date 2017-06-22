@@ -26,6 +26,9 @@ class ThreadRun extends AbstractCommand
         if (isset($data['from_dsc'])) {
             $this->data['from_dsc'] = $data['from_dsc'];
         }
+        if (isset($data['arguments'])) {
+            $this->data['arguments'] = $data['arguments'];
+        }
     }
 
     public function getUniqueId(): string
@@ -41,6 +44,11 @@ class ThreadRun extends AbstractCommand
     public function getFromDsc()
     {
         return $this->data['from_dsc'] ?? null;
+    }
+
+    public function getArguments(): array
+    {
+        return $this->data['arguments'] ?? [];
     }
 
     /**

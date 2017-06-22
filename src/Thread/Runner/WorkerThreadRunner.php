@@ -2,7 +2,6 @@
 
 namespace Saw\Thread\Runner;
 
-
 use Esockets\Client;
 use Saw\Command\CommandHandler;
 use Saw\Command\ThreadKnow;

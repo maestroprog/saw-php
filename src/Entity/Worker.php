@@ -27,9 +27,9 @@ class Worker
     /**
      * Задачи, которые выполняет воркер (по RID).
      *
-     * @var Task[]
+     * @var AbstractThread[]
      */
-    private $runTasks = [];
+    private $runThreads = [];
 
     private $processResource;
     private $client;
@@ -93,23 +93,23 @@ class Worker
 
     public function addThreadToRunList(AbstractThread $thread)
     {
-        $this->runTasks[$task->getRunId()] = $task;
+        $this->runThreads[$thread->getId()] = $thread;
     }
 
-    public function getTask(int $runId): Task
+    public function getRunThread(int $runId): AbstractThread
     {
-        return $this->runTasks[$runId] ?? null;
+        return $this->runThreads[$runId];
     }
 
-    public function removeTask(Task $task)
+    public function removeRunThread(AbstractThread $thread)
     {
-        if (isset($this->runTasks[$task->getRunId()])) {
-            unset($this->runTasks[$task->getRunId()]);
+        if (isset($this->runThreads[$thread->getId()])) {
+            unset($this->runThreads[$thread->getId()]);
         }
     }
 
-    public function getCountTasks()
+    public function getCountRunThreads()
     {
-        return count($this->runTasks);
+        return count($this->runThreads);
     }
 }
