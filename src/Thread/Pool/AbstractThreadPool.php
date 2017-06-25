@@ -27,4 +27,9 @@ abstract class AbstractThreadPool
     {
         return $this->threads[$this->threadUniqueIds[$uniqueId]];
     }
+
+    public function getThreadById(int $id): AbstractThread
+    {
+        return $this->threads[$id];
+    }
 }

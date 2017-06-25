@@ -24,7 +24,7 @@
 * **[MultiplexingInterface](MultiplexingInterface.php)** - интерфейс,
     описывающий структуру класса потока, который необходимо реализовать
     для работы потока в режиме мультиплексирования.
-* **[SynchronizeException](SynchronizeException.php)** - исключение типа
+* **[SynchronizeException](Syncronizer/SynchronizeException.php)** - исключение типа
     "Исключение во время синхронизации" в контексте многопоточности,
     т.е. какая-либо ошибка/исключение при синхронизации работы потоков.
 

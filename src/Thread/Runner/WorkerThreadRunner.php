@@ -18,12 +18,14 @@ final class WorkerThreadRunner implements ThreadRunnerInterface
     private $commandDispatcher;
 
     private $threadPool;
+    private $runThreadPool;
 
     public function __construct(Client $client, CommandDispatcher $commandDispatcher)
     {
         $this->client = $client;
         $this->commandDispatcher = $commandDispatcher;
         $this->threadPool = new WorkerThreadPool();
+        $this->runThreadPool = new WorkerThreadPool();
 
         $this->commandDispatcher
             ->add([
@@ -31,13 +33,6 @@ final class WorkerThreadRunner implements ThreadRunnerInterface
                     $result = $this->threadPool->runThreadById($context->getRunId());
                     // todo
                 }),
-                new CommandHandler(
-                    ThreadResult::NAME,
-                    ThreadResult::class,
-                    function (ThreadResult $context) {
-                        $this->setResultByRunId($context->getRunId(), $context->getResult());
-                    }
-                ),
             ]);
     }
 
@@ -72,48 +67,6 @@ final class WorkerThreadRunner implements ThreadRunnerInterface
     public function runThreads(): bool
     {
         ;
-    }
-
-    public function synchronizeOne(AbstractThread $thread)
-    {/*
-        while (!$thread->hasResult()) {
-            $this->client->live();
-        }*/
-    }
-
-    public function synchronizeThreads(array $threads)
-    {/*
-        $synchronized = false;
-        do {
-            $this->client->live();
-            $synchronizeOk = true;
-            /**
-             * @var $thread AbstractThread
-             *
-            foreach ($threads as $thread) {
-                $synchronizeOk = $synchronizeOk && $thread->hasResult();
-                if (!$synchronizeOk) break;
-            }
-            if ($synchronizeOk) {
-                $synchronized = true;
-            }
-        } while (!$synchronized);*/
-    }
-
-    public function synchronizeAll()
-    {/*
-        $synchronized = false;
-        do {
-            $this->client->live();
-            $synchronizeOk = true;
-            foreach ($this->threads as $thread) {
-                $synchronizeOk = $synchronizeOk && $thread->hasResult();
-                if (!$synchronizeOk) break;
-            }
-            if ($synchronizeOk) {
-                $synchronized = true;
-            }
-        } while (!$synchronized);*/
     }
 
     public function setResultByRunId(int $id, $data)

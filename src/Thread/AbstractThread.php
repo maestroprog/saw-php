@@ -121,4 +121,10 @@ abstract class AbstractThread
     {
         return $this->result;
     }
+
+    public function setResult($data)
+    {
+        $this->state = self::STATE_END;
+        $this->result = $data;
+    }
 }

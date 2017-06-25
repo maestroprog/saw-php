@@ -8,19 +8,21 @@ use Saw\Command\ThreadResult;
 use Saw\Command\ThreadRun;
 use Saw\Service\CommandDispatcher;
 use Saw\Thread\AbstractThread;
-use Saw\Thread\ThreadWithCode;
+use Saw\Thread\Pool\RunnableThreadPool;
 
 class WebThreadRunner implements ThreadRunnerInterface
 {
     private $client;
     private $commandDispatcher;
 
-    private $threads = [];
+    private $runThreads;
 
     public function __construct(Client $client, CommandDispatcher $commandDispatcher)
     {
         $this->client = $client;
         $this->commandDispatcher = $commandDispatcher;
+
+        $this->runThreads = new RunnableThreadPool();
 
         $this->commandDispatcher
             ->add([
@@ -35,68 +37,22 @@ class WebThreadRunner implements ThreadRunnerInterface
             ]);
     }
 
-    public function thread(string $uniqueId, callable $code): AbstractThread
-    {
-        static $threadId = 0;
-        return $this->threads[$threadId] = new ThreadWithCode(++$threadId, $uniqueId, $code);
-    }
-
-    public function threadArguments(string $uniqueId, callable $code, array $arguments): AbstractThread
-    {
-        return $this->thread($uniqueId, $code)->setArguments($arguments);
-    }
-
-    public function runThreads(): bool
-    {
-        foreach ($this->threads as $thread) {
-            $this->commandDispatcher->create(ThreadRun::NAME, $this->client)
-                ->run(ThreadRun::serializeTask($thread));
-        }
-    }
-
-    public function synchronizeOne(AbstractThread $thread)
-    {
-        while (!$thread->hasResult()) {
-            $this->client->live();
-        }
-    }
-
     /**
-     * @inheritdoc
+     * @param AbstractThread[] $threads
+     * @return bool
      */
-    public function synchronizeThreads(array $threads)
+    public function runThreads(array $threads): bool
     {
-        $synchronized = false;
-        do {
-            $this->client->live();
-            $synchronizeOk = true;
-            /**
-             * @var $thread AbstractThread
-             */
-            foreach ($threads as $thread) {
-                $synchronizeOk = $synchronizeOk && $thread->hasResult();
-                if (!$synchronizeOk) break;
+        foreach ($threads as $thread) {
+            $this->runThreads->add($thread);
+            try {
+                $this->commandDispatcher->create(ThreadRun::NAME, $this->client)
+                    ->run(ThreadRun::serializeTask($thread));
+            } catch (\Exception $e) {
+                $thread->run();
             }
-            if ($synchronizeOk) {
-                $synchronized = true;
-            }
-        } while (!$synchronized);
-    }
-
-    public function synchronizeAll()
-    {
-        $synchronized = false;
-        do {
-            $this->client->live();
-            $synchronizeOk = true;
-            foreach ($this->threads as $thread) {
-                $synchronizeOk = $synchronizeOk && $thread->hasResult();
-                if (!$synchronizeOk) break;
-            }
-            if ($synchronizeOk) {
-                $synchronized = true;
-            }
-        } while (!$synchronized);
+        }
+        return true;
     }
 
     public function setResultByRunId(int $id, $data)

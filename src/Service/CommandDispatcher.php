@@ -4,7 +4,7 @@ namespace Saw\Service;
 
 use Esockets\Client;
 use Saw\Command\AbstractCommand;
-use Saw\Command\CommandHandler as EntityCommand;
+use Saw\Command\CommandHandler;
 
 /**
  * Диспетчер команд.
@@ -14,7 +14,7 @@ final class CommandDispatcher
     /**
      * Команды, которые мы знаем.
      *
-     * @var EntityCommand[]
+     * @var CommandHandler[]
      */
     private $know = [];
 
@@ -32,7 +32,7 @@ final class CommandDispatcher
     /**
      * Добавляет новую команду в список известных команд.
      *
-     * @param EntityCommand[] $commands
+     * @param CommandHandler[] $commands
      * @return CommandDispatcher
      * @throws \Exception
      */

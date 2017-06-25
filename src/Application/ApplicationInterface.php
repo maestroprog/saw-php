@@ -3,7 +3,6 @@
 namespace Saw\Application;
 
 use Saw\ValueObject\Result;
-use Saw\Thread\MultiThreadingInterface;
 
 interface ApplicationInterface
 {
