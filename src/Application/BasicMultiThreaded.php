@@ -6,22 +6,26 @@ use Saw\Application\Context\ContextPool;
 use Saw\Memory\SharedMemoryInterface;
 use Saw\Thread\AbstractThread;
 use Saw\Thread\MultiThreadingInterface;
-use Saw\Thread\Runner\ThreadRunnerInterface;
+use Saw\Thread\MultiThreadingProvider;
 
 abstract class BasicMultiThreaded implements ApplicationInterface, MultiThreadingInterface
 {
     private $id;
-    private $threadRunner;
+    private $multiThreadingProvider;
+    private $applicationMemory;
+    private $contextPool;
 
     public function __construct(
         string $id,
-        ThreadRunnerInterface $threadRunner,
+        MultiThreadingProvider $multiThreadingProvider,
         SharedMemoryInterface $applicationMemory,
         ContextPool $contextPool
     )
     {
         $this->id = $id;
-        $this->threadRunner = $threadRunner;
+        $this->multiThreadingProvider = $multiThreadingProvider;
+        $this->applicationMemory = $applicationMemory;
+        $this->contextPool = $contextPool;
     }
 
     final public function getId(): string
@@ -41,7 +45,15 @@ abstract class BasicMultiThreaded implements ApplicationInterface, MultiThreadin
     {
         $this->main();
 
-        if (!$this->runThreads()) {
+        $runningResult = $this->multiThreadingProvider
+            ->getThreadRunner()
+            ->runThreads(
+                $this->multiThreadingProvider
+                    ->getThreadCreator()
+                    ->getThreadPool()
+                    ->getThreads()
+            );
+        if (!$runningResult) {
             throw new \RuntimeException('Cannot run the threads.');
         }
 
@@ -50,31 +62,26 @@ abstract class BasicMultiThreaded implements ApplicationInterface, MultiThreadin
 
     final public function thread(string $uniqueId, callable $code): AbstractThread
     {
-        return $this->threadRunner->thread($uniqueId, $code);
+        return $this->multiThreadingProvider->getThreadCreator()->thread($uniqueId, $code);
     }
 
     final  public function threadArguments(string $uniqueId, callable $code, array $arguments): AbstractThread
     {
-        return $this->threadRunner->threadArguments($uniqueId, $code, $arguments);
-    }
-
-    final public function runThreads(): bool
-    {
-        return $this->threadRunner->runThreads();
+        return $this->multiThreadingProvider->getThreadCreator()->threadArguments($uniqueId, $code, $arguments);
     }
 
     final  public function synchronizeOne(AbstractThread $thread)
     {
-        $this->threadRunner->synchronizeOne($thread);
+        $this->multiThreadingProvider->getSynchronizer()->synchronizeOne($thread);
     }
 
     final public function synchronizeThreads(array $threads)
     {
-        $this->threadRunner->synchronizeThreads($threads);
+        $this->multiThreadingProvider->getSynchronizer()->synchronizeThreads($threads);
     }
 
-    final  public function synchronizeAll()
+    final public function synchronizeAll()
     {
-        $this->threadRunner->synchronizeAll();
+        $this->multiThreadingProvider->getSynchronizer()->synchronizeAll();
     }
 }

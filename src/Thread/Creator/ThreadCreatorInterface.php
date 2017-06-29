@@ -3,6 +3,7 @@
 namespace Saw\Thread\Creator;
 
 use Saw\Thread\AbstractThread;
+use Saw\Thread\Pool\AbstractThreadPool;
 
 interface ThreadCreatorInterface
 {
@@ -26,4 +27,6 @@ interface ThreadCreatorInterface
      * @return AbstractThread
      */
     public function threadArguments(string $uniqueId, callable $code, array $arguments): AbstractThread;
+
+    public function getThreadPool(): AbstractThreadPool;
 }

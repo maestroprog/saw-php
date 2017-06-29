@@ -5,8 +5,6 @@ namespace Saw\Standalone;
 use Esockets\Client;
 use Saw\Application\ApplicationContainer;
 use Saw\Command\CommandHandler;
-use Saw\Command\ThreadKnow;
-use Saw\Command\ThreadResult;
 use Saw\Command\ThreadRun;
 use Saw\Service\ApplicationLoader;
 use Saw\Service\CommandDispatcher;
@@ -38,7 +36,6 @@ final class WorkerCore implements CycleInterface
         $this->threadPool = new WorkerThreadPool();
 
         $commandDispatcher->add([
-            new CommandHandler(ThreadKnow::NAME, ThreadKnow::class),
             new CommandHandler(
                 ThreadRun::NAME,
                 ThreadRun::class,
@@ -49,17 +46,6 @@ final class WorkerCore implements CycleInterface
                     $this->runTask($thread);
                 }
             ),
-            new CommandHandler(
-                ThreadResult::NAME,
-                ThreadResult::class,
-                function (ThreadResult $context) {
-                    //todo
-                    $this->receiveTask(
-                        $context->getRunId(),
-                        $context->getResult()
-                    );
-                }
-            ),
         ]);
     }
 
@@ -68,76 +54,10 @@ final class WorkerCore implements CycleInterface
      */
     public function run()
     {
-        $this->applicationContainer->run();//todo
+        $this->applicationContainer->run(); // todo
     }
 
     public function work()
     {
-        if (count($this->getunQueue())) {
-            /** @var Task $task */
-            $task = array_shift($this->getRunQueue());
-            $task->setResult($this->runCallback($task->getName()));
-            $this->dispatcher->create(ThreadResult::NAME, $this->sc)
-                ->onError(function () {
-                    //todo
-                })
-                ->run(ThreadResult::serializeTask($task));
-        }
-    }
-
-
-    /**
-     * @var array
-     */
-    private $knowTasks = [];
-
-    /**
-     * Оповещает контроллер о том, что данный воркер узнал новую задачу.
-     * Контроллер (и сам воркер) запоминает это.
-     *
-     * @param Task $task
-     */
-    public function addTask(Task $task)
-    {
-        if (!isset($this->knowTasks[$task->getName()])) {
-            $this->knowTasks[$task->getName()] = 1;
-        }
-    }
-
-    /**
-     * @var Task[]
-     */
-    private $runQueue = [];
-
-    /**
-     * Постановка задачи в очередь на выполнение.
-     *
-     * @param Task $task
-     */
-    public function runTask(Task $task)
-    {
-        $this->runQueue[] = $task;
-    }
-
-    public function runCallback(string $name)
-    {
-        return $this->taskManager->runCallback($name);
-    }
-
-    public function & getRunQueue(): array
-    {
-        return $this->runQueue;
-    }
-
-    /**
-     * Принимает от контроллера результат выполненной задачи.
-     *
-     * @param int $rid
-     * @param $result
-     */
-    public function receiveTask(int $rid, &$result)
-    {
-        $task = $this->taskManager->getRunTask($rid);
-        $task->setResult($result);
     }
 }

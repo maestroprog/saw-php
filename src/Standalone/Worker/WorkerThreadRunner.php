@@ -4,13 +4,12 @@ namespace Saw\Thread\Runner;
 
 use Esockets\Client;
 use Saw\Command\CommandHandler;
-use Saw\Command\ThreadKnow;
 use Saw\Command\ThreadResult;
 use Saw\Command\ThreadRun;
 use Saw\Service\CommandDispatcher;
 use Saw\Thread\AbstractThread;
+use Saw\Thread\Pool\AbstractThreadPool;
 use Saw\Thread\Pool\WorkerThreadPool;
-use Saw\Thread\ThreadWithCode;
 
 final class WorkerThreadRunner implements ThreadRunnerInterface
 {
@@ -33,8 +32,17 @@ final class WorkerThreadRunner implements ThreadRunnerInterface
                     $result = $this->threadPool->runThreadById($context->getRunId());
                     // todo
                 }),
+                new CommandHandler(
+                    ThreadResult::NAME,
+                    ThreadResult::class,
+                    function (ThreadResult $context) {
+                        $this->runThreadPool
+                            ->getThreadById($context->getRunId())
+                            ->setResult($context->getResult());
+                    }
+                ),
             ]);
-    }
+    }/*
 
     public function thread(string $uniqueId, callable $code): AbstractThread
     {
@@ -56,18 +64,27 @@ final class WorkerThreadRunner implements ThreadRunnerInterface
     public function threadArguments(string $uniqueId, callable $code, array $arguments): AbstractThread
     {
         return $this->thread($uniqueId, $code)->setArguments($arguments);
-    }
+    }*/
 
     /**
      * Воркер не должен запусукать потоки из приложения.
      * Метод нужен для совместимости работы приложений из скрипта и на воркерах.
      *
+     * @param AbstractThread[] $threads
      * @return bool
      */
-    public function runThreads(): bool
+    public function runThreads(array $threads): bool
     {
-        ;
+        foreach ($threads as $thread) {
+//todo
+        }
     }
+
+    public function getThreadPool(): AbstractThreadPool
+    {
+        return $this->runThreadPool;
+    }
+
 
     public function setResultByRunId(int $id, $data)
     {

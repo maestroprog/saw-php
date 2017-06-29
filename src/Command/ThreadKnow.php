@@ -13,7 +13,18 @@ class ThreadKnow extends AbstractCommand
 {
     const NAME = 'tadd';
 
-    protected $needData = ['unique_id'];
+    protected $needData = ['application_id', 'unique_id'];
+
+    /**
+     * Вернёт уникальный идентификатор приложения,
+     * к которому относится поток.
+     *
+     * @return string
+     */
+    public function getApplicationId(): string
+    {
+        return $this->data['application_id'];
+    }
 
     /**
      * Вернёт уникальный ID потока.

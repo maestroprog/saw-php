@@ -8,6 +8,7 @@ use Saw\Command\ThreadResult;
 use Saw\Command\ThreadRun;
 use Saw\Service\CommandDispatcher;
 use Saw\Thread\AbstractThread;
+use Saw\Thread\Pool\AbstractThreadPool;
 use Saw\Thread\Pool\RunnableThreadPool;
 
 class WebThreadRunner implements ThreadRunnerInterface
@@ -34,6 +35,15 @@ class WebThreadRunner implements ThreadRunnerInterface
                         $this->setResultByRunId($context->getRunId(), $context->getResult());
                     }
                 ),
+                new CommandHandler(
+                    ThreadResult::NAME,
+                    ThreadResult::class,
+                    function (ThreadResult $context) {
+                        $this->runThreads
+                            ->getThreadById($context->getRunId())
+                            ->setResult($context->getResult());
+                    }
+                ),
             ]);
     }
 
@@ -53,6 +63,11 @@ class WebThreadRunner implements ThreadRunnerInterface
             }
         }
         return true;
+    }
+
+    public function getThreadPool(): AbstractThreadPool
+    {
+        return $this->runThreads;
     }
 
     public function setResultByRunId(int $id, $data)

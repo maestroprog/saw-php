@@ -2,10 +2,9 @@
 
 namespace Saw\Thread\Runner;
 
-use Saw\Command\CommandHandler;
-use Saw\Command\ThreadResult;
 use Saw\Service\CommandDispatcher;
 
+// todo remove
 class ThreadResultHandler
 {
     private $threadRunner;
@@ -17,16 +16,6 @@ class ThreadResultHandler
         $this->commandDispatcher = $commandDispatcher;
 
         $this->commandDispatcher->add([
-            new CommandHandler(
-                ThreadResult::NAME,
-                ThreadResult::class,
-                function (ThreadResult $context) {
-                    $this->threadRunner
-                        ->getRunPool()
-                        ->getThreadById($context->getRunId())
-                        ->setResult($context->getResult());
-                }
-            ),
         ]);
     }
 }

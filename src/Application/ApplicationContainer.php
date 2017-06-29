@@ -14,6 +14,7 @@ final class ApplicationContainer
      * @var App[]
      */
     private $apps = [];
+    private $currentApp;
 
     public function add(App $application)
     {
@@ -31,13 +32,29 @@ final class ApplicationContainer
         return $this->apps[$id];
     }
 
+    public function getCurrentApp(): App
+    {
+        return $this->currentApp;
+    }
+
+    public function switchTo(App $application): App
+    {
+        $this->currentApp = $application;
+        return $application;
+    }
+
+    public function switchReset()
+    {
+        $this->currentApp = null;
+    }
+
     /**
      * Запускает все приложения в контейнере.
      */
     public function run()
     {
         foreach ($this->apps as $app) {
-            $app->run();
+            $this->switchTo($app)->run();
         }
     }
 }

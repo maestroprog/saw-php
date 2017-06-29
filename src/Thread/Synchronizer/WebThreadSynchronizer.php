@@ -3,10 +3,21 @@
 namespace Saw\Thread\Synchronizer;
 
 
+use Esockets\Client;
 use Saw\Thread\AbstractThread;
+use Saw\Thread\Runner\ThreadRunnerInterface;
 
 class WebThreadSynchronizer implements SynchronizerInterface
 {
+    private $threadRunner;
+    private $client;
+
+    public function __construct(ThreadRunnerInterface $threadRunner, Client $client)
+    {
+        $this->threadRunner = $threadRunner;
+        $this->client = $client;
+    }
+
     public function synchronizeOne(AbstractThread $thread)
     {
         while (!$thread->hasResult()) {
@@ -42,7 +53,7 @@ class WebThreadSynchronizer implements SynchronizerInterface
         do {
             $this->client->live();
             $synchronizeOk = true;
-            foreach ($this->threads as $thread) {
+            foreach ($this->threadRunner->getThreadPool() as $thread) {
                 $synchronizeOk = $synchronizeOk && $thread->hasResult();
                 if (!$synchronizeOk) break;
             }

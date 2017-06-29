@@ -4,13 +4,18 @@ namespace Saw\Thread\Pool;
 
 use Saw\Thread\AbstractThread;
 
-abstract class AbstractThreadPool
+abstract class AbstractThreadPool implements \IteratorAggregate
 {
     /**
      * @var AbstractThread[]
      */
-    protected $threads = [];
+    protected $threads;
     protected $threadUniqueIds = [];
+
+    public function __construct()
+    {
+        $this->threads = new \ArrayObject();
+    }
 
     public function add(AbstractThread $thread)
     {
@@ -31,5 +36,15 @@ abstract class AbstractThreadPool
     public function getThreadById(int $id): AbstractThread
     {
         return $this->threads[$id];
+    }
+
+    public function getThreads(): array
+    {
+        return $this->threads->getArrayCopy();
+    }
+
+    public function getIterator()
+    {
+        return $this->threads->getIterator();
     }
 }

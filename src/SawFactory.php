@@ -17,7 +17,15 @@ use Saw\Service\Executor;
 use Saw\Service\WorkerStarter;
 use Saw\Standalone\ControllerCore;
 use Saw\Standalone\WorkerCore;
+use Saw\Thread\Creator\ThreadCreator;
+use Saw\Thread\Creator\ThreadCreatorInterface;
+use Saw\Thread\Creator\WorkerThreadCreator;
+use Saw\Thread\MultiThreadingProvider;
+use Saw\Thread\Runner\ThreadRunnerInterface;
 use Saw\Thread\Runner\WebThreadRunner;
+use Saw\Thread\Runner\WorkerThreadRunner;
+use Saw\Thread\Synchronizer\SynchronizerInterface;
+use Saw\Thread\Synchronizer\WebThreadSynchronizer;
 use Saw\ValueObject\SawEnv;
 
 /**
@@ -39,7 +47,7 @@ final class SawFactory
     private $controllerStarter;
     private $sharedMemory;
     private $controllerConnector;
-    private $webThreadRunner;
+    private $threadRunner;
     private $workerStarter;
     private $controllerServer;
     private $controllerCore;
@@ -192,12 +200,18 @@ CMD;
             ?? $this->commandDispatcher = new CommandDispatcher();
     }
 
-    public function getWebThreadRunner(): WebThreadRunner
+    public function getThreadRunner(): ThreadRunnerInterface
     {
-        return $this->webThreadRunner
-            ?? $this->webThreadRunner
-                = new WebThreadRunner($this->getControllerClient(), $this->getCommandDispatcher());
+        return $this->threadRunner
+            ?? $this->threadRunner
+                = $this->environment->isWorker()
+                ? new WorkerThreadRunner(
+                    $this->getControllerClient(),
+                    $this->getCommandDispatcher()
+                )
+                : new WebThreadRunner($this->getControllerClient(), $this->getCommandDispatcher());
     }
+
 
     public function getControllerCore(): ControllerCore
     {
@@ -233,5 +247,40 @@ CMD;
     public function getContextPool(): ContextPool
     {
         return new ContextPool();
+    }
+
+    private $threadCreator;
+
+    public function getThreadCreator(): ThreadCreatorInterface
+    {
+        return $this->threadCreator
+            ?? $this->threadCreator
+                = $this->environment->isWorker()
+                ? new WorkerThreadCreator(
+                    $this->getCommandDispatcher(),
+                    $this->getControllerClient()
+                )
+                : new ThreadCreator();
+    }
+
+
+    public function getThreadSynchronizer(): SynchronizerInterface
+    {
+        return new WebThreadSynchronizer(
+            $this->getThreadRunner(),
+            $this->getControllerClient()
+        );
+    }
+
+    private $multiThreadingProvider;
+
+    public function getMultiThreadingProvider(): MultiThreadingProvider
+    {
+        return $this->multiThreadingProvider
+            ?? $this->multiThreadingProvider = new MultiThreadingProvider(
+                $this->getThreadCreator(),
+                $this->getThreadRunner(),
+                $this->getThreadSynchronizer()
+            );
     }
 }

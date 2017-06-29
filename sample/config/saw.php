@@ -28,7 +28,7 @@ return [
             'class' => MyApplication::class,
             'arguments' => [
                 'id' => MyApplication::ID,
-                'threadRunner' => '!getWebThreadRunner',
+                'multiThreadingProvider' => '!getMultiThreadingProvider',
                 'applicationMemory' => [
                     'method' => 'getSharedMemory',
                     'arguments' => [

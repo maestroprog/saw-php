@@ -15,7 +15,7 @@ class ThreadRun extends AbstractCommand
 {
     const NAME = 'trun';
 
-    protected $needData = ['run_id', 'unique_id'];
+    protected $needData = ['application_id', 'unique_id', 'run_id'];
 
     public function handle(array $data)
     {

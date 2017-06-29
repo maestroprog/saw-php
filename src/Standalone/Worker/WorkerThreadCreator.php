@@ -3,6 +3,7 @@
 namespace Saw\Thread\Creator;
 
 use Esockets\Client;
+use Saw\Command\CommandHandler;
 use Saw\Command\ThreadKnow;
 use Saw\Service\CommandDispatcher;
 use Saw\Thread\AbstractThread;
@@ -21,6 +22,7 @@ class WorkerThreadCreator extends ThreadCreator
 
         $this->commandDispatcher
             ->add([
+                new CommandHandler(ThreadKnow::NAME, ThreadKnow::class),
             ]);
     }
 

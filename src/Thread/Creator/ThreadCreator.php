@@ -3,6 +3,7 @@
 namespace Saw\Thread\Creator;
 
 use Saw\Thread\AbstractThread;
+use Saw\Thread\Pool\AbstractThreadPool;
 use Saw\Thread\Pool\WorkerThreadPool;
 use Saw\Thread\ThreadWithCode;
 
@@ -26,5 +27,10 @@ class ThreadCreator implements ThreadCreatorInterface
     public function threadArguments(string $uniqueId, callable $code, array $arguments): AbstractThread
     {
         return $this->thread($uniqueId, $code)->setArguments($arguments);
+    }
+
+    public function getThreadPool(): AbstractThreadPool
+    {
+        return $this->threadPool;
     }
 }

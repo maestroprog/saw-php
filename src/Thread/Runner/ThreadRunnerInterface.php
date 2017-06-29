@@ -17,7 +17,7 @@ interface ThreadRunnerInterface
      */
     public function runThreads(array $threads): bool;
 
-    public function getRunPool(): AbstractThreadPool;
+    public function getThreadPool(): AbstractThreadPool;
 
     public function setResultByRunId(int $id, $data);
 }
