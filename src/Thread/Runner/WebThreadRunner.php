@@ -2,11 +2,10 @@
 
 namespace Saw\Thread\Runner;
 
-use Esockets\Client;
 use Saw\Command\CommandHandler;
 use Saw\Command\ThreadResult;
 use Saw\Command\ThreadRun;
-use Saw\Service\CommandDispatcher;
+use Saw\Connector\ControllerConnectorInterface;
 use Saw\Thread\AbstractThread;
 use Saw\Thread\Pool\AbstractThreadPool;
 use Saw\Thread\Pool\RunnableThreadPool;
@@ -18,23 +17,23 @@ class WebThreadRunner implements ThreadRunnerInterface
 
     private $runThreads;
 
-    public function __construct(Client $client, CommandDispatcher $commandDispatcher)
+    public function __construct(ControllerConnectorInterface $connector)
     {
-        $this->client = $client;
-        $this->commandDispatcher = $commandDispatcher;
+        $this->client = $connector->getClient();
+        $this->commandDispatcher = $connector->getCommandDispatcher();
 
         $this->runThreads = new RunnableThreadPool();
 
         $this->commandDispatcher
             ->add([
                 new CommandHandler(ThreadRun::NAME, ThreadRun::class),
-                new CommandHandler(
+                /*new CommandHandler(
                     ThreadResult::NAME,
                     ThreadResult::class,
                     function (ThreadResult $context) {
                         $this->setResultByRunId($context->getRunId(), $context->getResult());
                     }
-                ),
+                ),*/
                 new CommandHandler(
                     ThreadResult::NAME,
                     ThreadResult::class,
@@ -56,10 +55,15 @@ class WebThreadRunner implements ThreadRunnerInterface
         foreach ($threads as $thread) {
             $this->runThreads->add($thread);
             try {
-                $this->commandDispatcher->create(ThreadRun::NAME, $this->client)
+                $this->commandDispatcher
+                    ->create(ThreadRun::NAME, $this->client)
                     ->run(ThreadRun::serializeTask($thread));
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 $thread->run();
+                var_dump($e->getTraceAsString());
+                die($e->getMessage());
+            } finally {
+                var_dump($thread->getResult(), $thread->hasResult());
             }
         }
         return true;
@@ -68,10 +72,5 @@ class WebThreadRunner implements ThreadRunnerInterface
     public function getThreadPool(): AbstractThreadPool
     {
         return $this->runThreads;
-    }
-
-    public function setResultByRunId(int $id, $data)
-    {
-
     }
 }

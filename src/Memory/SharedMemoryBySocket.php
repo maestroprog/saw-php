@@ -3,7 +3,8 @@
 namespace Saw\Memory;
 
 
-use Saw\Connector\ControllerConnector;
+use Saw\Connector\ControllerConnectorInterface;
+use Saw\Connector\WebControllerConnector;
 use Saw\Service\CommandDispatcher;
 
 class SharedMemoryBySocket implements SharedMemoryInterface
@@ -11,7 +12,7 @@ class SharedMemoryBySocket implements SharedMemoryInterface
     private $connector;
     private $memory;
 
-    public function __construct(ControllerConnector $connector)
+    public function __construct(ControllerConnectorInterface $connector)
     {
         $this->connector = $connector;
         $this->memory = new \SplDoublyLinkedList();

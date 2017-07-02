@@ -3,35 +3,38 @@
 namespace Saw\Thread\Runner;
 
 use Esockets\Client;
+use Saw\Application\ApplicationContainer;
 use Saw\Command\CommandHandler;
 use Saw\Command\ThreadResult;
-use Saw\Command\ThreadRun;
 use Saw\Service\CommandDispatcher;
 use Saw\Thread\AbstractThread;
 use Saw\Thread\Pool\AbstractThreadPool;
-use Saw\Thread\Pool\WorkerThreadPool;
+use Saw\Thread\Pool\PoolOfUniqueThreads;
 
 final class WorkerThreadRunner implements ThreadRunnerInterface
 {
     private $client;
     private $commandDispatcher;
+    private $applicationContainer;
 
     private $threadPool;
     private $runThreadPool;
 
-    public function __construct(Client $client, CommandDispatcher $commandDispatcher)
+    public function __construct(
+        Client $client,
+        CommandDispatcher $commandDispatcher,
+        ApplicationContainer $applicationContainer
+    )
     {
         $this->client = $client;
         $this->commandDispatcher = $commandDispatcher;
-        $this->threadPool = new WorkerThreadPool();
-        $this->runThreadPool = new WorkerThreadPool();
+        $this->applicationContainer = $applicationContainer;
+
+        $this->threadPool = new PoolOfUniqueThreads();
+        $this->runThreadPool = new PoolOfUniqueThreads();
 
         $this->commandDispatcher
             ->add([
-                new CommandHandler(ThreadRun::NAME, ThreadRun::class, function (ThreadRun $context) {
-                    $result = $this->threadPool->runThreadById($context->getRunId());
-                    // todo
-                }),
                 new CommandHandler(
                     ThreadResult::NAME,
                     ThreadResult::class,
@@ -84,7 +87,6 @@ final class WorkerThreadRunner implements ThreadRunnerInterface
     {
         return $this->runThreadPool;
     }
-
 
     public function setResultByRunId(int $id, $data)
     {

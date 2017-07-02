@@ -37,7 +37,7 @@ class ThreadDistributor implements CycleInterface
                 ThreadKnow::class,
                 function (ThreadKnow $context) {
                     static $threadId = 0;
-                    $thread = new ControlledThread(++$threadId, $context->getUniqueId());
+                    $thread = new ControlledThread(++$threadId, $context->getApplicationId(), $context->getUniqueId());
                     $this->threadKnow(
                         $this->workerPool->getById((int)$context->getPeer()->getConnectionResource()->getResource()),
                         $thread
@@ -49,7 +49,7 @@ class ThreadDistributor implements CycleInterface
                 ThreadRun::class,
                 function (ThreadRun $context) {
                     static $runId = 0;
-                    $thread = (new ControlledThread(++$runId, $context->getUniqueId()))
+                    $thread = (new ControlledThread(++$runId, $context->getApplicationId(), $context->getUniqueId()))
                         ->setArguments($context->getArguments());
                     $this->threadRunQueue->push($thread);
                 }

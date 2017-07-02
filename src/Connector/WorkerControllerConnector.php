@@ -4,16 +4,11 @@ namespace Saw\Connector;
 
 use Esockets\base\AbstractAddress;
 use Esockets\base\exception\ConnectionException;
-use Esockets\base\SenderInterface;
 use Esockets\Client;
-use Esockets\debug\Log;
 use Saw\Service\CommandDispatcher;
 use Saw\Service\ControllerStarter;
 
-/**
- * Коннектор, использующийся index.php скриптом, для подключения к контроллеру.
- */
-final class ControllerConnector implements SenderInterface
+final class WorkerControllerConnector implements ControllerConnectorInterface
 {
     private $client;
     private $connectAddress;
@@ -31,9 +26,6 @@ final class ControllerConnector implements SenderInterface
         $this->connectAddress = $connectAddress;
         $this->commandDispatcher = $commandDispatcher;
         $this->controllerStarter = $controllerStarter;
-
-        $client->onReceive($this->onRead());
-        $this->connect();
     }
 
     /**
@@ -52,6 +44,7 @@ final class ControllerConnector implements SenderInterface
         } catch (ConnectionException $e) {
             $this->controllerStarter->start();
         }
+        $this->client->block();
     }
 
     /**
@@ -78,31 +71,5 @@ final class ControllerConnector implements SenderInterface
     public function send($data): bool
     {
         return $this->client->send($data);
-    }
-
-    protected function onRead(): callable
-    {
-        return function ($data) {
-            Log::log('I RECEIVED  :)');
-            Log::log(var_export($data, true));
-
-            switch ($data) {
-                case 'ACCEPT':
-                    // todo
-                    break;
-                case 'INVALID':
-                    // todo
-                    break;
-                case 'BYE':
-
-                    break;
-                default:
-                    if (is_array($data) && $this->commandDispatcher->valid($data)) {
-                        $this->commandDispatcher->dispatch($data, $this->client);
-                    } else {
-                        $this->client->send('INVALID');
-                    }
-            }
-        };
     }
 }

@@ -2,13 +2,12 @@
 
 namespace Saw\Standalone;
 
-use Esockets\Client;
 use Esockets\debug\Log;
 use Saw\Command\AbstractCommand;
 use Saw\Command\CommandHandler;
 use Saw\Command\WorkerAdd;
 use Saw\Command\WorkerDelete;
-use Saw\Service\CommandDispatcher;
+use Saw\Connector\ControllerConnectorInterface;
 
 /**
  * Воркер, использующийся воркер-скриптом.
@@ -18,6 +17,7 @@ use Saw\Service\CommandDispatcher;
 final class Worker
 {
     private $core;
+    private $connector;
     private $client;
     private $commandDispatcher;
 
@@ -30,13 +30,13 @@ final class Worker
 
     public function __construct(
         WorkerCore $core,
-        Client $client,
-        CommandDispatcher $commandDispatcher
+        ControllerConnectorInterface $connector
     )
     {
         $this->core = $core;
-        $this->client = $client;
-        $this->commandDispatcher = $commandDispatcher;
+        $this->connector = $connector;
+        $this->client = $connector->getClient();
+        $this->commandDispatcher = $connector->getCommandDispatcher();
     }
 
     /**
@@ -59,14 +59,17 @@ final class Worker
             $this->dispatchSignals = true;
         }
 
-        if (!$this->client->isConnected()) {
-            throw new \RuntimeException('Cannot start when not connected.');
-        }
         $this->client->onReceive($this->onRead());
         $this->client->onDisconnect(function () {
             Log::log('i disconnected!');
             $this->work = false;
         });
+
+        $this->connector->connect();
+
+        if (!$this->client->isConnected()) {
+            throw new \RuntimeException('Cannot start when not connected.');
+        }
 
         $this->commandDispatcher->add([
             new CommandHandler(
@@ -101,7 +104,7 @@ final class Worker
                 pcntl_signal_dispatch();
             }
             $this->core->work();
-            $this->client->read();
+            $this->connector->work();
         }
     }
 

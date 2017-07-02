@@ -4,10 +4,10 @@ namespace Saw\Thread\Pool;
 
 use Saw\Thread\AbstractThread;
 
-class RunnableThreadPool extends AbstractThreadPool
+class PoolOfUniqueThreads extends AbstractThreadPool
 {
     public function getThreadId(AbstractThread $thread)
     {
-        return $thread->getId();
+        return $thread->getUniqueId();
     }
 }

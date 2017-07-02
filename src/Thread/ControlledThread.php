@@ -10,13 +10,14 @@ namespace Saw\Thread;
  */
 class ControlledThread extends AbstractThread
 {
-    public function __construct(int $id, string $uniqueId)
+    public function __construct(int $id, string $applicationId, string $uniqueId)
     {
-        parent::__construct($id, $uniqueId);
+        parent::__construct($id, $applicationId, $uniqueId);
     }
 
-    public function run()
+    public function run(): AbstractThread
     {
-        // TODO: Implement run() method.
+        $this->state = self::STATE_RUN;
+        return $this;
     }
 }

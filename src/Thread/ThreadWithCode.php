@@ -9,18 +9,24 @@ class ThreadWithCode extends AbstractThread
      */
     private $code;
 
-    public function __construct(int $id, string $uniqueId, callable $code)
+    public function __construct(int $id, string $applicationId, string $uniqueId, callable $code)
     {
-        parent::__construct($id, $uniqueId);
+        parent::__construct($id, $applicationId, $uniqueId);
         $this->code = $code;
     }
 
-    public function run()
+    public function run(): AbstractThread
     {
         try {
-            call_user_func_array($this->code, $this->arguments);
+            $this->state = self::STATE_RUN;
+            $result = call_user_func_array($this->code, $this->arguments);
         } catch (\Throwable $throwable) {
             // todo
+            $result = null;
+            throw new ThreadRunningException($throwable->getMessage(), $throwable->getCode(), $throwable);
+        } finally {
+            $this->setResult($result);
+            $this->state = self::STATE_END;
         }
     }
 }

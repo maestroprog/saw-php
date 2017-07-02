@@ -19,5 +19,5 @@ interface ThreadRunnerInterface
 
     public function getThreadPool(): AbstractThreadPool;
 
-    public function setResultByRunId(int $id, $data);
+    /*public function setResultByRunId(int $id, $data);*/
 }

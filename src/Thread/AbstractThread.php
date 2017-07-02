@@ -10,6 +10,7 @@ abstract class AbstractThread
     const STATE_ERR = 3; // ошибка при выполнении потока
 
     private $id;
+    private $applicationId;
 
     /**
      * @var string Уникальный идентификатор кода.
@@ -21,12 +22,13 @@ abstract class AbstractThread
      */
     protected $arguments = [];
 
-    private $state = self::STATE_NEW;
-    private $result;
+    protected $state = self::STATE_NEW;
+    protected $result;
 
-    public function __construct(int $id, string $uniqueId)
+    public function __construct(int $id, string $applicationId, string $uniqueId)
     {
         $this->id = $id;
+        $this->applicationId = $applicationId;
         $this->uniqueId = $uniqueId;
     }
 
@@ -38,6 +40,16 @@ abstract class AbstractThread
     public function getId(): int
     {
         return $this->id;
+    }
+
+    /**
+     * Идентификатор приложения, к которому относится поток.
+     *
+     * @return string
+     */
+    public function getApplicationId(): string
+    {
+        return $this->applicationId;
     }
 
     /**
@@ -103,9 +115,9 @@ abstract class AbstractThread
      * @todo кстати, это абстрактный метод!
      *
      * @param void
-     * @return void
+     * @return AbstractThread
      */
-    abstract public function run();
+    abstract public function run(): AbstractThread;
 
     public function getCurrentState(): int
     {
@@ -117,7 +129,7 @@ abstract class AbstractThread
         return is_null($this->result);
     }
 
-    public function getResult(): string
+    public function getResult()
     {
         return $this->result;
     }

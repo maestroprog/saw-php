@@ -3,6 +3,8 @@
 namespace Saw\Application;
 
 use Saw\Application\ApplicationInterface as App;
+use Saw\Thread\Pool\ContainerOfThreadPools;
+use Saw\Thread\Pool\PoolOfUniqueThreads;
 
 /**
  * Контейнер приложений.
@@ -10,18 +12,27 @@ use Saw\Application\ApplicationInterface as App;
  */
 final class ApplicationContainer
 {
+    private $threadPools;
+
     /**
      * @var App[]
      */
-    private $apps = [];
+    private $apps;
     private $currentApp;
 
-    public function add(App $application)
+    public function __construct(ContainerOfThreadPools $threadPools)
+    {
+        $this->threadPools = $threadPools;
+        $this->apps = new \ArrayObject();
+    }
+
+    public function add(App $application): App
     {
         if (isset($this->apps[$application->getId()])) {
             throw new \RuntimeException('The application has already added.');
         }
-        $this->apps[$application->getId()] = $application;
+        $this->threadPools->add($application->getId(), new PoolOfUniqueThreads());
+        return $this->apps[$application->getId()] = $this->switchTo($application);
     }
 
     public function get(string $id): App
@@ -39,10 +50,13 @@ final class ApplicationContainer
 
     public function switchTo(App $application): App
     {
-        $this->currentApp = $application;
-        return $application;
+        $this->threadPools->switchTo($this->threadPools->get($application->getId()));
+        return $this->currentApp = $application;
     }
 
+    /**
+     * todo use
+     */
     public function switchReset()
     {
         $this->currentApp = null;
@@ -56,5 +70,13 @@ final class ApplicationContainer
         foreach ($this->apps as $app) {
             $this->switchTo($app)->run();
         }
+    }
+
+    /**
+     * @return ContainerOfThreadPools
+     */
+    public function getThreadPools(): ContainerOfThreadPools
+    {
+        return $this->threadPools;
     }
 }

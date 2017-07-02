@@ -10,7 +10,6 @@ abstract class AbstractThreadPool implements \IteratorAggregate
      * @var AbstractThread[]
      */
     protected $threads;
-    protected $threadUniqueIds = [];
 
     public function __construct()
     {
@@ -19,31 +18,45 @@ abstract class AbstractThreadPool implements \IteratorAggregate
 
     public function add(AbstractThread $thread)
     {
-        $this->threads[$thread->getId()] = $thread;
-        $this->threadUniqueIds[$thread->getUniqueId()] = $thread->getId();
+        $id = $this->getThreadId($thread);
+        if (!$this->exists($id)) {
+            $this->threads[$id] = $thread;
+        }
     }
 
-    public function existsThreadByUniqueId(string $uniqueId): bool
+    public function remove(AbstractThread $thread)
     {
-        return array_key_exists($uniqueId, $this->threadUniqueIds);
+        $id = $this->getThreadId($thread);
+        if ($this->exists($id)) {
+            unset($this->threads[$id]);
+        }
     }
 
-    public function getThreadByUniqueId(string $uniqueId): AbstractThread
+    public function exists($id): bool
     {
-        return $this->threads[$this->threadUniqueIds[$uniqueId]];
+        return isset($this->threads[$id]);
     }
 
-    public function getThreadById(int $id): AbstractThread
+    /**
+     * @param AbstractThread $thread
+     * @return string|int
+     */
+    abstract public function getThreadId(AbstractThread $thread);
+
+    public function getThreadById($id): AbstractThread
     {
         return $this->threads[$id];
     }
 
+    /**
+     * @return AbstractThread[]
+     */
     public function getThreads(): array
     {
         return $this->threads->getArrayCopy();
     }
 
-    public function getIterator()
+    public function getIterator(): \Iterator
     {
         return $this->threads->getIterator();
     }

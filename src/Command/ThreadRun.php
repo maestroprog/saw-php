@@ -20,15 +20,16 @@ class ThreadRun extends AbstractCommand
     public function handle(array $data)
     {
         parent::handle($data);
-        if (isset($data['command_id'])) {
-            $this->data['command_id'] = $data['command_id'];
+        foreach ($this->needData as $key) {
+            if (isset($data[$key])) {
+                $this->data[$key] = $data[$key];
+            }
         }
-        if (isset($data['from_dsc'])) {
-            $this->data['from_dsc'] = $data['from_dsc'];
-        }
-        if (isset($data['arguments'])) {
-            $this->data['arguments'] = $data['arguments'];
-        }
+    }
+
+    public function getApplicationId(): string
+    {
+        return $this->data['application_id'];
     }
 
     public function getUniqueId(): string
@@ -61,6 +62,7 @@ class ThreadRun extends AbstractCommand
     public static function serializeTask(AbstractThread $thread): array
     {
         return [
+            'application_id' => $thread->getApplicationId(),
             'run_id' => $thread->getId(),
             'unique_id' => $thread->getUniqueId(),
             'arguments' => $thread->getArguments(),

@@ -4,7 +4,7 @@ namespace Saw\Entity;
 
 use Esockets\Client;
 use Saw\Thread\AbstractThread;
-use Saw\Thread\Pool\WorkerThreadPool;
+use Saw\Thread\Pool\PoolOfUniqueThreads;
 use Saw\ValueObject\ProcessStatus;
 
 /**
@@ -52,7 +52,7 @@ class Worker
         $this->client = $client;
         $this->state = $state;
 
-        $this->knowThreads = new WorkerThreadPool();
+        $this->knowThreads = new PoolOfUniqueThreads();
     }
 
     /**

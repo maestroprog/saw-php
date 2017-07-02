@@ -9,7 +9,9 @@ use Saw\Application\ApplicationContainer;
 use Saw\Application\Context\ContextPool;
 use Saw\Config\ControllerConfig;
 use Saw\Config\DaemonConfig;
-use Saw\Connector\ControllerConnector;
+use Saw\Connector\ControllerConnectorInterface;
+use Saw\Connector\WebControllerConnector;
+use Saw\Connector\WorkerControllerConnector;
 use Saw\Memory\SharedMemoryBySocket;
 use Saw\Service\CommandDispatcher;
 use Saw\Service\ControllerStarter;
@@ -17,13 +19,17 @@ use Saw\Service\Executor;
 use Saw\Service\WorkerStarter;
 use Saw\Standalone\ControllerCore;
 use Saw\Standalone\WorkerCore;
+use Saw\Thread\Creator\DummyThreadCreator;
 use Saw\Thread\Creator\ThreadCreator;
 use Saw\Thread\Creator\ThreadCreatorInterface;
 use Saw\Thread\Creator\WorkerThreadCreator;
 use Saw\Thread\MultiThreadingProvider;
+use Saw\Thread\Pool\ContainerOfThreadPools;
+use Saw\Thread\Runner\DummyThreadRunner;
 use Saw\Thread\Runner\ThreadRunnerInterface;
 use Saw\Thread\Runner\WebThreadRunner;
 use Saw\Thread\Runner\WorkerThreadRunner;
+use Saw\Thread\Synchronizer\DummySynchronizer;
 use Saw\Thread\Synchronizer\SynchronizerInterface;
 use Saw\Thread\Synchronizer\WebThreadSynchronizer;
 use Saw\ValueObject\SawEnv;
@@ -46,7 +52,7 @@ final class SawFactory
     private $executor;
     private $controllerStarter;
     private $sharedMemory;
-    private $controllerConnector;
+    private $webControllerConnector;
     private $threadRunner;
     private $workerStarter;
     private $controllerServer;
@@ -165,14 +171,28 @@ CMD;
     public function getSharedMemory(): SharedMemoryBySocket
     {
         return $this->sharedMemory
-            ?? $this->sharedMemory = new SharedMemoryBySocket($this->getControllerConnector());
+            ?? $this->sharedMemory = new SharedMemoryBySocket($this->getWebControllerConnector());
     }
 
-    public function getControllerConnector(): ControllerConnector
+    public function getWebControllerConnector(): ControllerConnectorInterface
     {
-        return $this->controllerConnector
-            ?? $this->controllerConnector
-                = new ControllerConnector(
+        return $this->webControllerConnector
+            ?? $this->webControllerConnector
+                = new WebControllerConnector(
+                $this->getControllerClient(),
+                $this->daemonConfig->getControllerAddress(),
+                $this->getCommandDispatcher(),
+                $this->getControllerStarter()
+            );
+    }
+
+    private $workerControllerConnector;
+
+    public function getWorkerControllerConnector(): ControllerConnectorInterface
+    {
+        return $this->workerControllerConnector
+            ??  $this->workerControllerConnector
+                = new WorkerControllerConnector(
                 $this->getControllerClient(),
                 $this->daemonConfig->getControllerAddress(),
                 $this->getCommandDispatcher(),
@@ -207,11 +227,15 @@ CMD;
                 = $this->environment->isWorker()
                 ? new WorkerThreadRunner(
                     $this->getControllerClient(),
-                    $this->getCommandDispatcher()
+                    $this->getCommandDispatcher(),
+                    $this->getApplicationContainer()
                 )
-                : new WebThreadRunner($this->getControllerClient(), $this->getCommandDispatcher());
+                : (
+                    $this->config['multiThreading']['disabled'] ?? false
+                        ? new DummyThreadRunner()
+                        : new WebThreadRunner($this->getWebControllerConnector())
+                );
     }
-
 
     public function getControllerCore(): ControllerCore
     {
@@ -230,7 +254,7 @@ CMD;
     public function getApplicationContainer(): ApplicationContainer
     {
         return $this->applicationContainer
-            ?? $this->applicationContainer = new ApplicationContainer();
+            ?? $this->applicationContainer = new ApplicationContainer($this->getContainerOfUniqueThreadPools());
     }
 
     public function getWorkerCore(): WorkerCore
@@ -249,6 +273,14 @@ CMD;
         return new ContextPool();
     }
 
+    private $containerOfThreadPools;
+
+    public function getContainerOfUniqueThreadPools(): ContainerOfThreadPools
+    {
+        return $this->containerOfThreadPools
+            ?? $this->containerOfThreadPools = new ContainerOfThreadPools();
+    }
+
     private $threadCreator;
 
     public function getThreadCreator(): ThreadCreatorInterface
@@ -257,19 +289,31 @@ CMD;
             ?? $this->threadCreator
                 = $this->environment->isWorker()
                 ? new WorkerThreadCreator(
+                    $this->getContainerOfUniqueThreadPools(),
                     $this->getCommandDispatcher(),
                     $this->getControllerClient()
                 )
-                : new ThreadCreator();
+                : (
+                    $this->config['multiThreading']['disabled'] ?? false
+                        ? new DummyThreadCreator()
+                        : new ThreadCreator($this->getContainerOfUniqueThreadPools())
+                );
     }
 
 
+    private $threadSynchronizer;
+
     public function getThreadSynchronizer(): SynchronizerInterface
     {
-        return new WebThreadSynchronizer(
-            $this->getThreadRunner(),
-            $this->getControllerClient()
-        );
+        return $this->threadSynchronizer
+            ?? (
+                $this->config['multiThreading']['disabled'] ?? false
+                    ? new DummySynchronizer()
+                    : new WebThreadSynchronizer(
+                        $this->getThreadRunner(),
+                        $this->getWebControllerConnector()
+                    )
+            );
     }
 
     private $multiThreadingProvider;
@@ -278,6 +322,7 @@ CMD;
     {
         return $this->multiThreadingProvider
             ?? $this->multiThreadingProvider = new MultiThreadingProvider(
+                $this->getContainerOfUniqueThreadPools(),
                 $this->getThreadCreator(),
                 $this->getThreadRunner(),
                 $this->getThreadSynchronizer()

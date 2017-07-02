@@ -2,6 +2,8 @@
 
 namespace Saw\Command;
 
+use Saw\Thread\AbstractThread;
+
 /**
  * Общая команда "Результат выполнения задачи".
  * В любом случае отправляется для передачи результата выполнения задачи
@@ -42,15 +44,15 @@ class ThreadResult extends AbstractCommand
      * Команда сама знает, что ей нужно знать о задаче
      * - поэтому дадим ей задачу, пускай возьмёт все, что ей нужно.
      *
-     * @param Task $task
+     * @param AbstractThread $thread
      * @return array
      */
-    public static function serializeTask(Task $task): array
+    public static function serializeTask(AbstractThread $thread): array
     {
         return [
-            'run_id' => $task->getRunId(),
-            'from_dsc' => $task->getPeerDsc(),
-            'result' => $task->getResult(),
+            'run_id' => $thread->getRunId(),
+            'from_dsc' => $thread->getPeerDsc(),
+            'result' => $thread->getResult(),
         ];
     }
 }

@@ -33,11 +33,6 @@ final class Saw
      */
     private $applicationLoader;
 
-    public static function factory(): SawFactory
-    {
-        return self::instance()->factory;
-    }
-
     /**
      * @return self
      */
@@ -52,6 +47,20 @@ final class Saw
         defined('SAW_DIR') or define('SAW_DIR', __DIR__);
     }
 
+    public static function factory(): SawFactory
+    {
+        return self::instance()->factory;
+    }
+
+    /**
+     * @return ApplicationInterface
+     * @todo use
+     */
+    public static function getCurrentApp(): ApplicationInterface
+    {
+        return self::instance()->factory()->getApplicationContainer()->getCurrentApp();
+    }
+
     /**
      * Инициализация фреймворка с заданным конфигом.
      *
@@ -60,7 +69,7 @@ final class Saw
      */
     public function init(array $config): self
     {
-        foreach (['saw', 'factory', 'daemon', 'sockets', 'application',] as $check) {
+        foreach (['saw', 'factory', 'daemon', 'sockets', 'application', 'controller'] as $check) {
             if (!isset($config[$check]) || !is_array($config[$check])) {
                 $config[$check] = [];
             }
@@ -110,7 +119,7 @@ final class Saw
      */
     public function instanceApp(string $appClass): ApplicationInterface
     {
-        return $this->applicationLoader->instanceApp($appClass);
+        return self::factory()->getApplicationContainer()->add($this->applicationLoader->instanceApp($appClass));
     }
 
     /**
@@ -134,8 +143,7 @@ final class Saw
         $this->factory->setEnvironment(SawEnv::worker());
         return new Worker(
             $this->factory->getWorkerCore(),
-            $this->factory->getControllerClient(),
-            $this->factory->getCommandDispatcher()
+            $this->factory->getWorkerControllerConnector()
         );
     }
 
