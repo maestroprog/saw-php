@@ -2,6 +2,7 @@
 
 namespace Saw\Standalone\Controller;
 
+use Esockets\debug\Log;
 use Saw\Command\CommandHandler;
 use Saw\Command\ThreadKnow;
 use Saw\Command\ThreadResult;
@@ -19,17 +20,25 @@ class ThreadDistributor implements CycleInterface
 {
     private $commandDispatcher;
     private $workerPool;
+    private $workerBalance;
 
     private $threadKnownIndex;
     private $threadRunQueue;
+    private $threadRunned;
 
-    public function __construct(CommandDispatcher $commandDispatcher, WorkerPool $workerPool)
+    public function __construct(
+        CommandDispatcher $commandDispatcher,
+        WorkerPool $workerPool,
+        WorkerBalance $workerBalance
+    )
     {
         $this->commandDispatcher = $commandDispatcher;
         $this->workerPool = $workerPool;
+        $this->workerBalance = $workerBalance;
 
         $this->threadKnownIndex = new ControllerThreadPoolIndex();
         $this->threadRunQueue = new \SplQueue();
+        $this->threadRunned = new ControllerThreadPoolIndex();
 
         $commandDispatcher->add([
             new CommandHandler(
@@ -58,9 +67,9 @@ class ThreadDistributor implements CycleInterface
                 ThreadResult::NAME,
                 ThreadResult::class,
                 function (ThreadResult $context) {
-                    $this->tRes(
-                        $context->getRunId(),
+                    $this->threadResult(
                         (int)$context->getPeer()->getConnectionResource()->getResource(),
+                        $context->getRunId(),
                         $context->getFromDsc(),
                         $context->getResult()
                     );
@@ -74,34 +83,33 @@ class ThreadDistributor implements CycleInterface
      */
     public function work()
     {
-        foreach ($this->taskNew as $rid => $task) {
-            if (!isset($this->tasksKnow[$task->getName()])) {
-                continue;
-            }
-            $worker = $this->wMinT($task->getName(), function (Worker $worker) {
-                return $worker->getState() !== Worker::STOP;
-            });
-            if ($worker >= 0) {
-                $workerPeer = $this->server->getPeerByDsc($worker);
-                try {
-                    /** @var $command ThreadRun */
-                    $this->commandDispatcher->create(ThreadRun::NAME, $workerPeer)
-                        ->onError(function () use ($task) {
-                            Log::log('error run task ' . $task->getName());
-                            //todo
-                        })
-                        ->onSuccess(function () use ($worker, $rid, $task) {
-                            //$this->taskRun[$rid] = $task;
-                        })
-                        ->run(ThreadRun::serializeTask($task));
-                    // т.к. выполнение задачи на стороне воркера произойдет раньше,
-                    // чем возврат ответа с успешным запуском
-                    // почистим массив, и запомним что поставили воркеру эту задачу
-                    $this->workers[$worker]->addTask($task);
-                    unset($this->taskNew[$rid]);
-                } catch (\Throwable $e) {
-                    throw new \Exception('Cannot balanced Task ' . $task->getRunId(), 0, $e);
-                }
+        $filter = function (Worker $worker) {
+            return $worker->getState() !== Worker::STOP;
+        };
+        while ($thread = $this->threadRunQueue->pop()) {
+            /**
+             * @var $thread ControlledThread
+             */
+            try {
+                $worker = $this->workerBalance->getLowLoadedWorker($thread);
+                /** @var $command ThreadRun */
+                $this->commandDispatcher->create(ThreadRun::NAME, $worker->getClient())
+                    ->onError(function () use ($thread) {
+                        Log::log('error run task ' . $thread->getUniqueId());
+                        //todo
+                    })
+                    ->onSuccess(function () use ($worker, $thread) {
+                        //$this->taskRun[$rid] = $task;
+                    })
+                    ->run(ThreadRun::seriializeThread($thread));
+                // т.к. выполнение задачи на стороне воркера произойдет раньше,
+                // чем возврат ответа с успешным запуском
+                // почистим массив, и запомним что поставили воркеру эту задачу
+                $this->threadRunned->add($worker, $thread);
+            } catch (\RuntimeException $e) {
+//                $this->threadRunQueue->unshift($thread); // откладываем до лучших времён.
+            } catch (\Throwable $e) {
+                throw new \Exception('Cannot balance thread ' . $thread->getId(), 0, $e);
             }
         }
     }
@@ -119,12 +127,13 @@ class ThreadDistributor implements CycleInterface
         $worker->addThreadToKnownList($thread);
     }
 
-    public function tRes(int $rid, int $workerDsc, int $dsc, &$result)
+    public function threadResult(Worker $worker, int $runId, int $dsc, $result)
     {
+        $this->threadRunned->getThread(); // todo
         $peer = $this->server->getPeerByDsc($dsc);
         // @todo empty name!
         $worker = $this->getWorkerByDsc($workerDsc);
-        $task = $worker->getTask($rid);
+        $task = $worker->getTask($runId);
         $task->setResult($result);
         $worker->removeTask($task); // release worker
         $this->commandDispatcher->create(ThreadResult::NAME, $peer)

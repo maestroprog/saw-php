@@ -59,7 +59,7 @@ class ThreadRun extends AbstractCommand
      * @param AbstractThread $thread
      * @return array
      */
-    public static function serializeTask(AbstractThread $thread): array
+    public static function seriializeThread(AbstractThread $thread): array
     {
         return [
             'application_id' => $thread->getApplicationId(),

@@ -65,6 +65,24 @@ class Worker
         return (int)$this->client->getConnectionResource()->getResource();
     }
 
+    /**
+     * @return ProcessStatus
+     */
+    public function getProcessResource(): ProcessStatus
+    {
+        return $this->processResource;
+    }
+
+    /**
+     * Вернёт клиента, с помощью которого можно общаться с воркером.
+     *
+     * @return Client
+     */
+    public function getClient(): Client
+    {
+        return $this->client;
+    }
+
     public function getState(): int
     {
         return $this->state;
@@ -78,7 +96,7 @@ class Worker
      */
     public function isThreadKnow(AbstractThread $thread): bool
     {
-        return $this->knowThreads->existsThreadByUniqueId($thread->getUniqueId());
+        return $this->knowThreads->exists($thread->getUniqueId());
     }
 
     /**

@@ -12,7 +12,7 @@ use Saw\Thread\Creator\ThreadCreator;
 use Saw\Thread\Pool\ContainerOfThreadPools;
 use Saw\Thread\ThreadWithCode;
 
-class WorkerThreadCreator extends ThreadCreator
+final class WorkerThreadCreator extends ThreadCreator
 {
     private $commandDispatcher;
     private $client;

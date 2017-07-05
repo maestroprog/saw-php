@@ -14,6 +14,8 @@ use Saw\Service\ControllerStarter;
  */
 final class WebControllerConnector implements ControllerConnectorInterface
 {
+    use ControllerConnectorTrait;
+
     private $client;
     private $connectAddress;
     private $commandDispatcher;
@@ -70,10 +72,10 @@ final class WebControllerConnector implements ControllerConnectorInterface
         return $this->commandDispatcher;
     }
 
-    public function work()
+    /*public function work()
     {
-        $this->client->live();
-    }
+//        $this->client->live();
+    }*/
 
     public function send($data): bool
     {

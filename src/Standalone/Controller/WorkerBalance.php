@@ -4,12 +4,12 @@ namespace Saw\Standalone\Controller;
 
 use Esockets\debug\Log;
 use Saw\Command\CommandHandler;
-use Saw\Command\ThreadRun;
 use Saw\Command\WorkerAdd;
 use Saw\Command\WorkerDelete;
 use Saw\Entity\Worker;
 use Saw\Service\CommandDispatcher;
 use Saw\Service\WorkerStarter;
+use Saw\Thread\AbstractThread;
 use Saw\ValueObject\ProcessStatus;
 
 /**
@@ -33,7 +33,7 @@ class WorkerBalance implements CycleInterface
     private $running = 0;
 
     /**
-     * @var ProcessStatus
+     * @var ProcessStatus|null
      */
     private $workerRun;
 
@@ -55,11 +55,12 @@ class WorkerBalance implements CycleInterface
                 if (is_null($this->workerRun) || !$this->workerRun instanceof ProcessStatus) {
                     throw new \LogicException('Некорректный состояние запуска воркера.');
                 }
-                if ($context->getPid() !== $this->workerRun->getPid()) {
+                var_dump($context->getPid(), $this->workerRun->getPid());
+                /*if ($context->getPid() !== $this->workerRun->getPid()) {
                     // если pid запущенного процесса не соответсвует pid-у который сообщил воркер
                     return false;
-                }
-                $this->workerPool->add(new Worker($this->workerRun, $context->getPeer()));
+                }*/
+                $this->addWorker(new Worker($this->workerRun, $context->getPeer()));
                 return true;
             }),
             new CommandHandler(
@@ -90,7 +91,7 @@ class WorkerBalance implements CycleInterface
         } elseif ($this->running && $this->running < time() - 10) {
             // timeout 10 sec - не удалось запустить воркер
             $this->running = 0;
-            if ($this->workerRun->isRunning()) {
+            if (!$this->workerRun->isRunning()) {
                 // убиваем запущенный процесс, если он ещё работает
                 $this->workerRun->kill();
             }
@@ -124,8 +125,8 @@ class WorkerBalance implements CycleInterface
      */
     public function removeWorker(Worker $worker)
     {
-        $this->server->getPeerByDsc($dsc)->send(['command' => 'wdel']);
-        unset($this->workers[$dsc]);
+        $this->commandDispatcher->create(WorkerDelete::NAME, $worker->getClient())->run();
+        $this->workerPool->remove($worker);
         // TODO
         // нужно запилить механизм перехвата невыполненных задач
         foreach ($this->tasks as $name => $workers) {
@@ -168,12 +169,13 @@ class WorkerBalance implements CycleInterface
     /**
      * Получить одного из слабо нагруженных воркеров.
      *
-     * @param ThreadRun $threadCommand Задача для которой необходимо найти воркера.
+     * @param AbstractThread $thread Поток для выполнения которого необходимо найти воркера.
      * @return Worker
+     * @throws \RuntimeException
      */
-    public function getLowLoadedWorker(ThreadRun $threadCommand): Worker
+    public function getLowLoadedWorker(AbstractThread $thread): Worker
     {
-        $selectedDsc = -1;
+        $selectedWorker = null;
         foreach ($this->workerPool as $worker) {
             /*if (!is_null($filter) && !$filter($worker)) {
                 // отфильтровали
@@ -182,18 +184,21 @@ class WorkerBalance implements CycleInterface
             /**
              * @var $worker Worker
              */
-            if (!$worker->isThreadKnow($threadCommand)) {
+            if ($worker->getState() === Worker::STOP || !$worker->isThreadKnow($thread)) {
                 // не знает такую задачу
                 continue;
             }
             if (!isset($count)) {
                 $count = $worker->getCountRunThreads();
-                $selectedDsc = $dsc;
+                $selectedWorker = $worker;
             } elseif ($count > ($newCount = $worker->getCountRunThreads())) {
                 $count = $newCount;
-                $selectedDsc = $dsc;
+                $selectedWorker = $worker;
             }
         }
-        return $selectedDsc;
+        if (is_null($selectedWorker)) {
+            throw new \RuntimeException('Cannot select worker.');
+        }
+        return $selectedWorker;
     }
 }

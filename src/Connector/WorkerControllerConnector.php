@@ -10,6 +10,8 @@ use Saw\Service\ControllerStarter;
 
 final class WorkerControllerConnector implements ControllerConnectorInterface
 {
+    use ControllerConnectorTrait;
+
     private $client;
     private $connectAddress;
     private $commandDispatcher;
@@ -44,7 +46,7 @@ final class WorkerControllerConnector implements ControllerConnectorInterface
         } catch (ConnectionException $e) {
             $this->controllerStarter->start();
         }
-        $this->client->block();
+//        $this->client->block();
     }
 
     /**
@@ -63,10 +65,11 @@ final class WorkerControllerConnector implements ControllerConnectorInterface
         return $this->commandDispatcher;
     }
 
-    public function work()
+    /*public function work()
     {
-        $this->client->live();
-    }
+//        $this->client->live();
+        $this->client->read(); // tmp crutch, costyle costyl
+    }*/
 
     public function send($data): bool
     {

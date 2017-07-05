@@ -73,6 +73,7 @@ final class Controller
         /*todo register_shutdown_function(function () {
             $this->stop();
         });*/
+//        $this->server->block();
         $this->work();
     }
 

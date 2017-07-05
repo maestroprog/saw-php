@@ -50,7 +50,7 @@ class ThreadResult extends AbstractCommand
     public static function serializeTask(AbstractThread $thread): array
     {
         return [
-            'run_id' => $thread->getRunId(),
+            'run_id' => $thread->getId(),
             'from_dsc' => $thread->getPeerDsc(),
             'result' => $thread->getResult(),
         ];

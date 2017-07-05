@@ -57,7 +57,7 @@ class WebThreadRunner implements ThreadRunnerInterface
             try {
                 $this->commandDispatcher
                     ->create(ThreadRun::NAME, $this->client)
-                    ->run(ThreadRun::serializeTask($thread));
+                    ->run(ThreadRun::seriializeThread($thread));
             } catch (\Throwable $e) {
                 $thread->run();
                 var_dump($e->getTraceAsString());

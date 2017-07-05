@@ -42,7 +42,7 @@ final class ControllerCore implements CycleInterface
             $this->workerPool,
             $config->getWorkerMaxCount()
         );
-        $this->threadDistributor = new ThreadDistributor($commandDispatcher, $this->workerPool);
+        $this->threadDistributor = new ThreadDistributor($commandDispatcher, $this->workerPool, $this->workerBalance);
 
         $commandDispatcher->add([
         ]);
@@ -51,6 +51,6 @@ final class ControllerCore implements CycleInterface
     public function work()
     {
         $this->workerBalance->work();
-        $this->threadDistributor->work();
+//        $this->threadDistributor->work();
     }
 }
