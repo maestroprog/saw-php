@@ -28,7 +28,6 @@ class WorkerThreadCreatorTest extends \PHPUnit_Framework_TestCase
 
         $client->expects($this->once())
             ->method('send')
-            ->with($this->isJson())
             ->willReturn(true);
 
         $threadCreator->thread('TEST', function () {

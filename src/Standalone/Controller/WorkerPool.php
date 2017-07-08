@@ -19,7 +19,7 @@ class WorkerPool implements \Countable, \IteratorAggregate
         if (isset($this->workers[$workerId])) {
             throw new \LogicException('Can not add an already added id.');
         }
-        $this->workers[$workerId] = $workerId;
+        $this->workers[$workerId] = $worker;
     }
 
     public function isExistsById(int $workerId): bool

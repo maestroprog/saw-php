@@ -13,6 +13,7 @@ use Saw\Standalone\Controller\CycleInterface;
 use Saw\Thread\AbstractThread;
 use Saw\Thread\ControlledThread;
 use Saw\Thread\Pool\RunnableThreadPool;
+use Saw\Thread\StubThread;
 
 /**
  * Ядро воркера.
@@ -45,7 +46,7 @@ final class WorkerCore implements CycleInterface
                 ThreadRun::class,
                 function (ThreadRun $context) {
                     // выполняем задачу
-                    $thread = (new ControlledThread(
+                    $thread = (new StubThread(
                         $context->getRunId(),
                         $context->getApplicationId(),
                         $context->getUniqueId()

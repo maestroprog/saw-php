@@ -13,7 +13,7 @@ abstract class AbstractThreadPool implements \IteratorAggregate
 
     public function __construct()
     {
-        $this->threads = new \ArrayObject();
+        $this->threads = [];
     }
 
     public function add(AbstractThread $thread)
@@ -53,11 +53,11 @@ abstract class AbstractThreadPool implements \IteratorAggregate
      */
     public function getThreads(): array
     {
-        return $this->threads->getArrayCopy();
+        return $this->threads;
     }
 
     public function getIterator(): \Iterator
     {
-        return $this->threads->getIterator();
+        return new \ArrayIterator($this->threads);
     }
 }

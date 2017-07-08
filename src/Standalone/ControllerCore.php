@@ -51,6 +51,6 @@ final class ControllerCore implements CycleInterface
     public function work()
     {
         $this->workerBalance->work();
-//        $this->threadDistributor->work();
+        $this->threadDistributor->work();
     }
 }

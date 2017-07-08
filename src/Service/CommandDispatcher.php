@@ -75,6 +75,8 @@ final class CommandDispatcher
      * @param $data
      * @param Client $peer
      * @throws \Exception
+     * @throws \RuntimeException
+     * @throws \Throwable
      */
     public function dispatch($data, Client $peer)
     {
@@ -110,7 +112,7 @@ final class CommandDispatcher
                 } catch (\Throwable $e) {
                     //todo
                     echo $e->getMessage();
-                    exit;
+                    throw $e;
                 }
                 break;
             case AbstractCommand::STATE_RES:

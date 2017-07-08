@@ -25,6 +25,9 @@ class ThreadRun extends AbstractCommand
                 $this->data[$key] = $data[$key];
             }
         }
+        if (isset($data['arguments'])) {
+            $this->data['arguments'] = $data['arguments'];
+        }
     }
 
     public function getApplicationId(): string
@@ -59,7 +62,7 @@ class ThreadRun extends AbstractCommand
      * @param AbstractThread $thread
      * @return array
      */
-    public static function seriializeThread(AbstractThread $thread): array
+    public static function serializeThread(AbstractThread $thread): array
     {
         return [
             'application_id' => $thread->getApplicationId(),
