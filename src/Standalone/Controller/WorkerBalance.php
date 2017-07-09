@@ -53,9 +53,8 @@ class WorkerBalance implements CycleInterface
         $commandDispatcher->add([
             new CommandHandler(WorkerAdd::NAME, WorkerAdd::class, function (WorkerAdd $context) {
                 if (is_null($this->workerRun) || !$this->workerRun instanceof ProcessStatus) {
-                    throw new \LogicException('Некорректный состояние запуска воркера.');
+                    throw new \LogicException('Некорректное состояние запуска воркера.');
                 }
-                var_dump($context->getPid(), $this->workerRun->getPid());
                 /*if ($context->getPid() !== $this->workerRun->getPid()) {
                     // если pid запущенного процесса не соответсвует pid-у который сообщил воркер
                     return false;
@@ -64,12 +63,9 @@ class WorkerBalance implements CycleInterface
                 return true;
             }),
             new CommandHandler(
-                WorkerDelete::NAME,
-                WorkerDelete::class,
-                function (WorkerDelete $context) {
-                    $this->workerPool->removeById((int)$context->getPeer()->getConnectionResource()->getResource());
-                }
-            ),
+                WorkerDelete::NAME, WorkerDelete::class, function (WorkerDelete $context) {
+                $this->workerPool->removeById((int)$context->getPeer()->getConnectionResource()->getResource());
+            }),
         ]);
     }
 
@@ -91,7 +87,7 @@ class WorkerBalance implements CycleInterface
         } elseif ($this->running && $this->running < time() - 10) {
             // timeout 10 sec - не удалось запустить воркер
             $this->running = 0;
-            if (!$this->workerRun->isRunning()) {
+            if ($this->workerRun->isRunning()) {
                 // убиваем запущенный процесс, если он ещё работает
                 $this->workerRun->kill();
             }

@@ -17,17 +17,17 @@ class ThreadRun extends AbstractCommand
 
     protected $needData = ['application_id', 'unique_id', 'run_id'];
 
-    public function handle(array $data)
+    public function handle(array $data): AbstractCommand
     {
-        parent::handle($data);
-        foreach ($this->needData as $key) {
+        /*foreach ($this->needData as $key) {
             if (isset($data[$key])) {
                 $this->data[$key] = $data[$key];
             }
-        }
+        }*/
         if (isset($data['arguments'])) {
             $this->data['arguments'] = $data['arguments'];
         }
+        return parent::handle($data);
     }
 
     public function getApplicationId(): string

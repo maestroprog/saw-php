@@ -182,11 +182,13 @@ abstract class AbstractCommand
      * Инициализирует кастомные данные, поступившие вместе с командой.
      *
      * @param $data
-     * @return void
+     * @return self
      */
-    public function handle(array $data)
+    public function handle(array $data): self
     {
         $this->data = array_merge($this->data, array_intersect_key($data, array_flip($this->needData)));
+
+        return $this;
     }
 
     /**
