@@ -1,32 +1,18 @@
 <?php
 
-use Saw\Connector\WebControllerConnector;
 
-define('SAW_ENVIRONMENT', 'Debug');
-$config = require __DIR__ . '/../common.php';
+ini_set('display_errors', true);
+error_reporting(E_ALL);
+ini_set('log_errors', true);
+ini_set('error_log', __DIR__ . '/messages-debug.log');
 
-try {
-    $init = WebControllerConnector::getInstance();
-    if ($init->init($config)) {
-        Esockets\debug\Log::log('configured. input...');
-        if (!($init->connect() or $init->start())) {
-            Esockets\debug\Log::log('Saw start failed');
-            throw new \Exception('Framework starting fail');
-        }
-        Esockets\debug\Log::log('work start');
-        $init->work();
-        Esockets\debug\Log::log('input end');
-
-        $init->stop();
-        Esockets\debug\Log::log('closed');
-    }
-} catch (Exception $e) {
-    switch (PHP_SAPI) {
-        case 'cli':
-
-            break;
-        default:
-            header('HTTP/1.1 503 Service Unavailable');
-            echo sprintf('<p style="color:red">%s</p>', $e->getMessage());
-    }
+if (PHP_SAPI !== 'cli') {
+    header('HTTP/1.1 503 Service Unavailable');
+    die(sprintf('<p style="color:red">%s</p>', 'Saw worker must be run in cli mode.'));
 }
+
+require_once __DIR__ . '/../src/bootstrap.php';
+\Saw\Saw::instance()
+    ->init(require __DIR__ . '/../sample/config/saw.php')
+    ->instanceDebugger()
+    ->start();

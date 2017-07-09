@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: maestroprog
- * Date: 08.07.2017
- * Time: 20:43
- */
 
 namespace Saw\Thread\Pool;
 

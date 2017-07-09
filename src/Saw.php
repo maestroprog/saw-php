@@ -9,6 +9,7 @@ use Saw\Config\ControllerConfig;
 use Saw\Config\DaemonConfig;
 use Saw\Service\ApplicationLoader;
 use Saw\Standalone\Controller;
+use Saw\Standalone\Debugger;
 use Saw\Standalone\Worker;
 use Saw\ValueObject\SawEnv;
 
@@ -145,6 +146,11 @@ final class Saw
             $this->factory->getWorkerCore(),
             $this->factory->getWorkerControllerConnector()
         );
+    }
+
+    public function instanceDebugger(): Debugger
+    {
+        return new Debugger($this->factory->getWorkerControllerConnector());
     }
 
     /**

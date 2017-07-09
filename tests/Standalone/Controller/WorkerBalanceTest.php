@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: maestroprog
- * Date: 09.07.2017
- * Time: 12:12
- */
 
 namespace tests\Standalone\Controller {
 
