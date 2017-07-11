@@ -119,7 +119,7 @@ abstract class AbstractCommand
      * @throws \Exception
      * @throws \Throwable
      */
-    final public function run($data = [])
+    final public function run(array $data = [])
     {
         if (!$this->isValid($data)) {
             throw new \Exception('Invalid command ' . $this->getCommandName());
@@ -151,7 +151,7 @@ abstract class AbstractCommand
             'code' => $this->code,
             'data' => $this->getData()])
         ) {
-            throw new \Exception('Fail for send result of command ' . $this->getCommandName());
+            throw new \RuntimeException('Fail for send result of command ' . $this->getCommandName());
         }
     }
 

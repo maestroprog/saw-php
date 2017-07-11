@@ -111,8 +111,8 @@ final class Worker
     protected function onRead(): callable
     {
         return function ($data) {
-            Log::log('I RECEIVED  :)');
-            Log::log(var_export($data, true));
+            /*Log::log('I RECEIVED  :)');
+            Log::log(var_export($data, true));*/
 
             switch ($data) {
                 case 'ACCEPT':

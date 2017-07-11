@@ -86,7 +86,11 @@ final class Controller
             if ($this->dispatchSignals) {
                 pcntl_signal_dispatch();
             }
-            $this->server->find();
+            try {
+                $this->server->find();
+            } catch (\RuntimeException $e) {
+                ; // todo
+            }
             $this->core->work();
         }
     }
@@ -103,8 +107,8 @@ final class Controller
             $peer->unblock();
             Log::log('peer connected ' . $peer->getPeerAddress());
             $peer->onReceive(function ($data) use ($peer) {
-                Log::log('I RECEIVED  :) from ' . $peer->getConnectionResource()->getResource() . $peer->getPeerAddress());
-                Log::log(var_export($data, true));
+//                Log::log('I RECEIVED  :) from ' . $peer->getConnectionResource()->getResource() . $peer->getPeerAddress());
+//                Log::log(var_export($data, true));
                 if (!is_array($data) || !$this->commandDispatcher->valid($data)) {
                     $peer->send('INVALID');
                 } else {

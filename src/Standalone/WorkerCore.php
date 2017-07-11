@@ -11,7 +11,6 @@ use Saw\Service\ApplicationLoader;
 use Saw\Service\CommandDispatcher;
 use Saw\Standalone\Controller\CycleInterface;
 use Saw\Thread\AbstractThread;
-use Saw\Thread\ControlledThread;
 use Saw\Thread\Pool\RunnableThreadPool;
 use Saw\Thread\StubThread;
 
@@ -42,18 +41,15 @@ final class WorkerCore implements CycleInterface
 
         $commandDispatcher->add([
             new CommandHandler(
-                ThreadRun::NAME,
-                ThreadRun::class,
-                function (ThreadRun $context) {
-                    // выполняем задачу
-                    $thread = (new StubThread(
-                        $context->getRunId(),
-                        $context->getApplicationId(),
-                        $context->getUniqueId()
-                    ))->setArguments($context->getArguments());
-                    $this->threadPool->add($thread);
-                }
-            ),
+                ThreadRun::NAME, ThreadRun::class, function (ThreadRun $context) {
+                // выполняем задачу
+                $thread = (new StubThread(
+                    $context->getRunId(),
+                    $context->getApplicationId(),
+                    $context->getUniqueId()
+                ))->setArguments($context->getArguments());
+                $this->threadPool->add($thread);
+            }),
             new CommandHandler(ThreadResult::NAME, ThreadResult::class),
         ]);
     }

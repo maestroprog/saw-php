@@ -84,9 +84,9 @@ final class WebControllerConnector implements ControllerConnectorInterface
 
     protected function onRead(): callable
     {
-        return function ($data) {
+        return function ($data) {/*
             Log::log('I RECEIVED  :)');
-            Log::log(var_export($data, true));
+            Log::log(var_export($data, true));*/
 
             switch ($data) {
                 case 'ACCEPT':

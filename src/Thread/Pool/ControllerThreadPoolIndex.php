@@ -5,7 +5,7 @@ namespace Saw\Thread\Pool;
 use Saw\Entity\Worker;
 use Saw\Thread\AbstractThread;
 
-class ControllerThreadPoolIndex
+class ControllerThreadPoolIndex implements \Countable
 {
     private $threads;
     private $links;
@@ -58,5 +58,10 @@ class ControllerThreadPoolIndex
                 unset($this->workers[$workerId]);
             }
         }
+    }
+
+    public function count()
+    {
+        return count($this->threads);
     }
 }

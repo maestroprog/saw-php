@@ -48,7 +48,6 @@ final class ProcessStatus
     public function isRunning(): bool
     {
         $this->update(); // обновляем инфу
-        var_dump($this->status);exit;
         return (bool)$this->status['running'];
     }
 

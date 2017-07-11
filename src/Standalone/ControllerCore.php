@@ -6,6 +6,7 @@ use Esockets\Server;
 use Saw\Config\ControllerConfig;
 use Saw\Service\CommandDispatcher;
 use Saw\Service\WorkerStarter;
+use Saw\Standalone\Controller\ControllerDebugger;
 use Saw\Standalone\Controller\CycleInterface;
 use Saw\Standalone\Controller\ThreadDistributor;
 use Saw\Standalone\Controller\WorkerBalance;
@@ -24,6 +25,7 @@ final class ControllerCore implements CycleInterface
     private $workerPool;
     private $workerBalance;
     private $threadDistributor;
+    private $debugger;
 
     public function __construct(
         Server $server,
@@ -43,6 +45,7 @@ final class ControllerCore implements CycleInterface
             $config->getWorkerMaxCount()
         );
         $this->threadDistributor = new ThreadDistributor($commandDispatcher, $this->workerPool, $this->workerBalance);
+        $this->debugger = new ControllerDebugger($commandDispatcher, $this->threadDistributor);
 
         $commandDispatcher->add([
         ]);

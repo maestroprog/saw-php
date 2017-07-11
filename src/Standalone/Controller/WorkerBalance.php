@@ -125,41 +125,11 @@ class WorkerBalance implements CycleInterface
         $this->workerPool->remove($worker);
         // TODO
         // нужно запилить механизм перехвата невыполненных задач
-        foreach ($this->tasks as $name => $workers) {
+        /*foreach ($this->tasks as $name => $workers) {
             if (isset($workers[$dsc])) {
                 unset($this->tasks[$name][$dsc]);
             }
-        }
-    }
-
-    /**
-     * Функция выбирает наименее загруженный воркер.
-     *
-     * @param string $name задача
-     * @param callable|null $filter ($data)
-     * @return int
-     */
-    private function wMinT($name, callable $filter = null): int
-    {
-        $selectedDsc = -1;
-        foreach ($this->workers as $dsc => $worker) {
-            if (!is_null($filter) && !$filter($worker)) {
-                // отфильтровали
-                continue;
-            }
-            if (!$worker->isKnowTask($this->taskAssoc[$name])) {
-                // не знает такую задачу
-                continue;
-            }
-            if (!isset($count)) {
-                $count = $worker->getCountTasks();
-                $selectedDsc = $dsc;
-            } elseif ($count > ($newCount = $worker->getCountTasks())) {
-                $count = $newCount;
-                $selectedDsc = $dsc;
-            }
-        }
-        return $selectedDsc;
+        }*/
     }
 
     /**

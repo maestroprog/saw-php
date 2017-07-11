@@ -230,4 +230,60 @@ class ThreadDistributor implements CycleInterface
             })
             ->run(ThreadResult::serializeTask($sourceThread));
     }
+
+    /**
+     * @return WorkerPool
+     */
+    public function getWorkerPool(): WorkerPool
+    {
+        return $this->workerPool;
+    }
+
+    /**
+     * @return WorkerBalance
+     */
+    public function getWorkerBalance(): WorkerBalance
+    {
+        return $this->workerBalance;
+    }
+
+    /**
+     * @return ControllerThreadPoolIndex
+     */
+    public function getThreadKnownIndex(): ControllerThreadPoolIndex
+    {
+        return $this->threadKnownIndex;
+    }
+
+    /**
+     * @return \SplQueue
+     */
+    public function getThreadRunQueue(): \SplQueue
+    {
+        return $this->threadRunQueue;
+    }
+
+    /**
+     * @return ControllerThreadPoolIndex
+     */
+    public function getThreadRunSources(): ControllerThreadPoolIndex
+    {
+        return $this->threadRunSources;
+    }
+
+    /**
+     * @return ControllerThreadPoolIndex
+     */
+    public function getThreadRunWork(): ControllerThreadPoolIndex
+    {
+        return $this->threadRunWork;
+    }
+
+    /**
+     * @return ThreadLinker
+     */
+    public function getThreadLinks(): ThreadLinker
+    {
+        return $this->threadLinks;
+    }
 }
