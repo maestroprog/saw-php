@@ -1,25 +1,17 @@
 <?php
 
-use Saw\Standalone\Worker;
+ini_set('display_errors', true);
+error_reporting(E_ALL);
+ini_set('log_errors', true);
+ini_set('error_log', __DIR__ . '/messages-worker.log');
 
 if (PHP_SAPI !== 'cli') {
     header('HTTP/1.1 503 Service Unavailable');
-    echo sprintf('<p style="color:red">%s</p>', 'Saw worker must be run in cli mode.');
+    die(sprintf('<p style="color:red">%s</p>', 'Saw worker must be run in cli mode.'));
 }
 
-define('SAW_ENVIRONMENT', 'Worker');
-
-$config = require __DIR__ . '/../common.php';
-
-try {
-    $worker = Worker::create($config);
-} catch (Throwable $e) {
-    Esockets\debug\Log::log($e->getMessage());
-    exit(1);
-}
-
-Esockets\debug\Log::log('work start');
-$worker->work();
-Esockets\debug\Log::log('work end');
-
-exit(0);
+require_once __DIR__ . '/../src/bootstrap.php';
+\Saw\Saw::instance()
+    ->init(require __DIR__ . '/../sample/config/saw.php')
+    ->instanceWorker()
+    ->start();

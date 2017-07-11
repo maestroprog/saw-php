@@ -1,11 +1,10 @@
 <?php
 
-namespace maestroprog\saw\Service;
+namespace Saw\Service;
 
 use Esockets\base\AbstractAddress;
 use Esockets\base\exception\ConnectionException;
 use Esockets\Client;
-use Saw\Service\Executor;
 use Esockets\debug\Log;
 
 /**
@@ -15,6 +14,7 @@ final class ControllerStarter
 {
     private $executor;
     private $client;
+    private $connectAddress;
     private $cmd;
     private $pidFile;
 
@@ -22,35 +22,39 @@ final class ControllerStarter
      * ControllerStarter constructor.
      * @param Executor $executor
      * @param Client $client
+     * @param AbstractAddress $connectAddress
      * @param string $cmd
      * @param string $pidFile
      */
-    public function __construct(Executor $executor, Client $client, string $cmd, string $pidFile)
+    public function __construct(
+        Executor $executor,
+        Client $client,
+        AbstractAddress $connectAddress,
+        string $cmd,
+        string $pidFile
+    )
     {
         $this->executor = $executor;
         $this->client = $client;
+        $this->connectAddress = $connectAddress;
         $this->cmd = $cmd;
         $this->pidFile = $pidFile;
     }
 
     /**
-     * @param AbstractAddress $address
      * @throws \RuntimeException
      */
-    public function start(AbstractAddress $address)
+    public function start()
     {
         $before_run = microtime(true);
         $pid = $this->executor->exec($this->cmd);
         $after_run = microtime(true);
-        if (false === file_put_contents($this->pidFile, $pid)) {
-            throw new \RuntimeException('Cannot save the pid in pid file.');
-        }
         usleep(10000); // await for run controller Saw
         $try = 0;
         while (true) {
             $try_run = microtime(true);
             try {
-                $this->client->connect($address);
+                $this->client->connect($this->connectAddress);
                 Log::log(sprintf(
                     'run: %f, exec: %f, connected: %f',
                     $before_run,
@@ -61,10 +65,18 @@ final class ControllerStarter
                 break;
             } catch (ConnectionException $e) {
                 if ($try++ > 10) {
+                    if ($this->isExistsPidFile()) {
+                        unlink($this->pidFile);
+                    }
                     throw new \RuntimeException('Attempts were unsuccessfully');
                 }
                 usleep(10000);
             }
         }
+    }
+
+    public function isExistsPidFile(): bool
+    {
+        return file_exists($this->pidFile);
     }
 }

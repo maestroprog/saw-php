@@ -2,53 +2,75 @@
 
 namespace Saw\Thread\Runner;
 
+use Saw\Command\CommandHandler;
+use Saw\Command\ThreadResult;
 use Saw\Command\ThreadRun;
-use Saw\Connector\WebConnector;
+use Saw\Connector\ControllerConnectorInterface;
 use Saw\Thread\AbstractThread;
-use Saw\Thread\ThreadWithCode;
+use Saw\Thread\Pool\AbstractThreadPool;
+use Saw\Thread\Pool\RunnableThreadPool;
 
 class WebThreadRunner implements ThreadRunnerInterface
 {
-    private $connector;
+    private $client;
+    private $commandDispatcher;
 
-    private $threads = [];
+    private $runThreads;
 
-    public function __construct(WebConnector $connector)
+    public function __construct(ControllerConnectorInterface $connector)
     {
-        $this->connector = $connector;
+        $this->client = $connector->getClient();
+        $this->commandDispatcher = $connector->getCommandDispatcher();
+
+        $this->runThreads = new RunnableThreadPool();
+
+        $this->commandDispatcher
+            ->add([
+                new CommandHandler(ThreadRun::NAME, ThreadRun::class),
+                /*new CommandHandler(
+                    ThreadResult::NAME,
+                    ThreadResult::class,
+                    function (ThreadResult $context) {
+                        $this->setResultByRunId($context->getRunId(), $context->getResult());
+                    }
+                ),*/
+                new CommandHandler(
+                    ThreadResult::NAME,
+                    ThreadResult::class,
+                    function (ThreadResult $context) {
+                        $this->runThreads
+                            ->getThreadById($context->getRunId())
+                            ->setResult($context->getResult());
+                    }
+                ),
+            ]);
     }
 
-    public function thread(string $uniqueId, callable $code): AbstractThread
+    /**
+     * @param AbstractThread[] $threads
+     * @return bool
+     */
+    public function runThreads(array $threads): bool
     {
-        static $threadId = 0;
-        return $this->threads[$threadId] = new ThreadWithCode(++$threadId, $uniqueId, $code);
-    }
-
-    public function threadArguments(string $uniqueId, callable $code, array $arguments): AbstractThread
-    {
-        return $this->thread($uniqueId, $code)->setArguments($arguments);
-    }
-
-    public function runThreads(): bool
-    {
-        $dispatcher = $this->connector->getDispatcher();
-        foreach ($this->threads as $thread) {
-            $dispatcher->create(ThreadRun::NAME)->run(ThreadRun::serializeTask($thread));
+        foreach ($threads as $thread) {
+            $this->runThreads->add($thread);
+            try {
+                $this->commandDispatcher
+                    ->create(ThreadRun::NAME, $this->client)
+                    ->run(ThreadRun::serializeThread($thread));
+            } catch (\Throwable $e) {
+                $thread->run();
+                var_dump($e->getTraceAsString());
+                die($e->getMessage());
+            } finally {
+                var_dump($thread->getResult(), $thread->hasResult());
+            }
         }
+        return true;
     }
 
-    public function synchronizeOne(AbstractThread $thread)
+    public function getThreadPool(): AbstractThreadPool
     {
-        // TODO: Implement synchronizeOne() method.
-    }
-
-    public function synchronizeThreads(array $threads)
-    {
-        // TODO: Implement synchronizeThreads() method.
-    }
-
-    public function synchronizeAll()
-    {
-        // TODO: Implement synchronizeAll() method.
+        return $this->runThreads;
     }
 }

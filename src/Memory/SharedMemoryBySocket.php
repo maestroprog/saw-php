@@ -3,22 +3,30 @@
 namespace Saw\Memory;
 
 
+use Saw\Connector\ControllerConnectorInterface;
+use Saw\Connector\WebControllerConnector;
 use Saw\Service\CommandDispatcher;
 
 class SharedMemoryBySocket implements SharedMemoryInterface
 {
-    public function __construct(CommandDispatcher $commandDispatcher)
+    private $connector;
+    private $memory;
+
+    public function __construct(ControllerConnectorInterface $connector)
     {
+        $this->connector = $connector;
+        $this->memory = new \SplDoublyLinkedList();
     }
 
     public function has($varName): bool
     {
-        // TODO: Implement has() method.
+        return $this->memory->offsetExists($varName);
     }
 
     public function remove($varName)
     {
-        // TODO: Implement remove() method.
+        $this->memory->offsetUnset($varName);
+        //todo
     }
 
     public function read($varName, bool $withLocking = true)

@@ -13,9 +13,4 @@ namespace Saw\Command;
 class WorkerDelete extends AbstractCommand
 {
     const NAME = 'wdel';
-
-    public function getCommand(): string
-    {
-        return self::NAME;
-    }
 }

@@ -15,27 +15,29 @@ class ThreadRun extends AbstractCommand
 {
     const NAME = 'trun';
 
-    protected $needData = ['run_id', 'unique_id'];
+    protected $needData = ['application_id', 'unique_id', 'run_id'];
 
-    public function getCommand(): string
+    public function handle(array $data): AbstractCommand
     {
-        return self::NAME;
+        /*foreach ($this->needData as $key) {
+            if (isset($data[$key])) {
+                $this->data[$key] = $data[$key];
+            }
+        }*/
+        if (isset($data['arguments'])) {
+            $this->data['arguments'] = $data['arguments'];
+        }
+        return parent::handle($data);
     }
 
-    public function handle(array $data)
+    public function getApplicationId(): string
     {
-        parent::handle($data);
-        if (isset($data['command_id'])) {
-            $this->data['command_id'] = $data['command_id'];
-        }
-        if (isset($data['from_dsc'])) {
-            $this->data['from_dsc'] = $data['from_dsc'];
-        }
+        return $this->data['application_id'];
     }
 
-    public function getName(): string
+    public function getUniqueId(): string
     {
-        return $this->data['name'];
+        return $this->data['unique_id'];
     }
 
     public function getRunId(): int
@@ -48,6 +50,11 @@ class ThreadRun extends AbstractCommand
         return $this->data['from_dsc'] ?? null;
     }
 
+    public function getArguments(): array
+    {
+        return $this->data['arguments'] ?? [];
+    }
+
     /**
      * Команда сама знает, что ей нужно знать о задаче
      * - поэтому дадим ей задачу, пускай возьмёт все, что ей нужно.
@@ -55,9 +62,10 @@ class ThreadRun extends AbstractCommand
      * @param AbstractThread $thread
      * @return array
      */
-    public static function serializeTask(AbstractThread $thread): array
+    public static function serializeThread(AbstractThread $thread): array
     {
         return [
+            'application_id' => $thread->getApplicationId(),
             'run_id' => $thread->getId(),
             'unique_id' => $thread->getUniqueId(),
             'arguments' => $thread->getArguments(),

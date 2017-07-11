@@ -4,7 +4,7 @@ namespace Saw\Service;
 
 use Esockets\Client;
 use Saw\Command\AbstractCommand;
-use Saw\Command\CommandHandler as EntityCommand;
+use Saw\Command\CommandHandler;
 
 /**
  * Диспетчер команд.
@@ -14,7 +14,7 @@ final class CommandDispatcher
     /**
      * Команды, которые мы знаем.
      *
-     * @var EntityCommand[]
+     * @var CommandHandler[]
      */
     private $know = [];
 
@@ -25,17 +25,14 @@ final class CommandDispatcher
      */
     private $created = [];
 
-    private $client;
-
-    public function __construct(Client $client)
+    public function __construct()
     {
-        $this->client = $client;
     }
 
     /**
      * Добавляет новую команду в список известных команд.
      *
-     * @param EntityCommand[] $commands
+     * @param CommandHandler[] $commands
      * @return CommandDispatcher
      * @throws \Exception
      */
@@ -54,10 +51,11 @@ final class CommandDispatcher
      * Создаёт новую команду для постановки задачи.
      *
      * @param string $command
+     * @param Client $client
      * @return AbstractCommand
      * @throws \Exception
      */
-    public function create(string $command): AbstractCommand
+    public function create(string $command, Client $client): AbstractCommand
     {
         if (!isset($this->know[$command])) {
             throw new \Exception(sprintf('I don\'t know command %s', $command));
@@ -67,8 +65,7 @@ final class CommandDispatcher
             throw new \Exception(sprintf('I don\'t know Class %s', $class));
         }
         static $id = 0;
-        $this->created[$id] = $command = new $class($id, $this->client);
-        $id++;
+        $this->created[$id] = $command = AbstractCommand::create($class, ++$id, $client);
         return $command;
     }
 
@@ -78,6 +75,8 @@ final class CommandDispatcher
      * @param $data
      * @param Client $peer
      * @throws \Exception
+     * @throws \RuntimeException
+     * @throws \Throwable
      */
     public function dispatch($data, Client $peer)
     {
@@ -92,7 +91,7 @@ final class CommandDispatcher
             $command->reset($data['state'], $data['code']);
         } else {
             $class = $commandEntity->getClass();
-            $command = new $class($data['id'], $peer, $data['state'], $data['code']);
+            $command = AbstractCommand::instance($class, $data['id'], $peer, $data['state'], $data['code']);
         }
         $command->handle($data['data']);
         // смотрим, в каком состоянии находится поступившая к нам команда
@@ -113,7 +112,7 @@ final class CommandDispatcher
                 } catch (\Throwable $e) {
                     //todo
                     echo $e->getMessage();
-                    exit;
+                    throw $e;
                 }
                 break;
             case AbstractCommand::STATE_RES:

@@ -1,6 +1,6 @@
-/.idea
 /*.sock
 *.log
 phpunit.phar
 composer.lock
 /vendor
+/.vagrant/

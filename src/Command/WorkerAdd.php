@@ -13,8 +13,15 @@ class WorkerAdd extends AbstractCommand
 {
     const NAME = 'wadd';
 
-    public function getCommand(): string
+    protected $needData = ['pid'];
+
+    /**
+     * Вернёт pid, о котором сообщил воркер.
+     *
+     * @return int
+     */
+    public function getPid(): int
     {
-        return self::NAME;
+        return $this->data['pid'];
     }
 }

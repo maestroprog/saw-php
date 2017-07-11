@@ -2,44 +2,37 @@
 
 namespace Saw\Command;
 
+use Saw\Thread\AbstractThread;
+
 /**
- * Общая команда "Результат выполнения задачи".
- * В любом случае отправляется для передачи результата выполнения задачи
- * конечному получателю - тому кто ставил задачу.
+ * Общая команда "Результат выполнения потока".
+ * В любом случае отправляется для передачи результата выполнения потока
+ * конечному получателю - тому кто ставил поток на выполнение.
  *
- * Результат выполнения команды - успешный/неуспешный прием результата выполнения задачи.
+ * Результат выполнения команды - успешный/неуспешный прием результата выполнения потока.
  */
 class ThreadResult extends AbstractCommand
 {
     const NAME = 'tres';
 
-    protected $needData = ['run_id', 'result'];
-
-    public function getCommand(): string
-    {
-        return self::NAME;
-    }
-
-
-    public function handle(array $data)
-    {
-        parent::handle($data);
-        if (isset($data['from_dsc'])) {
-            $this->data['from_dsc'] = $data['from_dsc'];
-        }
-    }
+    protected $needData = ['run_id', 'application_id', 'unique_id', 'result'];
 
     public function getRunId(): int
     {
         return $this->data['run_id'];
     }
 
-    public function getFromDsc()
+    public function getApplicationId(): string
     {
-        return $this->data['from_dsc'] ?? null;
+        return $this->data['application_id'];
     }
 
-    public function & getResult()
+    public function getUniqueId(): string
+    {
+        return $this->data['unique_id'];
+    }
+
+    public function getResult()
     {
         return $this->data['result'];
     }
@@ -48,15 +41,16 @@ class ThreadResult extends AbstractCommand
      * Команда сама знает, что ей нужно знать о задаче
      * - поэтому дадим ей задачу, пускай возьмёт все, что ей нужно.
      *
-     * @param Task $task
+     * @param AbstractThread $thread
      * @return array
      */
-    public static function serializeTask(Task $task): array
+    public static function serializeTask(AbstractThread $thread): array
     {
         return [
-            'run_id' => $task->getRunId(),
-            'from_dsc' => $task->getPeerDsc(),
-            'result' => $task->getResult(),
+            'run_id' => $thread->getId(),
+            'application_id' => $thread->getApplicationId(),
+            'unique_id' => $thread->getUniqueId(),
+            'result' => $thread->getResult(),
         ];
     }
 }

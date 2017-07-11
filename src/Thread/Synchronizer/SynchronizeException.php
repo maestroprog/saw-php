@@ -1,6 +1,6 @@
 <?php
 
-namespace Saw\Thread;
+namespace Saw\Thread\Synchronizer;
 
 class SynchronizeException extends \Exception
 {

@@ -1,8 +1,11 @@
 <?php
 
-namespace Saw\Entity\controller;
+namespace Saw\Entity;
 
-use Saw\Entity\Task;
+use Esockets\Client;
+use Saw\Thread\AbstractThread;
+use Saw\Thread\Pool\PoolOfUniqueThreads;
+use Saw\ValueObject\ProcessStatus;
 
 /**
  * Сущность воркера, которой оперирует контроллер.
@@ -10,10 +13,26 @@ use Saw\Entity\Task;
  */
 class Worker
 {
-    const NEW = 0; // новый воркер
     const READY = 1; // воркер, готовый к выполнению задач
     const RUN = 2; // воркер, выполняющий задачу
     const STOP = 3; // воркер, остановивший работу
+
+    /**
+     * Задачи, которые знает воркер (по TID).
+     *
+     * @var
+     */
+    private $knowThreads;
+
+    /**
+     * Задачи, которые выполняет воркер (по RID).
+     *
+     * @var AbstractThread[]
+     */
+    private $runThreads = [];
+
+    private $processResource;
+    private $client;
 
     /**
      * Состояние воркера.
@@ -23,21 +42,45 @@ class Worker
     private $state;
 
     /**
-     * Задачи, которые знает воркер (по TID).
-     *
-     * @var int[]
+     * @param ProcessStatus $processResource
+     * @param Client $client
+     * @param int $state
      */
-    private $knowTasks = [];
-    /**
-     * Задачи, которые выполняет воркер (по RID).
-     *
-     * @var Task[]
-     */
-    private $runTasks = [];
-
-    public function __construct(int $state = self::NEW)
+    public function __construct(ProcessStatus $processResource, Client $client, int $state = self::READY)
     {
+        $this->processResource = $processResource;
+        $this->client = $client;
         $this->state = $state;
+
+        $this->knowThreads = new PoolOfUniqueThreads();
+    }
+
+    /**
+     * Вернёт ID воркера.
+     *
+     * @return int
+     */
+    public function getId(): int
+    {
+        return (int)$this->client->getConnectionResource()->getResource();
+    }
+
+    /**
+     * @return ProcessStatus
+     */
+    public function getProcessResource(): ProcessStatus
+    {
+        return $this->processResource;
+    }
+
+    /**
+     * Вернёт клиента, с помощью которого можно общаться с воркером.
+     *
+     * @return Client
+     */
+    public function getClient(): Client
+    {
+        return $this->client;
     }
 
     public function getState(): int
@@ -45,35 +88,46 @@ class Worker
         return $this->state;
     }
 
-    public function isKnowTask(int $tid): bool
+    /**
+     * Проверяет, знает ли воркер указанный поток.
+     *
+     * @param AbstractThread $thread
+     * @return bool
+     */
+    public function isThreadKnow(AbstractThread $thread): bool
     {
-        return in_array($tid, $this->knowTasks);
+        return $this->knowThreads->exists($thread->getUniqueId());
     }
 
-    public function addKnowTask(int $tid)
+    /**
+     * Добавляет поток в список известных воркеру.
+     *
+     * @param AbstractThread $thread
+     */
+    public function addThreadToKnownList(AbstractThread $thread)
     {
-        $this->knowTasks[$tid] = $tid;
+        $this->knowThreads->add($thread);
     }
 
-    public function addTask(Task $task)
+    public function addThreadToRunList(AbstractThread $thread)
     {
-        $this->runTasks[$task->getRunId()] = $task;
+        $this->runThreads[$thread->getId()] = $thread;
     }
 
-    public function getTask(int $runId): Task
+    public function getRunThread(int $runId): AbstractThread
     {
-        return $this->runTasks[$runId] ?? null;
+        return $this->runThreads[$runId];
     }
 
-    public function removeTask(Task $task)
+    public function removeRunThread(AbstractThread $thread)
     {
-        if (isset($this->runTasks[$task->getRunId()])) {
-            unset($this->runTasks[$task->getRunId()]);
+        if (isset($this->runThreads[$thread->getId()])) {
+            unset($this->runThreads[$thread->getId()]);
         }
     }
 
-    public function getCountTasks()
+    public function getCountRunThreads()
     {
-        return count($this->runTasks);
+        return count($this->runThreads);
     }
 }

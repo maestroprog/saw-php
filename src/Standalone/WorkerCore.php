@@ -1,95 +1,92 @@
 <?php
 
-namespace Saw\Heading\worker;
+namespace Saw\Standalone;
 
 use Esockets\Client;
+use Saw\Application\ApplicationContainer;
+use Saw\Command\CommandHandler;
+use Saw\Command\ThreadResult;
+use Saw\Command\ThreadRun;
+use Saw\Service\ApplicationLoader;
+use Saw\Service\CommandDispatcher;
+use Saw\Standalone\Controller\CycleInterface;
+use Saw\Thread\AbstractThread;
+use Saw\Thread\Pool\RunnableThreadPool;
+use Saw\Thread\StubThread;
 
 /**
  * Ядро воркера.
  * Само по себе нужно только для изоляции приложения.
  */
-final class WorkerCore
+final class WorkerCore implements CycleInterface
 {
-    private $peer;
-    public $app;
+    private $client;
+    private $commandDispatcher;
+    private $applicationContainer;
+
+    private $threadPool;
 
     public function __construct(
         Client $peer,
-        string $workerAppClass
+        CommandDispatcher $commandDispatcher,
+        ApplicationContainer $applicationContainer,
+        ApplicationLoader $applicationLoader
     )
     {
-        $this->peer = $peer;
+        $this->client = $peer;
+        $this->commandDispatcher = $commandDispatcher;
+        $this->applicationContainer = $applicationContainer;
+
+        $this->threadPool = new RunnableThreadPool();
+
+        $commandDispatcher->add([
+            new CommandHandler(
+                ThreadRun::NAME, ThreadRun::class, function (ThreadRun $context) {
+                // выполняем задачу
+                $thread = (new StubThread(
+                    $context->getRunId(),
+                    $context->getApplicationId(),
+                    $context->getUniqueId()
+                ))->setArguments($context->getArguments());
+                $this->threadPool->add($thread);
+            }),
+            new CommandHandler(ThreadResult::NAME, ThreadResult::class),
+        ]);
     }
 
     /**
-     * Запускает приложение, которое привязано к воркеру.
-     *
-     * @throws \Exception
+     * Метод служит для запуска всех приложений внутри воркера.
      */
     public function run()
     {
-        if (!$this->taskManager) {
-            throw new \Exception('Cannot run worker!');
+        $this->applicationContainer->run(); // todo
+    }
+
+    public function work()
+    {
+        foreach ($this->threadPool as $thread) {
+            /**
+             * @var $thread AbstractThread
+             */
+            if ($thread->getCurrentState() === AbstractThread::STATE_NEW) {
+                $this->applicationContainer->switchTo($this->applicationContainer->get($thread->getApplicationId()));
+                $thread = $this->applicationContainer
+                    ->getThreadPools()
+                    ->getCurrentPool()
+                    ->getThreadById($thread->getUniqueId())
+                    ->setArguments($thread->getArguments())
+                    ->run();
+                $this->commandDispatcher
+                    ->create(ThreadResult::NAME, $this->client)
+                    ->onError(function () {
+                        // todo
+                        throw new \RuntimeException('Cannot run tres command.');
+                    })
+                    ->onSuccess(function () use ($thread) {
+                        $this->threadPool->getThreadById($thread->getId());
+                    })
+                    ->run(ThreadResult::serializeTask($thread));
+            }
         }
-        $this->app = new $this->appClass($this->taskManager);
-        if (!$this->app instanceof Application) {
-            throw new \Exception('Worker application must be instance of Saw\library\Application');
-        }
-        $this->app->run();
-    }
-
-    /**
-     * @var array
-     */
-    private $knowTasks = [];
-
-    /**
-     * Оповещает контроллер о том, что данный воркер узнал новую задачу.
-     * Контроллер (и сам воркер) запоминает это.
-     *
-     * @param Task $task
-     */
-    public function addTask(Task $task)
-    {
-        if (!isset($this->knowTasks[$task->getName()])) {
-            $this->knowTasks[$task->getName()] = 1;
-        }
-    }
-
-    /**
-     * @var Task[]
-     */
-    private $runQueue = [];
-
-    /**
-     * Постановка задачи в очередь на выполнение.
-     *
-     * @param Task $task
-     */
-    public function runTask(Task $task)
-    {
-        $this->runQueue[] = $task;
-    }
-
-    public function runCallback(string $name)
-    {
-        return $this->taskManager->runCallback($name);
-    }
-
-    public function & getRunQueue(): array
-    {
-        return $this->runQueue;
-    }
-
-    /**
-     * Принимает от контроллера результат выполненной задачи.
-     *
-     * @param int $rid
-     * @param $result
-     */
-    public function receiveTask(int $rid, &$result)
-    {
-        $task = $this->taskManager->getRunTask($rid);
-        $task->setResult($result);
     }
 }

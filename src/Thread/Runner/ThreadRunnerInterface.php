@@ -2,10 +2,22 @@
 
 namespace Saw\Thread\Runner;
 
+use Saw\Thread\AbstractThread;
+use Saw\Thread\Pool\AbstractThreadPool;
 
-use Saw\Thread\MultiThreadingInterface;
-
-interface ThreadRunnerInterface extends MultiThreadingInterface
+interface ThreadRunnerInterface
 {
+    /**
+     * Заускает созданные потоки на выполнение.
+     * Вернет true, если запуск удался, а false
+     * можно интерпретировать как неудачу.
+     *
+     * @param AbstractThread[] $threads
+     * @return bool
+     */
+    public function runThreads(array $threads): bool;
 
+    public function getThreadPool(): AbstractThreadPool;
+
+    /*public function setResultByRunId(int $id, $data);*/
 }
