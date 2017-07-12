@@ -5,8 +5,11 @@ namespace Saw\Standalone;
 use Esockets\Client;
 use Saw\Application\ApplicationContainer;
 use Saw\Command\CommandHandler;
+use Saw\Command\DebugCommand;
+use Saw\Command\DebugData;
 use Saw\Command\ThreadResult;
 use Saw\Command\ThreadRun;
+use Saw\Heading\ReportSupportInterface;
 use Saw\Service\ApplicationLoader;
 use Saw\Service\CommandDispatcher;
 use Saw\Standalone\Controller\CycleInterface;
@@ -18,7 +21,7 @@ use Saw\Thread\StubThread;
  * Ядро воркера.
  * Само по себе нужно только для изоляции приложения.
  */
-final class WorkerCore implements CycleInterface
+final class WorkerCore implements CycleInterface, ReportSupportInterface
 {
     private $client;
     private $commandDispatcher;
@@ -51,6 +54,12 @@ final class WorkerCore implements CycleInterface
                 $this->threadPool->add($thread);
             }),
             new CommandHandler(ThreadResult::NAME, ThreadResult::class),
+            new CommandHandler(DebugCommand::NAME, DebugCommand::class, function (DebugCommand $context) {
+                $this->commandDispatcher->create(DebugData::NAME, $context->getPeer())
+                    ->run(['result' => $this->getFullReport(), 'type' => DebugData::TYPE_VALUE]);
+                return true;
+            }),
+            new CommandHandler(DebugData::NAME, DebugData::class),
         ]);
     }
 
@@ -88,5 +97,10 @@ final class WorkerCore implements CycleInterface
                     ->run(ThreadResult::serializeTask($thread));
             }
         }
+    }
+
+    public function getFullReport(): array
+    {
+        // todo
     }
 }

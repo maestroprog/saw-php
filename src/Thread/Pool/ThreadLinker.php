@@ -4,7 +4,7 @@ namespace Saw\Thread\Pool;
 
 use Saw\Thread\AbstractThread;
 
-class ThreadLinker
+class ThreadLinker implements \Countable
 {
     private $links;
 
@@ -26,5 +26,10 @@ class ThreadLinker
     public function unlinkThreads(AbstractThread $thread)
     {
         unset($this->links[$thread]);
+    }
+
+    public function count()
+    {
+        return $this->links->count();
     }
 }
