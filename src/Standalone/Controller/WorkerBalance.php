@@ -18,7 +18,7 @@ use Saw\ValueObject\ProcessStatus;
  */
 class WorkerBalance implements CycleInterface
 {
-    const WORKER_MIN = 2;
+    const WORKER_MIN = 1;
 
     private $workerStarter;
     private $commandDispatcher;

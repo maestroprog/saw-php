@@ -40,6 +40,11 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
         $this->commandDispatcher = $commandDispatcher;
         $this->applicationContainer = $applicationContainer;
 
+        $apps = $applicationLoader->instanceAllApps();
+        foreach ($apps as $app) {
+            $this->applicationContainer->add($app);
+        }
+
         $this->threadPool = new RunnableThreadPool();
 
         $commandDispatcher->add([
@@ -53,7 +58,6 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
                 ))->setArguments($context->getArguments());
                 $this->threadPool->add($thread);
             }),
-            new CommandHandler(ThreadResult::NAME, ThreadResult::class),
             new CommandHandler(DebugCommand::NAME, DebugCommand::class, function (DebugCommand $context) {
                 $this->commandDispatcher->create(DebugData::NAME, $context->getPeer())
                     ->run(['result' => $this->getFullReport(), 'type' => DebugData::TYPE_VALUE]);
@@ -101,6 +105,11 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
 
     public function getFullReport(): array
     {
-        // todo
+        return [
+            'AppsCount' => count($this->applicationContainer),
+            'ThreadPoolsCount' => count($this->applicationContainer->getThreadPools()),
+            'ThreadsCount' => $this->applicationContainer->getThreadPools()->threadsCount(),
+            'WorkCount' => count($this->threadPool),
+        ];
     }
 }

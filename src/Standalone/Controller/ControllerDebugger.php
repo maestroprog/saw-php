@@ -57,8 +57,13 @@ class ControllerDebugger
                 $result['result'] = $this->fullStat($query);
                 break;
             case 'help':
-                $result['result'] = 'List of commands: killall, fullstat, help';
+                $result['result'] = 'List of commands: killall, fullstat, help, restart';
                 break;
+            case 'restart':
+                $this->killAll();
+                // todo restart
+                exit;
+            // no break
             default:
                 $result['result'] = 'Unknown query';
         }

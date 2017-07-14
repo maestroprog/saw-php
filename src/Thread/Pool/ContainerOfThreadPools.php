@@ -2,7 +2,7 @@
 
 namespace Saw\Thread\Pool;
 
-final class ContainerOfThreadPools
+final class ContainerOfThreadPools implements \Countable
 {
     private $pools;
     private $currentPool;
@@ -33,5 +33,17 @@ final class ContainerOfThreadPools
     public function switchTo(AbstractThreadPool $threadPool): AbstractThreadPool
     {
         return $this->currentPool = $threadPool;
+    }
+
+    public function count()
+    {
+        return $this->pools->count();
+    }
+
+    public function threadsCount(): int
+    {
+        return array_sum(array_map(function (AbstractThreadPool $pool) {
+            return $pool->count();
+        }, $this->pools->getArrayCopy()));
     }
 }

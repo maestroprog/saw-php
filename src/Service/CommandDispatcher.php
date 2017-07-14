@@ -3,6 +3,7 @@
 namespace Saw\Service;
 
 use Esockets\Client;
+use Esockets\debug\Log;
 use Saw\Command\AbstractCommand;
 use Saw\Command\CommandHandler;
 
@@ -40,7 +41,7 @@ final class CommandDispatcher
     {
         foreach ($commands as $command) {
             if (isset($this->know[$command->getName()]) || !class_exists($command->getClass())) {
-                throw new \Exception(sprintf('AbstractCommand %s cannot added', $command->getName()));
+                throw new \Exception(sprintf('Cannot add command %s.', $command->getName()));
             }
             $this->know[$command->getName()] = $command;
         }
@@ -87,8 +88,15 @@ final class CommandDispatcher
         $commandEntity = $this->know[$command];
         /** @var $command AbstractCommand */
         if ($data['state'] == AbstractCommand::STATE_RES) {
-            $command = $this->created[$data['id']];
-            $command->reset($data['state'], $data['code']);
+            if (isset($this->created[$data['id']])) {
+                // обрабатываем только созданные задачи
+                $command = $this->created[$data['id']];
+                $command->reset($data['state'], $data['code']);
+            } else {
+                // несуществующие залоггируем
+                Log::log(var_export($data, true));
+                return;
+            }
         } else {
             $class = $commandEntity->getClass();
             $command = AbstractCommand::instance($class, $data['id'], $peer, $data['state'], $data['code']);

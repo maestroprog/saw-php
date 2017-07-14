@@ -19,6 +19,7 @@ use Saw\Service\Executor;
 use Saw\Service\WorkerStarter;
 use Saw\Standalone\ControllerCore;
 use Saw\Standalone\Worker\WorkerThreadCreator;
+use Saw\Standalone\Worker\WorkerThreadRunner;
 use Saw\Standalone\WorkerCore;
 use Saw\Thread\Creator\DummyThreadCreator;
 use Saw\Thread\Creator\ThreadCreator;
@@ -28,7 +29,6 @@ use Saw\Thread\Pool\ContainerOfThreadPools;
 use Saw\Thread\Runner\DummyThreadRunner;
 use Saw\Thread\Runner\ThreadRunnerInterface;
 use Saw\Thread\Runner\WebThreadRunner;
-use Saw\Thread\Runner\WorkerThreadRunner;
 use Saw\Thread\Synchronizer\DummySynchronizer;
 use Saw\Thread\Synchronizer\SynchronizerInterface;
 use Saw\Thread\Synchronizer\WebThreadSynchronizer;
@@ -171,10 +171,18 @@ CMD;
     public function getSharedMemory(): SharedMemoryBySocket
     {
         return $this->sharedMemory
-            ?? $this->sharedMemory = new SharedMemoryBySocket($this->getWebControllerConnector());
+            ?? $this->sharedMemory = new SharedMemoryBySocket($this->getControllerConnector());
     }
 
-    public function getWebControllerConnector(): ControllerConnectorInterface
+    public function getControllerConnector(): ControllerConnectorInterface
+    {
+        if ($this->environment->isWeb()) {
+            return $this->getWebControllerConnector();
+        }
+        return $this->getWorkerControllerConnector();
+    }
+
+    private function getWebControllerConnector(): ControllerConnectorInterface
     {
         return $this->webControllerConnector
             ?? $this->webControllerConnector
@@ -188,7 +196,7 @@ CMD;
 
     private $workerControllerConnector;
 
-    public function getWorkerControllerConnector(): ControllerConnectorInterface
+    private function getWorkerControllerConnector(): ControllerConnectorInterface
     {
         return $this->workerControllerConnector
             ??  $this->workerControllerConnector
@@ -233,7 +241,7 @@ CMD;
                 : (
                     $this->config['multiThreading']['disabled'] ?? false
                         ? new DummyThreadRunner()
-                        : new WebThreadRunner($this->getWebControllerConnector())
+                        : new WebThreadRunner($this->getControllerConnector())
                 );
     }
 
@@ -311,7 +319,7 @@ CMD;
                     ? new DummySynchronizer()
                     : new WebThreadSynchronizer(
                         $this->getThreadRunner(),
-                        $this->getWebControllerConnector()
+                        $this->getControllerConnector()
                     )
             );
     }

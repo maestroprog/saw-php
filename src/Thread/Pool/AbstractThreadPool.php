@@ -4,7 +4,7 @@ namespace Saw\Thread\Pool;
 
 use Saw\Thread\AbstractThread;
 
-abstract class AbstractThreadPool implements \IteratorAggregate
+abstract class AbstractThreadPool implements \IteratorAggregate, \Countable
 {
     /**
      * @var AbstractThread[]
@@ -59,5 +59,10 @@ abstract class AbstractThreadPool implements \IteratorAggregate
     public function getIterator(): \Iterator
     {
         return new \ArrayIterator($this->threads);
+    }
+
+    public function count()
+    {
+        return count($this->threads);
     }
 }

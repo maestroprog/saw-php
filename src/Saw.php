@@ -144,13 +144,14 @@ final class Saw
         $this->factory->setEnvironment(SawEnv::worker());
         return new Worker(
             $this->factory->getWorkerCore(),
-            $this->factory->getWorkerControllerConnector()
+            $this->factory->getControllerConnector()
         );
     }
 
     public function instanceDebugger(): Debugger
     {
-        return new Debugger($this->factory->getWorkerControllerConnector());
+        $this->factory->setEnvironment(SawEnv::worker());
+        return new Debugger($this->factory->getControllerConnector());
     }
 
     /**

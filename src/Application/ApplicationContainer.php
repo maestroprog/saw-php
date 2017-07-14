@@ -10,7 +10,7 @@ use Saw\Thread\Pool\PoolOfUniqueThreads;
  * Контейнер приложений.
  * Нужен для управления приложениями контроллером и воркерами.
  */
-final class ApplicationContainer
+final class ApplicationContainer implements \Countable
 {
     private $threadPools;
 
@@ -78,5 +78,10 @@ final class ApplicationContainer
     public function getThreadPools(): ContainerOfThreadPools
     {
         return $this->threadPools;
+    }
+
+    public function count()
+    {
+        return $this->apps->count();
     }
 }

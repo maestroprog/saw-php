@@ -73,7 +73,7 @@ namespace {
 
         public function end()
         {
-//            $this->synchronizeAll();
+            $this->synchronizeAll();
             var_dump('ended');
             echo $this->header->getResult(),
             $this->article->getResult(),

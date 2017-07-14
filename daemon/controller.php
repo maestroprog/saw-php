@@ -16,5 +16,5 @@ try {
         ->instanceController()
         ->start();
 } catch (\Throwable $e) {
-    file_put_contents('dump.log', $e->getMessage() . PHP_EOL . $e->getTraceAsString());
+    file_put_contents(__DIR__ . '/dump.log', $e->getMessage() . PHP_EOL . $e->getTraceAsString());
 }

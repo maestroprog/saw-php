@@ -40,5 +40,5 @@ return [
         ],
     ],
     'factory' => require __DIR__ . '/factory.php',
-    'sockets' => require __DIR__ . '/esockets.php',
+    'sockets' => require __DIR__ . '/esockets_debug.php',
 ];
