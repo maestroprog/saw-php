@@ -14,7 +14,7 @@ class LoggingProtocol extends \Esockets\base\AbstractProtocol
     {
         $data = $this->realProtocol->returnRead();
         if (!is_null($data)) {
-            \Esockets\debug\Log::log('I receive', var_export($data, true));
+            \Esockets\debug\Log::log('I receive from ' . spl_object_hash($this->provider), var_export($data, true));
         }
         return $data;
     }
@@ -26,7 +26,7 @@ class LoggingProtocol extends \Esockets\base\AbstractProtocol
 
     public function send($data): bool
     {
-        \Esockets\debug\Log::log('I send', var_export($data, true));
+        \Esockets\debug\Log::log('I send to ' . spl_object_hash($this->provider), var_export($data, true));
         return $this->realProtocol->send($data);
     }
 }

@@ -28,5 +28,6 @@ class ThreadWithCode extends AbstractThread
             $this->setResult($result);
             $this->state = self::STATE_END;
         }
+        return $this;
     }
 }

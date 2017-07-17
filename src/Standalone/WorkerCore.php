@@ -83,12 +83,15 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
              */
             if ($thread->getCurrentState() === AbstractThread::STATE_NEW) {
                 $this->applicationContainer->switchTo($this->applicationContainer->get($thread->getApplicationId()));
-                $thread = $this->applicationContainer
-                    ->getThreadPools()
-                    ->getCurrentPool()
-                    ->getThreadById($thread->getUniqueId())
-                    ->setArguments($thread->getArguments())
-                    ->run();
+                $thread->run()->setResult(
+                    $this->applicationContainer
+                        ->getThreadPools()
+                        ->getCurrentPool()
+                        ->getThreadById($thread->getUniqueId())
+                        ->setArguments($thread->getArguments())
+                        ->run()
+                        ->getResult()
+                );
                 $this->commandDispatcher
                     ->create(ThreadResult::NAME, $this->client)
                     ->onError(function () {
@@ -96,7 +99,8 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
                         throw new \RuntimeException('Cannot run tres command.');
                     })
                     ->onSuccess(function () use ($thread) {
-                        $this->threadPool->getThreadById($thread->getId());
+//                        $this->threadPool->getThreadById($thread->getId());
+                        $this->threadPool->remove($thread);
                     })
                     ->run(ThreadResult::serializeTask($thread));
             }

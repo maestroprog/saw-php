@@ -101,9 +101,8 @@ final class Worker
             if ($this->dispatchSignals) {
                 pcntl_signal_dispatch();
             }
-//            $this->client->read();
             $this->connector->work();
-//            $this->core->work();
+            $this->core->work();
             usleep(10000);
         }
     }
