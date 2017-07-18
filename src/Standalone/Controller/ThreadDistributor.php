@@ -12,6 +12,7 @@ use Saw\Service\CommandDispatcher;
 use Saw\Thread\AbstractThread;
 use Saw\Thread\ControlledThread;
 use Saw\Thread\Pool\ControllerThreadPoolIndex;
+use Saw\Thread\Pool\PoolOfUniqueThreads;
 use Saw\Thread\Pool\ThreadLinker;
 use Saw\Thread\StubThread;
 
@@ -27,14 +28,14 @@ class ThreadDistributor implements CycleInterface
     /**
      * Индекс известных потоков.
      *
-     * @var ControllerThreadPoolIndex
+     * @var PoolOfUniqueThreads
      */
     private $threadKnownIndex;
 
     /**
      * Очередь потоков на выполнение.
      *
-     * @var \SplQueue
+     * @var \SplStack
      */
     private $threadRunQueue;
 
@@ -70,9 +71,9 @@ class ThreadDistributor implements CycleInterface
         $this->workerBalance = $workerBalance;
 
         // иднекс известных потоков
-        $this->threadKnownIndex = new ControllerThreadPoolIndex();
+        $this->threadKnownIndex = new PoolOfUniqueThreads(); // todo why not used?
         // очередь потоков на выполнение
-        $this->threadRunQueue = new \SplQueue();
+        $this->threadRunQueue = new \SplStack();
         // индекс потоков, поставленных на выполнение из очереди
         $this->threadRunSources = new ControllerThreadPoolIndex();
         // индекс работающих потоков
@@ -107,7 +108,7 @@ class ThreadDistributor implements CycleInterface
                     ))->setArguments($context->getArguments());
 
                     // добавление потока в очередь выполнения
-                    $this->threadRunQueue->enqueue($thread);
+                    $this->threadRunQueue->push($thread);
                 }
             ),
             new CommandHandler(
@@ -134,7 +135,7 @@ class ThreadDistributor implements CycleInterface
             return $worker->getState() !== Worker::STOP;
         };
         while (!$this->threadRunQueue->isEmpty()) {
-            $thread = $this->threadRunQueue->dequeue();
+            $thread = $this->threadRunQueue->shift();
             /**
              * @var $thread ControlledThread
              */
@@ -158,7 +159,7 @@ class ThreadDistributor implements CycleInterface
      */
     public function threadKnow(Worker $worker, AbstractThread $thread)
     {
-        $this->threadKnownIndex->add($worker, $thread);
+        $this->threadKnownIndex->add($thread);
         $worker->addThreadToKnownList($thread);
     }
 
@@ -179,6 +180,15 @@ class ThreadDistributor implements CycleInterface
             $worker->getClient()
         ))->setArguments($sourceThread->getArguments());
 
+        // todo start check
+        // сообщаем сущности воркера, что он выполняет поток
+        $worker->addThreadToRunList($runThread);
+        $this->threadRunSources->add($worker, $sourceThread);
+        $this->threadRunWork->add($worker, $runThread);
+        // связываем поток для выполнения с исходным потоком
+        $this->threadLinks->linkThreads($runThread, $sourceThread);
+        // todo check ---
+
         /** @var $command ThreadRun */
         $this->commandDispatcher->create(ThreadRun::NAME, $worker->getClient())
             ->onError(function () use ($sourceThread) {
@@ -187,12 +197,7 @@ class ThreadDistributor implements CycleInterface
                 //todo
             })
             ->onSuccess(function () use ($worker, $sourceThread, $runThread) {
-                // сообщаем сущности воркера, что он выполняет поток
-                $worker->addThreadToRunList($runThread);
-                $this->threadRunSources->add($worker, $sourceThread);
-                $this->threadRunWork->add($worker, $runThread);
-                // связываем поток для выполнения с исходным потоком
-                $this->threadLinks->linkThreads($runThread, $sourceThread);
+                // todo end check
             })
             ->run(ThreadRun::serializeThread($runThread));
     }
@@ -218,7 +223,7 @@ class ThreadDistributor implements CycleInterface
 
         $this->threadRunSources->removeThread($sourceThread);
         $this->threadRunWork->removeThread($runThread);
-        
+
         if (!$sourceThread instanceof ControlledThread) {
             throw new \LogicException('Unknown thread object!');
         }
@@ -251,7 +256,7 @@ class ThreadDistributor implements CycleInterface
     /**
      * @return ControllerThreadPoolIndex
      */
-    public function getThreadKnownIndex(): ControllerThreadPoolIndex
+    public function getThreadKnownIndex(): PoolOfUniqueThreads
     {
         return $this->threadKnownIndex;
     }
@@ -259,7 +264,7 @@ class ThreadDistributor implements CycleInterface
     /**
      * @return \SplQueue
      */
-    public function getThreadRunQueue(): \SplQueue
+    public function getThreadRunQueue(): \SplStack
     {
         return $this->threadRunQueue;
     }

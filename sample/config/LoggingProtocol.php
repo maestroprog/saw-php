@@ -1,6 +1,6 @@
 <?php
 
-class LoggingProtocol extends \Esockets\base\AbstractProtocol
+class LoggingProtocol extends \Esockets\base\AbstractProtocol implements \Esockets\base\PingSupportInterface
 {
     private $realProtocol;
 
@@ -26,7 +26,17 @@ class LoggingProtocol extends \Esockets\base\AbstractProtocol
 
     public function send($data): bool
     {
-        \Esockets\debug\Log::log('I send to ' . spl_object_hash($this->provider), var_export($data, true));
+//        \Esockets\debug\Log::log('I send to ' . spl_object_hash($this->provider), var_export($data, true));
         return $this->realProtocol->send($data);
+    }
+
+    public function ping(\Esockets\base\PingPacket $pingPacket)
+    {
+        $this->realProtocol->ping($pingPacket);
+    }
+
+    public function pong(callable $pongReceived)
+    {
+        $this->realProtocol->pong($pongReceived);
     }
 }
