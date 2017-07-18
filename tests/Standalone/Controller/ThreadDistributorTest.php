@@ -13,6 +13,7 @@ use Saw\Service\CommandDispatcher;
 use Saw\Standalone\Controller\ThreadDistributor;
 use Saw\Standalone\Controller\WorkerBalance;
 use Saw\Standalone\Controller\WorkerPool;
+use Saw\Thread\Pool\AbstractThreadPool;
 use Saw\Thread\StubThread;
 
 class ThreadDistributorTest extends TestCase
@@ -201,5 +202,11 @@ class ThreadDistributorTest extends TestCase
         // 5. Принятие, обработка результата выполнения потка
         // 6. Отправка результата выполнения потока
         $threadDistributor->work();
+
+        /**
+         * @var $threadRunWork AbstractThreadPool
+         */
+        $threadRunWork = $this->readAttribute($threadDistributor, 'threadRunWork');
+        $this->assertCount(0, $threadRunWork);
     }
 }

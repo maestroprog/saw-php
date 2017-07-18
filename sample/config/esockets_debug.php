@@ -9,7 +9,7 @@ return [
     Configurator::CONNECTION_TYPE => Configurator::CONNECTION_TYPE_SOCKET,
     Configurator::CONNECTION_CONFIG => [
         SocketFactory::SOCKET_DOMAIN => AF_INET,
-        SocketFactory::SOCKET_PROTOCOL => SOL_TCP,
+        SocketFactory::SOCKET_PROTOCOL => SOL_UDP,
     ],
     Configurator::PROTOCOL_CLASS => LoggingProtocol::class,
 ];

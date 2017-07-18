@@ -7,14 +7,14 @@ class LoggingProtocol extends \Esockets\base\AbstractProtocol
     public function __construct(\Esockets\base\IoAwareInterface $provider)
     {
         parent::__construct($provider);
-        $this->realProtocol = new \Esockets\protocol\Easy($provider);
+        $this->realProtocol = new \Esockets\protocol\EasyStream($provider);
     }
 
     public function returnRead()
     {
         $data = $this->realProtocol->returnRead();
         if (!is_null($data)) {
-            \Esockets\debug\Log::log('I receive from ' . spl_object_hash($this->provider), var_export($data, true));
+//            \Esockets\debug\Log::log('I receive from ' . spl_object_hash($this->provider), var_export($data, true));
         }
         return $data;
     }

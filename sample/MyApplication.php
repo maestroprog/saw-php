@@ -73,8 +73,9 @@ namespace {
 
         public function end()
         {
+            $time = microtime(true);
             $this->synchronizeAll();
-            var_dump('ended');
+            var_dump('ended', microtime(true) - $time);
             echo $this->header->getResult(),
             $this->article->getResult(),
             $this->footer->getResult(),

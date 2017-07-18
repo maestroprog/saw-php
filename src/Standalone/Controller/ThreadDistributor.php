@@ -89,7 +89,7 @@ class ThreadDistributor implements CycleInterface
                     $thread = new StubThread(++$threadId, $context->getApplicationId(), $context->getUniqueId());
                     // добавление потока в список известных
                     $this->threadKnow(
-                        $this->workerPool->getById((int)$context->getPeer()->getConnectionResource()->getResource()),
+                        $this->workerPool->getById($context->getPeer()->getConnectionResource()->getId()),
                         $thread
                     );
                 }
@@ -107,7 +107,7 @@ class ThreadDistributor implements CycleInterface
                     ))->setArguments($context->getArguments());
 
                     // добавление потока в очередь выполнения
-                    $this->threadRunQueue->push($thread);
+                    $this->threadRunQueue->enqueue($thread);
                 }
             ),
             new CommandHandler(
@@ -116,7 +116,7 @@ class ThreadDistributor implements CycleInterface
                 function (ThreadResult $context) {
                     // получение и обработка результата выполнения потока
                     $this->threadResult(
-                        $this->workerPool->getById((int)$context->getPeer()->getConnectionResource()->getResource()),
+                        $this->workerPool->getById($context->getPeer()->getConnectionResource()->getId()),
                         $context->getRunId(),
                         $context->getResult()
                     );
@@ -216,6 +216,9 @@ class ThreadDistributor implements CycleInterface
         // удаляем из сущности воркера информацию о завершённом потоке
         $worker->removeRunThread($runThread);
 
+        $this->threadRunSources->removeThread($sourceThread);
+        $this->threadRunWork->removeThread($runThread);
+        
         if (!$sourceThread instanceof ControlledThread) {
             throw new \LogicException('Unknown thread object!');
         }
@@ -225,8 +228,6 @@ class ThreadDistributor implements CycleInterface
                 //todo
             })
             ->onSuccess(function () use ($sourceThread, $runThread) {
-                $this->threadRunSources->removeThread($sourceThread);
-                $this->threadRunWork->removeThread($runThread);
             })
             ->run(ThreadResult::serializeTask($sourceThread));
     }
