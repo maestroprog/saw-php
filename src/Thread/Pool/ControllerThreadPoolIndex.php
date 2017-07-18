@@ -57,6 +57,7 @@ class ControllerThreadPoolIndex implements \Countable
             if (count($this->workers[$workerId]) === 0) {
                 unset($this->workers[$workerId]);
             }
+            unset($this->threads[$thread->getId()]);
         }
     }
 

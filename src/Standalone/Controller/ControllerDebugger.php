@@ -2,6 +2,7 @@
 
 namespace Saw\Standalone\Controller;
 
+use Esockets\Client;
 use Saw\Command\CommandHandler;
 use Saw\Command\DebugCommand;
 use Saw\Command\DebugData;
@@ -28,7 +29,12 @@ class ControllerDebugger
                     ->run($data);
                 return true;
             }),
-            new CommandHandler(DebugData::NAME, DebugData::class),
+            new CommandHandler(DebugData::NAME, DebugData::class, function (DebugData $context) {
+                if ($this->debuggerClient instanceof Client) {
+                    $this->commandDispatcher->create(DebugData::NAME, $this->debuggerClient)
+                        ->run($context->getData());
+                }
+            }),
         ]);
     }
 
@@ -48,11 +54,16 @@ class ControllerDebugger
                 ];
                 break;
             case 'fullstat':
-                $result['result'] = $this->fullStat();
+                $result['result'] = $this->fullStat($query);
                 break;
             case 'help':
-                $result['result'] = 'List of commands: killall, fullstat, help';
+                $result['result'] = 'List of commands: killall, fullstat, help, restart';
                 break;
+            case 'restart':
+                $this->killAll();
+                // todo restart
+                exit;
+            // no break
             default:
                 $result['result'] = 'Unknown query';
         }
@@ -72,13 +83,26 @@ class ControllerDebugger
         return $count;
     }
 
-    protected function fullStat(): array
+    private $debuggerClient;
+
+    protected function fullStat(DebugCommand $command): array
     {
+        $this->debuggerClient = $command->getPeer();
         foreach ($this->threadDistributor->getWorkerPool() as $worker) {
             /**
              * @var Worker $worker
              */
-            $worker->getClient();
+            $this->commandDispatcher->create(DebugCommand::NAME, $worker->getClient())
+                ->run(['query' => 'fullstat']);
         }
+        return [
+            'Workers count' => $this->threadDistributor->getWorkerPool()->count(),
+            'Run threads count' => $this->threadDistributor->getThreadRunQueue()->count(),
+            'Known threads count' => $this->threadDistributor->getThreadKnownIndex()->count(),
+            'Currently queue size' => $this->threadDistributor->getThreadRunQueue()->count(),
+            'Sources count' => $this->threadDistributor->getThreadRunSources()->count(),
+            'Linked count' => $this->threadDistributor->getThreadLinks()->count(),
+            'Work count' => $this->threadDistributor->getThreadRunWork()->count(),
+        ];
     }
 }

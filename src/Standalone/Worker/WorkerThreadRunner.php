@@ -1,17 +1,19 @@
 <?php
 
-namespace Saw\Thread\Runner;
+namespace Saw\Standalone\Worker;
 
 use Esockets\Client;
 use Saw\Application\ApplicationContainer;
 use Saw\Command\CommandHandler;
 use Saw\Command\ThreadResult;
+use Saw\Command\ThreadRun;
 use Saw\Service\CommandDispatcher;
 use Saw\Thread\AbstractThread;
 use Saw\Thread\Pool\AbstractThreadPool;
 use Saw\Thread\Pool\PoolOfUniqueThreads;
+use Saw\Thread\Runner\ThreadRunnerDisablingSupportInterface;
 
-final class WorkerThreadRunner implements ThreadRunnerInterface
+final class WorkerThreadRunner implements ThreadRunnerDisablingSupportInterface
 {
     private $client;
     private $commandDispatcher;
@@ -19,6 +21,7 @@ final class WorkerThreadRunner implements ThreadRunnerInterface
 
     private $threadPool;
     private $runThreadPool;
+    private $disabled = true;
 
     public function __construct(
         Client $client,
@@ -70,7 +73,7 @@ final class WorkerThreadRunner implements ThreadRunnerInterface
     }*/
 
     /**
-     * Воркер не должен запусукать потоки из приложения.
+     * Воркер не должен запускать потоки из приложения.
      * Метод нужен для совместимости работы приложений из скрипта и на воркерах.
      *
      * @param AbstractThread[] $threads
@@ -78,9 +81,25 @@ final class WorkerThreadRunner implements ThreadRunnerInterface
      */
     public function runThreads(array $threads): bool
     {
-        foreach ($threads as $thread) {
-//todo
+        if (!$this->disabled) {
+            foreach ($threads as $thread) {
+                $this->runThreadPool->add($thread);
+                try {
+                    $this->commandDispatcher
+                        ->create(ThreadRun::NAME, $this->client)
+                        ->run(ThreadRun::serializeThread($thread));
+                } catch (\Throwable $e) {
+                    $thread->run();
+                    var_dump($e->getTraceAsString());
+                    die($e->getMessage());
+                } finally {
+                    var_dump($thread->getResult(), $thread->hasResult());
+                }
+            }
+        } else {
+            $this->enable();
         }
+        return true;
     }
 
     public function getThreadPool(): AbstractThreadPool
@@ -90,6 +109,16 @@ final class WorkerThreadRunner implements ThreadRunnerInterface
 
     public function setResultByRunId(int $id, $data)
     {
-        // TODO: Implement setResultByRunId() method.
+        $this->runThreadPool->getThreadById($id)->setResult($data);
+    }
+
+    public function disable()
+    {
+        $this->disabled = true;
+    }
+
+    public function enable()
+    {
+        $this->disabled = false;
     }
 }

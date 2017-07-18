@@ -18,7 +18,7 @@ use Saw\ValueObject\ProcessStatus;
  */
 class WorkerBalance implements CycleInterface
 {
-    const WORKER_MIN = 2;
+    const WORKER_MIN = 8;
 
     private $workerStarter;
     private $commandDispatcher;
@@ -64,7 +64,7 @@ class WorkerBalance implements CycleInterface
             }),
             new CommandHandler(
                 WorkerDelete::NAME, WorkerDelete::class, function (WorkerDelete $context) {
-                $this->workerPool->removeById((int)$context->getPeer()->getConnectionResource()->getResource());
+                $this->workerPool->removeById($context->getPeer()->getConnectionResource()->getId());
             }),
         ]);
     }

@@ -21,7 +21,7 @@
     "email": "maestroprog@gmail.com"
   },
   "require": {
-    "maestroprog/esockets": "v2.0-alpha"
+    "maestroprog/esockets": "dev-2.1-dev"
   },
   "minimum-stability": "dev",
   "repositories": [

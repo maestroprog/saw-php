@@ -13,6 +13,11 @@ trait ControllerConnectorTrait
 
     public function work()
     {
-        $this->client->read();
+        $socket = $this->client->getConnectionResource()->getResource();
+        $read = [$socket];
+        $write = $except = [];
+        if (socket_select($read, $write, $except, 1)) {
+            $this->client->read();
+        }
     }
 }

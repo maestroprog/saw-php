@@ -62,7 +62,7 @@ class Worker
      */
     public function getId(): int
     {
-        return (int)$this->client->getConnectionResource()->getResource();
+        return $this->client->getConnectionResource()->getId();
     }
 
     /**

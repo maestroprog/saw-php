@@ -63,7 +63,7 @@ class WebThreadRunner implements ThreadRunnerInterface
                 var_dump($e->getTraceAsString());
                 die($e->getMessage());
             } finally {
-                var_dump($thread->getResult(), $thread->hasResult());
+//                var_dump($thread->getResult(), $thread->hasResult());
             }
         }
         return true;

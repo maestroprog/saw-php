@@ -3,7 +3,9 @@
 ini_set('display_errors', true);
 error_reporting(E_ALL);
 ini_set('log_errors', true);
+
 ini_set('error_log', __DIR__ . '/messages.log');
+file_put_contents(ini_get('error_log'), '');
 
 if (PHP_SAPI !== 'cli') {
     header('HTTP/1.1 503 Service Unavailable');
@@ -16,5 +18,6 @@ try {
         ->instanceController()
         ->start();
 } catch (\Throwable $e) {
-    file_put_contents('dump.log', $e->getMessage() . PHP_EOL . $e->getTraceAsString());
+    file_put_contents(__DIR__ . '/dump.log', $e->getMessage() . PHP_EOL . $e->getTraceAsString() . PHP_EOL);
+    file_put_contents(__DIR__ . '/dump.log', var_export($GLOBALS['log'], true), FILE_APPEND);
 }

@@ -43,6 +43,7 @@ abstract class BasicMultiThreaded implements ApplicationInterface, MultiThreadin
 
     final public function run()
     {
+        $this->init(); // todo check
         $this->main();
 
         $runningResult = $this->multiThreadingProvider
@@ -65,12 +66,12 @@ abstract class BasicMultiThreaded implements ApplicationInterface, MultiThreadin
         return $this->multiThreadingProvider->getThreadCreator()->thread($uniqueId, $code);
     }
 
-    final  public function threadArguments(string $uniqueId, callable $code, array $arguments): AbstractThread
+    final public function threadArguments(string $uniqueId, callable $code, array $arguments): AbstractThread
     {
         return $this->multiThreadingProvider->getThreadCreator()->threadArguments($uniqueId, $code, $arguments);
     }
 
-    final  public function synchronizeOne(AbstractThread $thread)
+    final public function synchronizeOne(AbstractThread $thread)
     {
         $this->multiThreadingProvider->getSynchronizer()->synchronizeOne($thread);
     }

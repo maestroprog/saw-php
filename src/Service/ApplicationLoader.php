@@ -72,7 +72,7 @@ final class ApplicationLoader
         $allAppIds = $this->applicationConfig->getAllApplicationIds();
 
         return array_map(function (string $id) {
-            $this->instanceAppById($id);
+            return $this->instanceAppById($id);
         }, $allAppIds);
     }
 }

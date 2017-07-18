@@ -90,6 +90,7 @@ final class Controller
                 $this->server->find();
             } catch (\RuntimeException $e) {
                 ; // todo
+                throw $e;
             }
             $this->core->work();
         }

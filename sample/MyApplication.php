@@ -32,9 +32,11 @@ namespace {
          */
         private $times;
 
+        private $t;
+
         public function init()
         {
-
+            $this->t = microtime(true);
         }
 
         protected function main()
@@ -73,8 +75,10 @@ namespace {
 
         public function end()
         {
-//            $this->synchronizeAll();
-            var_dump('ended');
+            $time = microtime(true);
+            $this->synchronizeAll();
+            var_dump('ended', microtime(true) - $time);
+            var_dump(microtime(true) - $this->t);
             echo $this->header->getResult(),
             $this->article->getResult(),
             $this->footer->getResult(),

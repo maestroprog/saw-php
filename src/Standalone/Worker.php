@@ -2,6 +2,7 @@
 
 namespace Saw\Standalone;
 
+use Esockets\base\exception\ConnectionException;
 use Esockets\debug\Log;
 use Saw\Command\AbstractCommand;
 use Saw\Command\CommandHandler;
@@ -37,6 +38,17 @@ final class Worker
         $this->connector = $connector;
         $this->client = $connector->getClient();
         $this->commandDispatcher = $connector->getCommandDispatcher();
+
+        $this->commandDispatcher->add([
+            new CommandHandler(WorkerAdd::NAME, WorkerAdd::class),
+            new CommandHandler(
+                WorkerDelete::NAME,
+                WorkerDelete::class,
+                function (AbstractCommand $context) {
+                    $this->stop();
+                }
+            )
+        ]);
     }
 
     /**
@@ -65,28 +77,14 @@ final class Worker
             $this->work = false;
         });
 
-        $this->connector->connect();
 
         if (!$this->client->isConnected()) {
-            throw new \RuntimeException('Cannot start when not connected.');
+            try {
+                $this->connector->connect();
+            } catch (ConnectionException $e) {
+                throw new \RuntimeException('Cannot start when not connected.', 0, $e);
+            }
         }
-
-        $this->commandDispatcher->add([
-            new CommandHandler(
-                WorkerAdd::NAME,
-                WorkerAdd::class,
-                function (AbstractCommand $context) {
-                    $this->core->run(); // запуск приложений
-                }
-            ),
-            new CommandHandler(
-                WorkerDelete::NAME,
-                WorkerDelete::class,
-                function (AbstractCommand $context) {
-                    $this->stop();
-                }
-            )
-        ]);
         $this->work();
     }
 
@@ -103,8 +101,9 @@ final class Worker
             if ($this->dispatchSignals) {
                 pcntl_signal_dispatch();
             }
-            $this->core->work();
             $this->connector->work();
+            $this->core->work();
+            usleep(10000);
         }
     }
 

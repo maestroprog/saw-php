@@ -2,6 +2,7 @@
 
 namespace Saw\Standalone;
 
+use Esockets\base\exception\ConnectionException;
 use Esockets\debug\Log;
 use Saw\Command\CommandHandler;
 use Saw\Command\DebugCommand;
@@ -44,10 +45,13 @@ class Debugger
             exit;
         });
 
-        $this->connector->connect();
 
         if (!$this->connector->getClient()->isConnected()) {
-            throw new \RuntimeException('Cannot start when not connected.');
+            try {
+                $this->connector->connect();
+            } catch (ConnectionException $e) {
+                throw new \RuntimeException('Cannot start when not connected.', 0, $e);
+            }
         }
 
 //        $this->connector->getClient()->block();
