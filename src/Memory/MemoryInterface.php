@@ -10,33 +10,32 @@ interface MemoryInterface
     /**
      * Проверяет существование переменной в памяти.
      *
-     * @param $varName
+     * @param string $varName
      * @return bool
      */
-    public function has($varName): bool;
+    public function has(string $varName): bool;
 
     /**
      * Читает переменную из памяти.
      *
-     * @param $varName
+     * @param string $varName
      * @return mixed
      */
-    public function read($varName);
+    public function read(string $varName);
 
     /**
      * Записывает переменную в память.
      *
-     * @param $varName
+     * @param string $varName
      * @param $variable
      * @return bool
      */
-    public function write($varName, $variable): bool;
+    public function write(string $varName, $variable): bool;
 
     /**
      * Удаляет переменную из памяти.
      *
-     * @param $varName
-     * @return mixed
+     * @param string void
      */
-    public function remove($varName);
+    public function remove(string $varName);
 }

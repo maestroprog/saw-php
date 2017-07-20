@@ -196,9 +196,10 @@ class ThreadDistributor implements CycleInterface
                 throw new \RuntimeException('Error run thread.');
                 //todo
             })
-            ->onSuccess(function () use ($worker, $sourceThread, $runThread) {
+            /*->onSuccess(function () use ($worker, $sourceThread, $runThread) {
                 // todo end check
-            })
+
+            })*/
             ->run(ThreadRun::serializeThread($runThread));
     }
 
@@ -232,8 +233,8 @@ class ThreadDistributor implements CycleInterface
             ->onError(function () {
                 //todo
             })
-            ->onSuccess(function () use ($sourceThread, $runThread) {
-            })
+            /*->onSuccess(function () use ($sourceThread, $runThread) {
+            })*/
             ->run(ThreadResult::serializeTask($sourceThread));
     }
 

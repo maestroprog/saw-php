@@ -13,19 +13,19 @@ interface SharedMemoryInterface extends MemoryInterface
     const LOCK_TIMEOUT = 1000; // 1 second
 
     /**
-     * @param $varName
+     * @param string $varName
      * @param bool $withLocking Позволяет залочить переменную при её чтении
      * @return mixed
      */
-    public function read($varName, bool $withLocking = true);
+    public function read(string $varName, bool $withLocking = true);
 
     /**
-     * @param $varName
+     * @param string $varName
      * @param $variable
      * @param bool $unlock Снимает блокировку с переменной после её перезаписи
      * @return bool
      */
-    public function write($varName, $variable, bool $unlock = true): bool;
+    public function write(string $varName, $variable, bool $unlock = true): bool;
 
     public function lock($varName);
 

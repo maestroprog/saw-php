@@ -2,7 +2,7 @@
 
 namespace Saw\Application;
 
-use Saw\ValueObject\Result;
+use Saw\Application\Context\ContextInterface;
 
 interface ApplicationInterface
 {
@@ -14,6 +14,14 @@ interface ApplicationInterface
     public function getId(): string;
 
     /**
+     * Вернёт контекст текущего запроса.
+     * Контексты запросов аналогичны сессиям.
+     *
+     * @return ContextInterface
+     */
+    public function context(): ContextInterface;
+
+    /**
      * Выполняется, после получения нового запроса.
      * Метод должен выполнять инициализацию приложения
      * - загружать все необходимые данные
@@ -21,14 +29,14 @@ interface ApplicationInterface
      *
      * Метод не выполняется на воркерах.
      *
-     * @return mixed
+     * @return void
      */
     public function init();
 
     /**
      * Запускает работу приложения.
      *
-     * @return mixed
+     * @return void
      */
     public function run();
 
@@ -38,6 +46,8 @@ interface ApplicationInterface
      * Собирает результаты выполнения потоков.
      * На основе полученных результатов конструирует общий
      * результат выполнения приложения, и возвращает его.
+     *
+     * @return void
      */
     public function end();
 }

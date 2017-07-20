@@ -5,7 +5,7 @@ namespace Saw\Application\Context;
 use Saw\Memory\SharedMemoryInterface;
 
 /**
- * Контекст
+ * Контекст.
  */
 class Context implements ContextInterface
 {
@@ -18,29 +18,29 @@ class Context implements ContextInterface
         $this->sharedMemory = $sharedMemory;
     }
 
-    public function has($varName): bool
+    public function has(string $varName): bool
     {
-        // TODO: Implement has() method.
+        return $this->sharedMemory->has($this->getKey($varName));
     }
 
-    public function read($varName)
+    public function read(string $varName)
     {
-        // TODO: Implement read() method.
+        return $this->sharedMemory->read($this->getKey($varName));
     }
 
-    public function write($varName, $variable): bool
+    public function write(string $varName, $variable): bool
     {
-        // TODO: Implement write() method.
+        return $this->sharedMemory->write($this->getKey($varName), $varName);
     }
 
-    public function remove($varName)
+    public function remove(string $varName)
     {
-        // TODO: Implement remove() method.
+        $this->sharedMemory->remove($this->getKey($varName));
     }
 
     public function getId(): string
     {
-        // TODO: Implement getId() method.
+        return $this->id;
     }
 
     public function update()
@@ -61,5 +61,10 @@ class Context implements ContextInterface
     public function __wakeup($dump)
     {
         // TODO: Implement __wakeup() method.
+    }
+
+    protected function getKey(string $varName): string
+    {
+        return 'context.' . $this->id . '.' . $varName;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Saw\Application;
 
+use Saw\Application\Context\ContextInterface;
 use Saw\Application\Context\ContextPool;
 use Saw\Memory\SharedMemoryInterface;
 use Saw\Thread\AbstractThread;
@@ -31,6 +32,13 @@ abstract class BasicMultiThreaded implements ApplicationInterface, MultiThreadin
     final public function getId(): string
     {
         return $this->id;
+    }
+
+    public function context(): ContextInterface
+    {
+        return $this
+            ->contextPool
+            ->add();
     }
 
     /**
