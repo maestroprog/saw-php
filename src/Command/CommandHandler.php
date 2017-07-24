@@ -17,13 +17,19 @@ final class CommandHandler
      * $callbackHandler должен вернуть true если команда выполнена успешно,
      * и false если выполнить команду не удалось.
      *
-     * @param string $name
      * @param string $class
      * @param callable|null $callbackHandler
+     * @internal param string $name
      */
-    public function __construct(string $name, string $class, callable $callbackHandler = null)
+    public function __construct(string $class, callable $callbackHandler = null)
     {
-        $this->name = $name;
+        if (!is_subclass_of($class, AbstractCommand::class)) {
+            throw new \InvalidArgumentException('Invalid command class "' . $class . '"');
+        }
+        /**
+         * @var $class AbstractCommand
+         */
+        $this->name = $class::NAME;
         $this->class = $class;
         $this->callbackHandler = $callbackHandler;
     }

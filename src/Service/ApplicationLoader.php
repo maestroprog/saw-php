@@ -42,7 +42,8 @@ final class ApplicationLoader
         }
 
         $class = new \ReflectionClass($applicationClass);
-        $arguments = $this->factory->instanceArguments($arguments);
+        $appId = $this->applicationConfig->getApplicationIdByClass($applicationClass);
+        $arguments = $this->factory->instanceArguments($arguments, ['appId' => $appId]);
         return $class->newInstanceArgs($arguments);
     }
 

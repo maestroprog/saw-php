@@ -83,45 +83,39 @@ class ThreadDistributor implements CycleInterface
 
         $commandDispatcher->add([
             new CommandHandler(
-                ThreadKnow::NAME,
-                ThreadKnow::class,
-                function (ThreadKnow $context) {
-                    static $threadId = 0;
-                    $thread = new StubThread(++$threadId, $context->getApplicationId(), $context->getUniqueId());
-                    // добавление потока в список известных
-                    $this->threadKnow(
-                        $this->workerPool->getById($context->getPeer()->getConnectionResource()->getId()),
-                        $thread
-                    );
-                }
+                ThreadKnow::class, function (ThreadKnow $context) {
+                static $threadId = 0;
+                $thread = new StubThread(++$threadId, $context->getApplicationId(), $context->getUniqueId());
+                // добавление потока в список известных
+                $this->threadKnow(
+                    $this->workerPool->getById($context->getPeer()->getConnectionResource()->getId()),
+                    $thread
+                );
+            }
             ),
             new CommandHandler(
-                ThreadRun::NAME,
-                ThreadRun::class,
-                function (ThreadRun $context) {
+                ThreadRun::class, function (ThreadRun $context) {
 
-                    $thread = (new ControlledThread(
-                        $context->getRunId(),
-                        $context->getApplicationId(),
-                        $context->getUniqueId(),
-                        $context->getPeer()
-                    ))->setArguments($context->getArguments());
+                $thread = (new ControlledThread(
+                    $context->getRunId(),
+                    $context->getApplicationId(),
+                    $context->getUniqueId(),
+                    $context->getPeer()
+                ))->setArguments($context->getArguments());
 
-                    // добавление потока в очередь выполнения
-                    $this->threadRunQueue->push($thread);
-                }
+                // добавление потока в очередь выполнения
+                $this->threadRunQueue->push($thread);
+            }
             ),
             new CommandHandler(
-                ThreadResult::NAME,
-                ThreadResult::class,
-                function (ThreadResult $context) {
-                    // получение и обработка результата выполнения потока
-                    $this->threadResult(
-                        $this->workerPool->getById($context->getPeer()->getConnectionResource()->getId()),
-                        $context->getRunId(),
-                        $context->getResult()
-                    );
-                }
+                ThreadResult::class, function (ThreadResult $context) {
+                // получение и обработка результата выполнения потока
+                $this->threadResult(
+                    $this->workerPool->getById($context->getPeer()->getConnectionResource()->getId()),
+                    $context->getRunId(),
+                    $context->getResult()
+                );
+            }
             ),
         ]);
     }

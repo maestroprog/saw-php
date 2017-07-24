@@ -12,7 +12,7 @@ namespace Saw\Memory;
  */
 interface LocalizedMemoryInterface extends MemoryInterface
 {
-    public function share($varName);
+    public function share(string $varName);
 
-    public function request($varName);
+    public function request(string $varName);
 }

@@ -49,7 +49,7 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
 
         $commandDispatcher->add([
             new CommandHandler(
-                ThreadRun::NAME, ThreadRun::class, function (ThreadRun $context) {
+                ThreadRun::class, function (ThreadRun $context) {
                 // выполняем задачу
                 $thread = (new StubThread(
                     $context->getRunId(),
@@ -58,12 +58,12 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
                 ))->setArguments($context->getArguments());
                 $this->threadPool->add($thread);
             }),
-            new CommandHandler(DebugCommand::NAME, DebugCommand::class, function (DebugCommand $context) {
+            new CommandHandler(DebugCommand::class, function (DebugCommand $context) {
                 $this->commandDispatcher->create(DebugData::NAME, $context->getPeer())
                     ->run(['result' => $this->getFullReport(), 'type' => DebugData::TYPE_VALUE]);
                 return true;
             }),
-            new CommandHandler(DebugData::NAME, DebugData::class),
+            new CommandHandler(DebugData::class),
         ]);
     }
 

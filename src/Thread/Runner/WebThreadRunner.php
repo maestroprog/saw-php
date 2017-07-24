@@ -26,7 +26,7 @@ class WebThreadRunner implements ThreadRunnerInterface
 
         $this->commandDispatcher
             ->add([
-                new CommandHandler(ThreadRun::NAME, ThreadRun::class),
+                new CommandHandler(ThreadRun::class),
                 /*new CommandHandler(
                     ThreadResult::NAME,
                     ThreadResult::class,
@@ -35,13 +35,11 @@ class WebThreadRunner implements ThreadRunnerInterface
                     }
                 ),*/
                 new CommandHandler(
-                    ThreadResult::NAME,
-                    ThreadResult::class,
-                    function (ThreadResult $context) {
-                        $this->runThreads
-                            ->getThreadById($context->getRunId())
-                            ->setResult($context->getResult());
-                    }
+                    ThreadResult::class, function (ThreadResult $context) {
+                    $this->runThreads
+                        ->getThreadById($context->getRunId())
+                        ->setResult($context->getResult());
+                }
                 ),
             ]);
     }

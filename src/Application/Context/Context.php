@@ -2,7 +2,7 @@
 
 namespace Saw\Application\Context;
 
-use Saw\Memory\SharedMemoryInterface;
+use Saw\Memory\MemoryInterface;
 
 /**
  * Контекст.
@@ -12,7 +12,7 @@ class Context implements ContextInterface
     private $id;
     private $sharedMemory;
 
-    public function __construct(string $id, SharedMemoryInterface $sharedMemory)
+    public function __construct(string $id, MemoryInterface $sharedMemory)
     {
         $this->id = $id;
         $this->sharedMemory = $sharedMemory;

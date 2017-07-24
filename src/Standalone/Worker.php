@@ -40,13 +40,11 @@ final class Worker
         $this->commandDispatcher = $connector->getCommandDispatcher();
 
         $this->commandDispatcher->add([
-            new CommandHandler(WorkerAdd::NAME, WorkerAdd::class),
+            new CommandHandler(WorkerAdd::class),
             new CommandHandler(
-                WorkerDelete::NAME,
-                WorkerDelete::class,
-                function (AbstractCommand $context) {
-                    $this->stop();
-                }
+                WorkerDelete::class, function (AbstractCommand $context) {
+                $this->stop();
+            }
             )
         ]);
     }

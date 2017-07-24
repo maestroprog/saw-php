@@ -39,13 +39,11 @@ final class WorkerThreadRunner implements ThreadRunnerDisablingSupportInterface
         $this->commandDispatcher
             ->add([
                 new CommandHandler(
-                    ThreadResult::NAME,
-                    ThreadResult::class,
-                    function (ThreadResult $context) {
-                        $this->runThreadPool
-                            ->getThreadById($context->getRunId())
-                            ->setResult($context->getResult());
-                    }
+                    ThreadResult::class, function (ThreadResult $context) {
+                    $this->runThreadPool
+                        ->getThreadById($context->getRunId())
+                        ->setResult($context->getResult());
+                }
                 ),
             ]);
     }/*

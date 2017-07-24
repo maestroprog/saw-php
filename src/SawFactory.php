@@ -12,7 +12,8 @@ use Saw\Config\DaemonConfig;
 use Saw\Connector\ControllerConnectorInterface;
 use Saw\Connector\WebControllerConnector;
 use Saw\Connector\WorkerControllerConnector;
-use Saw\Memory\SharedMemoryBySocket;
+use Saw\Memory\SharedMemoryInterface;
+use Saw\Memory\SharedMemoryOnSocket;
 use Saw\Service\CommandDispatcher;
 use Saw\Service\ControllerStarter;
 use Saw\Service\Executor;
@@ -40,6 +41,7 @@ use Saw\ValueObject\SawEnv;
 final class SawFactory
 {
     const CALL_POINTER = '!';
+    const VAR_POINTER = '@';
 
     private $config;
     private $daemonConfig;
@@ -110,21 +112,26 @@ CMD;
         return $this->socketConfigurator;
     }
 
-    public function instanceArguments(array $arguments): array
+    public function instanceArguments(array $arguments, array $variables = []): array
     {
-        $arguments = array_map(function ($argument) {
+        $arguments = array_map(function ($argument) use ($variables) {
             if (is_array($argument)) {
                 $arguments = [];
                 if (isset($argument['arguments'])) {
-                    $arguments = $this->instanceArguments($argument['arguments']);
+                    $arguments = $this->instanceArguments($argument['arguments'], $variables);
                 }
                 if (isset($argument['method'])) {
                     $argument = call_user_func([$this, $argument['method']]);
                 } else {
                     $argument = $arguments;
                 }
-            } elseif (self::CALL_POINTER === substr($argument, 0, 1)) {
-                $argument = call_user_func([$this, substr($argument, 1)]);
+            } else {
+                $char = substr($argument, 0, 1);
+                if (self::CALL_POINTER === $char) {
+                    $argument = call_user_func([$this, substr($argument, 1)]);
+                } elseif (self::VAR_POINTER === $char) {
+                    $argument = $variables[substr($argument, 1)] ?? null;
+                }
             }
             return $argument;
         }, $arguments);
@@ -168,10 +175,10 @@ CMD;
         return $this->executor;
     }
 
-    public function getSharedMemory(): SharedMemoryBySocket
+    public function getSharedMemory(): SharedMemoryInterface
     {
         return $this->sharedMemory
-            ?? $this->sharedMemory = new SharedMemoryBySocket($this->getControllerConnector());
+            ?? $this->sharedMemory = new SharedMemoryOnSocket($this->getControllerConnector());
     }
 
     public function getControllerConnector(): ControllerConnectorInterface
@@ -199,7 +206,7 @@ CMD;
     private function getWorkerControllerConnector(): ControllerConnectorInterface
     {
         return $this->workerControllerConnector
-            ??  $this->workerControllerConnector
+            ?? $this->workerControllerConnector
                 = new WorkerControllerConnector(
                 $this->getControllerClient(),
                 $this->daemonConfig->getControllerAddress(),

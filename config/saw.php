@@ -18,7 +18,7 @@ return [
 //    'external_address' => '192.168.1.66', // внешний адрес, нужен при создании кластера
         'worker_multiplier' => 4,
         'worker_max_count' => 8,
-        /* todo 'mediator' => [
+        /* 'mediator' => [
             'enabled' => true, // включить поддержку посредника
             'auto_run' => true,
         ],*/
@@ -27,12 +27,12 @@ return [
         MyApplication::ID => [
             'class' => MyApplication::class,
             'arguments' => [
-                'id' => MyApplication::ID,
+                'id' => '@appId',
                 'multiThreadingProvider' => '!getMultiThreadingProvider',
                 'applicationMemory' => [
                     'method' => 'getSharedMemory',
                     'arguments' => [
-                        'applicationId' => MyApplication::ID,
+                        'applicationId' => '@appId',
                     ]
                 ],
                 'contextPool' => '!getContextPool',

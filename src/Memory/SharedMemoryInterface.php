@@ -14,6 +14,13 @@ interface SharedMemoryInterface extends MemoryInterface
 
     /**
      * @param string $varName
+     * @param bool $withLocking Позволяет залочить переменную перед её созданием
+     * @return bool
+     */
+    public function has(string $varName, bool $withLocking = false): bool;
+
+    /**
+     * @param string $varName
      * @param bool $withLocking Позволяет залочить переменную при её чтении
      * @return mixed
      */
@@ -27,7 +34,7 @@ interface SharedMemoryInterface extends MemoryInterface
      */
     public function write(string $varName, $variable, bool $unlock = true): bool;
 
-    public function lock($varName);
+    public function lock(string $varName);
 
-    public function unlock($varName);
+    public function unlock(string $varName);
 }

@@ -23,13 +23,13 @@ class ControllerDebugger
         $this->threadDistributor = $threadDistributor;
 
         $commandDispatcher->add([
-            new CommandHandler(DebugCommand::NAME, DebugCommand::class, function (DebugCommand $context) {
+            new CommandHandler(DebugCommand::class, function (DebugCommand $context) {
                 $data = $this->query($context);
                 $this->commandDispatcher->create(DebugData::NAME, $context->getPeer())
                     ->run($data);
                 return true;
             }),
-            new CommandHandler(DebugData::NAME, DebugData::class, function (DebugData $context) {
+            new CommandHandler(DebugData::class, function (DebugData $context) {
                 if ($this->debuggerClient instanceof Client) {
                     $this->commandDispatcher->create(DebugData::NAME, $this->debuggerClient)
                         ->run($context->getData());

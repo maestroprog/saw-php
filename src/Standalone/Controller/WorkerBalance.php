@@ -51,7 +51,7 @@ class WorkerBalance implements CycleInterface
         $this->workerMaxCount = $workerMaxCount;
 
         $commandDispatcher->add([
-            new CommandHandler(WorkerAdd::NAME, WorkerAdd::class, function (WorkerAdd $context) {
+            new CommandHandler(WorkerAdd::class, function (WorkerAdd $context) {
                 if (is_null($this->workerRun) || !$this->workerRun instanceof ProcessStatus) {
                     throw new \LogicException('Некорректное состояние запуска воркера.');
                 }
@@ -63,7 +63,7 @@ class WorkerBalance implements CycleInterface
                 return true;
             }),
             new CommandHandler(
-                WorkerDelete::NAME, WorkerDelete::class, function (WorkerDelete $context) {
+                WorkerDelete::class, function (WorkerDelete $context) {
                 $this->workerPool->removeById($context->getPeer()->getConnectionResource()->getId());
             }),
         ]);
