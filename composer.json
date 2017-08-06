@@ -37,7 +37,8 @@
   ],
   "autoload": {
     "psr-4": {
-      "Maestroprog\\Saw\\": "src/"
+      "Maestroprog\\Saw\\": "src/",
+      "satooshi/php-coveralls": "^1.0"
     }
   }
 }
