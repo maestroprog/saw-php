@@ -1,9 +1,9 @@
 <?php
 
-namespace Saw\Config;
+namespace Maestroprog\Saw\Config;
 
-use Saw\Application\ApplicationInterface;
-use Saw\Saw;
+use Maestroprog\Saw\Application\ApplicationInterface;
+use Maestroprog\Saw\Saw;
 
 final class ApplicationConfig
 {

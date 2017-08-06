@@ -1,14 +1,14 @@
 <?php
 
-namespace Saw\Standalone;
+namespace Maestroprog\Saw\Standalone;
 
 use Esockets\base\exception\ConnectionException;
 use Esockets\debug\Log;
-use Saw\Command\AbstractCommand;
-use Saw\Command\CommandHandler;
-use Saw\Command\WorkerAdd;
-use Saw\Command\WorkerDelete;
-use Saw\Connector\ControllerConnectorInterface;
+use Maestroprog\Saw\Command\AbstractCommand;
+use Maestroprog\Saw\Command\CommandHandler;
+use Maestroprog\Saw\Command\WorkerAdd;
+use Maestroprog\Saw\Command\WorkerDelete;
+use Maestroprog\Saw\Connector\ControllerConnectorInterface;
 
 /**
  * Воркер, использующийся воркер-скриптом.

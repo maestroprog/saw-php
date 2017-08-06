@@ -1,6 +1,6 @@
 <?php
 
-namespace Saw\Memory;
+namespace Maestroprog\Saw\Memory;
 
 class LocalizedMemory implements LocalizedMemoryInterface
 {

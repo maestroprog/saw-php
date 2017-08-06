@@ -1,21 +1,21 @@
 <?php
 
-namespace Saw\Standalone;
+namespace Maestroprog\Saw\Standalone;
 
 use Esockets\Client;
-use Saw\Application\ApplicationContainer;
-use Saw\Command\CommandHandler;
-use Saw\Command\DebugCommand;
-use Saw\Command\DebugData;
-use Saw\Command\ThreadResult;
-use Saw\Command\ThreadRun;
-use Saw\Heading\ReportSupportInterface;
-use Saw\Service\ApplicationLoader;
-use Saw\Service\CommandDispatcher;
-use Saw\Standalone\Controller\CycleInterface;
-use Saw\Thread\AbstractThread;
-use Saw\Thread\Pool\RunnableThreadPool;
-use Saw\Thread\StubThread;
+use Maestroprog\Saw\Application\ApplicationContainer;
+use Maestroprog\Saw\Command\CommandHandler;
+use Maestroprog\Saw\Command\DebugCommand;
+use Maestroprog\Saw\Command\DebugData;
+use Maestroprog\Saw\Command\ThreadResult;
+use Maestroprog\Saw\Command\ThreadRun;
+use Maestroprog\Saw\Heading\ReportSupportInterface;
+use Maestroprog\Saw\Service\ApplicationLoader;
+use Maestroprog\Saw\Service\CommandDispatcher;
+use Maestroprog\Saw\Standalone\Controller\CycleInterface;
+use Maestroprog\Saw\Thread\AbstractThread;
+use Maestroprog\Saw\Thread\Pool\RunnableThreadPool;
+use Maestroprog\Saw\Thread\StubThread;
 
 /**
  * Ядро воркера.

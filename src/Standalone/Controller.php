@@ -1,11 +1,11 @@
 <?php
 
-namespace Saw\Standalone;
+namespace Maestroprog\Saw\Standalone;
 
 use Esockets\Client;
 use Esockets\debug\Log;
 use Esockets\Server;
-use Saw\Service\CommandDispatcher;
+use Maestroprog\Saw\Service\CommandDispatcher;
 
 /**
  * Класс демон-программы контроллера.

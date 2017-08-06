@@ -1,39 +1,39 @@
 <?php
 
-namespace Saw;
+namespace Maestroprog\Saw;
 
 use Esockets\base\Configurator;
 use Esockets\Client;
 use Esockets\Server;
-use Saw\Application\ApplicationContainer;
-use Saw\Application\Context\ContextPool;
-use Saw\Config\ControllerConfig;
-use Saw\Config\DaemonConfig;
-use Saw\Connector\ControllerConnectorInterface;
-use Saw\Connector\WebControllerConnector;
-use Saw\Connector\WorkerControllerConnector;
-use Saw\Memory\SharedMemoryInterface;
-use Saw\Memory\SharedMemoryOnSocket;
-use Saw\Service\CommandDispatcher;
-use Saw\Service\ControllerStarter;
-use Saw\Service\Executor;
-use Saw\Service\WorkerStarter;
-use Saw\Standalone\ControllerCore;
-use Saw\Standalone\Worker\WorkerThreadCreator;
-use Saw\Standalone\Worker\WorkerThreadRunner;
-use Saw\Standalone\WorkerCore;
-use Saw\Thread\Creator\DummyThreadCreator;
-use Saw\Thread\Creator\ThreadCreator;
-use Saw\Thread\Creator\ThreadCreatorInterface;
-use Saw\Thread\MultiThreadingProvider;
-use Saw\Thread\Pool\ContainerOfThreadPools;
-use Saw\Thread\Runner\DummyThreadRunner;
-use Saw\Thread\Runner\ThreadRunnerInterface;
-use Saw\Thread\Runner\WebThreadRunner;
-use Saw\Thread\Synchronizer\DummySynchronizer;
-use Saw\Thread\Synchronizer\SynchronizerInterface;
-use Saw\Thread\Synchronizer\WebThreadSynchronizer;
-use Saw\ValueObject\SawEnv;
+use Maestroprog\Saw\Application\ApplicationContainer;
+use Maestroprog\Saw\Application\Context\ContextPool;
+use Maestroprog\Saw\Config\ControllerConfig;
+use Maestroprog\Saw\Config\DaemonConfig;
+use Maestroprog\Saw\Connector\ControllerConnectorInterface;
+use Maestroprog\Saw\Connector\WebControllerConnector;
+use Maestroprog\Saw\Connector\WorkerControllerConnector;
+use Maestroprog\Saw\Memory\SharedMemoryInterface;
+use Maestroprog\Saw\Memory\SharedMemoryOnSocket;
+use Maestroprog\Saw\Service\CommandDispatcher;
+use Maestroprog\Saw\Service\ControllerStarter;
+use Maestroprog\Saw\Service\Executor;
+use Maestroprog\Saw\Service\WorkerStarter;
+use Maestroprog\Saw\Standalone\ControllerCore;
+use Maestroprog\Saw\Standalone\Worker\WorkerThreadCreator;
+use Maestroprog\Saw\Standalone\Worker\WorkerThreadRunner;
+use Maestroprog\Saw\Standalone\WorkerCore;
+use Maestroprog\Saw\Thread\Creator\DummyThreadCreator;
+use Maestroprog\Saw\Thread\Creator\ThreadCreator;
+use Maestroprog\Saw\Thread\Creator\ThreadCreatorInterface;
+use Maestroprog\Saw\Thread\MultiThreadingProvider;
+use Maestroprog\Saw\Thread\Pool\ContainerOfThreadPools;
+use Maestroprog\Saw\Thread\Runner\DummyThreadRunner;
+use Maestroprog\Saw\Thread\Runner\ThreadRunnerInterface;
+use Maestroprog\Saw\Thread\Runner\WebThreadRunner;
+use Maestroprog\Saw\Thread\Synchronizer\DummySynchronizer;
+use Maestroprog\Saw\Thread\Synchronizer\SynchronizerInterface;
+use Maestroprog\Saw\Thread\Synchronizer\WebThreadSynchronizer;
+use Maestroprog\Saw\ValueObject\SawEnv;
 
 /**
  * Фабрика всех сервисов и обхектов для пилы.
@@ -73,13 +73,13 @@ final class SawFactory
             // todo config path
             $config['controller_starter'] = <<<CMD
 -r "require_once '{$workDir}/src/bootstrap.php';
-\Saw\Saw::instance()->init(require __DIR__ . '/../sample/config/saw.php')->instanceController()->start();"
+\Maestroprog\Saw\Saw::instance()->init(require __DIR__ . '/../sample/config/saw.php')->instanceController()->start();"
 CMD;
         }
         if (!isset($config['worker_starter'])) {
             $config['worker_starter'] = <<<CMD
 -r "require_once __DIR__ . '/../src/bootstrap.php';
-\Saw\Saw::instance()
+\Maestroprog\Saw\Saw::instance()
     ->init(require __DIR__ . '/../sample/config/saw.php')
     ->instanceWorker()
     ->start();"

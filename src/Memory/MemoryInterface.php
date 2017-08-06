@@ -1,6 +1,6 @@
 <?php
 
-namespace Saw\Memory;
+namespace Maestroprog\Saw\Memory;
 
 /**
  * Описывает базовые возможности работы с памятью.

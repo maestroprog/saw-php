@@ -1,6 +1,6 @@
 <?php
 
-namespace Saw\Standalone\Controller;
+namespace Maestroprog\Saw\Standalone\Controller;
 
 /**
  * Интерфейс, подразумевающий циклическую работу.

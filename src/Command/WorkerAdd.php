@@ -1,6 +1,6 @@
 <?php
 
-namespace Saw\Command;
+namespace Maestroprog\Saw\Command;
 
 /**
  * Команда воркера "Воркер стартовал".

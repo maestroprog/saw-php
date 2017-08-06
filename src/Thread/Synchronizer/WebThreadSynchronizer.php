@@ -1,11 +1,11 @@
 <?php
 
-namespace Saw\Thread\Synchronizer;
+namespace Maestroprog\Saw\Thread\Synchronizer;
 
 
-use Saw\Connector\ControllerConnectorInterface;
-use Saw\Thread\AbstractThread;
-use Saw\Thread\Runner\ThreadRunnerInterface;
+use Maestroprog\Saw\Connector\ControllerConnectorInterface;
+use Maestroprog\Saw\Thread\AbstractThread;
+use Maestroprog\Saw\Thread\Runner\ThreadRunnerInterface;
 
 class WebThreadSynchronizer implements SynchronizerInterface
 {

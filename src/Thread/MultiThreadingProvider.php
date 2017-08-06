@@ -1,11 +1,11 @@
 <?php
 
-namespace Saw\Thread;
+namespace Maestroprog\Saw\Thread;
 
-use Saw\Thread\Creator\ThreadCreatorInterface;
-use Saw\Thread\Pool\ContainerOfThreadPools;
-use Saw\Thread\Runner\ThreadRunnerInterface;
-use Saw\Thread\Synchronizer\SynchronizerInterface;
+use Maestroprog\Saw\Thread\Creator\ThreadCreatorInterface;
+use Maestroprog\Saw\Thread\Pool\ContainerOfThreadPools;
+use Maestroprog\Saw\Thread\Runner\ThreadRunnerInterface;
+use Maestroprog\Saw\Thread\Synchronizer\SynchronizerInterface;
 
 final class MultiThreadingProvider
 {

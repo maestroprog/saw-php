@@ -1,8 +1,8 @@
 <?php
 
-namespace Saw\Standalone\Controller;
+namespace Maestroprog\Saw\Standalone\Controller;
 
-use Saw\Entity\Worker;
+use Maestroprog\Saw\Entity\Worker;
 
 class WorkerPool implements \Countable, \IteratorAggregate
 {

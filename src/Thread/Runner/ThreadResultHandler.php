@@ -1,8 +1,8 @@
 <?php
 
-namespace Saw\Thread\Runner;
+namespace Maestroprog\Saw\Thread\Runner;
 
-use Saw\Service\CommandDispatcher;
+use Maestroprog\Saw\Service\CommandDispatcher;
 
 // todo remove
 class ThreadResultHandler

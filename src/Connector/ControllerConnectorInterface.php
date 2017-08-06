@@ -1,11 +1,11 @@
 <?php
 
-namespace Saw\Connector;
+namespace Maestroprog\Saw\Connector;
 
 use Esockets\base\SenderInterface;
 use Esockets\Client;
-use Saw\Service\CommandDispatcher;
-use Saw\Standalone\Controller\CycleInterface;
+use Maestroprog\Saw\Service\CommandDispatcher;
+use Maestroprog\Saw\Standalone\Controller\CycleInterface;
 
 interface ControllerConnectorInterface extends SenderInterface, CycleInterface
 {

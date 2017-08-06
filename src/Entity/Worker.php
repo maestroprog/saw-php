@@ -1,11 +1,11 @@
 <?php
 
-namespace Saw\Entity;
+namespace Maestroprog\Saw\Entity;
 
 use Esockets\Client;
-use Saw\Thread\AbstractThread;
-use Saw\Thread\Pool\PoolOfUniqueThreads;
-use Saw\ValueObject\ProcessStatus;
+use Maestroprog\Saw\Thread\AbstractThread;
+use Maestroprog\Saw\Thread\Pool\PoolOfUniqueThreads;
+use Maestroprog\Saw\ValueObject\ProcessStatus;
 
 /**
  * Сущность воркера, которой оперирует контроллер.

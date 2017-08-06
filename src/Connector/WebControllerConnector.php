@@ -1,13 +1,13 @@
 <?php
 
-namespace Saw\Connector;
+namespace Maestroprog\Saw\Connector;
 
 use Esockets\base\AbstractAddress;
 use Esockets\base\exception\ConnectionException;
 use Esockets\Client;
 use Esockets\debug\Log;
-use Saw\Service\CommandDispatcher;
-use Saw\Service\ControllerStarter;
+use Maestroprog\Saw\Service\CommandDispatcher;
+use Maestroprog\Saw\Service\ControllerStarter;
 
 /**
  * Коннектор, использующийся index.php скриптом, для подключения к контроллеру.

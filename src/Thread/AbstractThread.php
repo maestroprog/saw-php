@@ -1,6 +1,6 @@
 <?php
 
-namespace Saw\Thread;
+namespace Maestroprog\Saw\Thread;
 
 abstract class AbstractThread
 {

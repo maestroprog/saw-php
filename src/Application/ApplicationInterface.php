@@ -1,8 +1,8 @@
 <?php
 
-namespace Saw\Application;
+namespace Maestroprog\Saw\Application;
 
-use Saw\Application\Context\ContextInterface;
+use Maestroprog\Saw\Application\Context\ContextInterface;
 
 interface ApplicationInterface
 {

@@ -1,8 +1,8 @@
 <?php
 
-namespace Saw\Application\Context;
+namespace Maestroprog\Saw\Application\Context;
 
-use Saw\Memory\MemoryInterface;
+use Maestroprog\Saw\Memory\MemoryInterface;
 
 /**
  * Контекст.

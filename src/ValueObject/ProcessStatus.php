@@ -1,11 +1,11 @@
 <?php
 
-namespace Saw\ValueObject;
+namespace Maestroprog\Saw\ValueObject;
 
 /**
  * Обёртка для resource возвращаемого функцией proc_open().
  */
-final class ProcessStatus
+class ProcessStatus
 {
     private $resource;
     private $status;

@@ -1,8 +1,8 @@
 <?php
 
-namespace Saw\Thread\Creator;
+namespace Maestroprog\Saw\Thread\Creator;
 
-use Saw\Thread\AbstractThread;
+use Maestroprog\Saw\Thread\AbstractThread;
 
 interface ThreadCreatorInterface
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Saw\Command;
+namespace Maestroprog\Saw\Command;
 
 class MemoryShare extends AbstractCommand
 {

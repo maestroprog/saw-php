@@ -1,13 +1,13 @@
 <?php
 
-namespace Saw\Standalone;
+namespace Maestroprog\Saw\Standalone;
 
 use Esockets\base\exception\ConnectionException;
 use Esockets\debug\Log;
-use Saw\Command\CommandHandler;
-use Saw\Command\DebugCommand;
-use Saw\Command\DebugData;
-use Saw\Connector\ControllerConnectorInterface;
+use Maestroprog\Saw\Command\CommandHandler;
+use Maestroprog\Saw\Command\DebugCommand;
+use Maestroprog\Saw\Command\DebugData;
+use Maestroprog\Saw\Connector\ControllerConnectorInterface;
 
 class Debugger
 {

@@ -1,10 +1,10 @@
 <?php
 
-namespace Saw\Thread\Creator;
+namespace Maestroprog\Saw\Thread\Creator;
 
-use Saw\Saw;
-use Saw\Thread\AbstractThread;
-use Saw\Thread\ThreadWithCode;
+use Maestroprog\Saw\Saw;
+use Maestroprog\Saw\Thread\AbstractThread;
+use Maestroprog\Saw\Thread\ThreadWithCode;
 
 class DummyThreadCreator implements ThreadCreatorInterface
 {

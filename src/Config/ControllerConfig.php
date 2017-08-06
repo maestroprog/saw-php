@@ -1,6 +1,6 @@
 <?php
 
-namespace Saw\Config;
+namespace Maestroprog\Saw\Config;
 
 final class ControllerConfig
 {

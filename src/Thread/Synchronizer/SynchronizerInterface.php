@@ -1,8 +1,8 @@
 <?php
 
-namespace Saw\Thread\Synchronizer;
+namespace Maestroprog\Saw\Thread\Synchronizer;
 
-use Saw\Thread\AbstractThread;
+use Maestroprog\Saw\Thread\AbstractThread;
 
 interface SynchronizerInterface
 {

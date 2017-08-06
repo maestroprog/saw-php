@@ -1,6 +1,6 @@
 <?php
 
-namespace Saw\Heading;
+namespace Maestroprog\Saw\Heading;
 
 /**
  * Интерфейс для поддержки отчётов о работе для компонентов.

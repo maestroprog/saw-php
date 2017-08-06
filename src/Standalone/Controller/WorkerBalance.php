@@ -1,16 +1,16 @@
 <?php
 
-namespace Saw\Standalone\Controller;
+namespace Maestroprog\Saw\Standalone\Controller;
 
 use Esockets\debug\Log;
-use Saw\Command\CommandHandler;
-use Saw\Command\WorkerAdd;
-use Saw\Command\WorkerDelete;
-use Saw\Entity\Worker;
-use Saw\Service\CommandDispatcher;
-use Saw\Service\WorkerStarter;
-use Saw\Thread\AbstractThread;
-use Saw\ValueObject\ProcessStatus;
+use Maestroprog\Saw\Command\CommandHandler;
+use Maestroprog\Saw\Command\WorkerAdd;
+use Maestroprog\Saw\Command\WorkerDelete;
+use Maestroprog\Saw\Entity\Worker;
+use Maestroprog\Saw\Service\CommandDispatcher;
+use Maestroprog\Saw\Service\WorkerStarter;
+use Maestroprog\Saw\Thread\AbstractThread;
+use Maestroprog\Saw\ValueObject\ProcessStatus;
 
 /**
  * Балансировщик воркеров.

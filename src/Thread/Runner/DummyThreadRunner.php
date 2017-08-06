@@ -1,10 +1,10 @@
 <?php
 
-namespace Saw\Thread\Runner;
+namespace Maestroprog\Saw\Thread\Runner;
 
-use Saw\Thread\AbstractThread;
-use Saw\Thread\Pool\AbstractThreadPool;
-use Saw\Thread\Pool\RunnableThreadPool;
+use Maestroprog\Saw\Thread\AbstractThread;
+use Maestroprog\Saw\Thread\Pool\AbstractThreadPool;
+use Maestroprog\Saw\Thread\Pool\RunnableThreadPool;
 
 class DummyThreadRunner implements ThreadRunnerInterface
 {

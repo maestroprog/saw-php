@@ -21,18 +21,23 @@
     "email": "maestroprog@gmail.com"
   },
   "require": {
-    "maestroprog/esockets": "dev-2.1-dev"
+    "maestroprog/esockets": "dev-2.1-dev",
+    "maestroprog/container": "dev-master"
   },
   "minimum-stability": "dev",
   "repositories": [
     {
       "type": "vcs",
       "url": "https://github.com/maestroprog/workmanager"
+    },
+    {
+      "type": "vcs",
+      "url": "https://github.com/maestroprog/di-container"
     }
   ],
   "autoload": {
     "psr-4": {
-      "Saw\\": "src/"
+      "Maestroprog\\Saw\\": "src/"
     }
   }
 }

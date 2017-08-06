@@ -1,6 +1,6 @@
 <?php
 
-namespace Saw\Thread\Runner;
+namespace Maestroprog\Saw\Thread\Runner;
 
 interface ThreadRunnerDisablingSupportInterface extends ThreadRunnerInterface
 {

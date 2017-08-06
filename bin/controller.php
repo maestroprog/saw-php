@@ -13,8 +13,8 @@ if (PHP_SAPI !== 'cli') {
 }
 try {
     require_once __DIR__ . '/../src/bootstrap.php';
-    \Saw\Saw::instance()
-        ->init(require __DIR__ . '/../sample/config/saw.php')
+    \Maestroprog\Saw\Saw::instance()
+        ->init(require __DIR__ . '/../config/saw.php')
         ->instanceController()
         ->start();
 } catch (\Throwable $e) {

@@ -1,10 +1,10 @@
 <?php
 
-namespace Saw\Service;
+namespace Maestroprog\Saw\Service;
 
-use Saw\Application\ApplicationInterface;
-use Saw\Config\ApplicationConfig;
-use Saw\SawFactory;
+use Maestroprog\Saw\Application\ApplicationInterface;
+use Maestroprog\Saw\Config\ApplicationConfig;
+use Maestroprog\Saw\SawFactory;
 
 /**
  * Загрузчик приложений.
@@ -59,7 +59,7 @@ final class ApplicationLoader
         }
 
         $class = new \ReflectionClass($this->applicationConfig->getApplicationClassById($applicationId));
-        $arguments = $this->factory->instanceArguments($arguments);
+        $arguments = $this->factory->instanceArguments($arguments, ['appId' => $applicationId]);
         return $class->newInstanceArgs($arguments);
     }
 

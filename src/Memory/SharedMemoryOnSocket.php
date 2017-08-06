@@ -1,12 +1,12 @@
 <?php
 
-namespace Saw\Memory;
+namespace Maestroprog\Saw\Memory;
 
-use Saw\Command\CommandHandler;
-use Saw\Command\MemoryFree;
-use Saw\Command\MemoryRequest;
-use Saw\Command\MemoryShare;
-use Saw\Connector\ControllerConnectorInterface;
+use Maestroprog\Saw\Command\CommandHandler;
+use Maestroprog\Saw\Command\MemoryFree;
+use Maestroprog\Saw\Command\MemoryRequest;
+use Maestroprog\Saw\Command\MemoryShare;
+use Maestroprog\Saw\Connector\ControllerConnectorInterface;
 
 class SharedMemoryOnSocket implements SharedMemoryInterface
 {

@@ -1,7 +1,5 @@
 <?php
 
-require_once __DIR__ . '/../MyApplication.php';
-
 return [
     'saw' => [
         'debug' => true,
@@ -23,22 +21,7 @@ return [
             'auto_run' => true,
         ],*/
     ],
-    'application' => [
-        MyApplication::ID => [
-            'class' => MyApplication::class,
-            'arguments' => [
-                'id' => '@appId',
-                'multiThreadingProvider' => '!getMultiThreadingProvider',
-                'applicationMemory' => [
-                    'method' => 'getSharedMemory',
-                    'arguments' => [
-                        'applicationId' => '@appId',
-                    ]
-                ],
-                'contextPool' => '!getContextPool',
-            ],
-        ],
-    ],
+    'application' => [],
     'factory' => require __DIR__ . '/factory.php',
     'sockets' => require __DIR__ . '/esockets_debug.php',
 ];

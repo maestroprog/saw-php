@@ -1,9 +1,9 @@
 <?php
 
-namespace Saw\Thread\Pool;
+namespace Maestroprog\Saw\Thread\Pool;
 
-use Saw\Entity\Worker;
-use Saw\Thread\AbstractThread;
+use Maestroprog\Saw\Entity\Worker;
+use Maestroprog\Saw\Thread\AbstractThread;
 
 class ControllerThreadPoolIndex implements \Countable
 {

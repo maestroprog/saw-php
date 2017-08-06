@@ -1,8 +1,8 @@
 <?php
 
-namespace Saw\Thread\Pool;
+namespace Maestroprog\Saw\Thread\Pool;
 
-use Saw\Thread\AbstractThread;
+use Maestroprog\Saw\Thread\AbstractThread;
 
 class RunnableThreadPool extends AbstractThreadPool
 {

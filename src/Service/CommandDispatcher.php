@@ -1,11 +1,11 @@
 <?php
 
-namespace Saw\Service;
+namespace Maestroprog\Saw\Service;
 
 use Esockets\Client;
 use Esockets\debug\Log;
-use Saw\Command\AbstractCommand;
-use Saw\Command\CommandHandler;
+use Maestroprog\Saw\Command\AbstractCommand;
+use Maestroprog\Saw\Command\CommandHandler;
 
 /**
  * Диспетчер команд.

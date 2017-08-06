@@ -1,12 +1,12 @@
 <?php
 
-namespace Saw\Thread\Creator;
+namespace Maestroprog\Saw\Thread\Creator;
 
-use Saw\Saw;
-use Saw\Thread\AbstractThread;
-use Saw\Thread\Pool\AbstractThreadPool;
-use Saw\Thread\Pool\ContainerOfThreadPools;
-use Saw\Thread\ThreadWithCode;
+use Maestroprog\Saw\Saw;
+use Maestroprog\Saw\Thread\AbstractThread;
+use Maestroprog\Saw\Thread\Pool\AbstractThreadPool;
+use Maestroprog\Saw\Thread\Pool\ContainerOfThreadPools;
+use Maestroprog\Saw\Thread\ThreadWithCode;
 
 class ThreadCreator implements ThreadCreatorInterface
 {

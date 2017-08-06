@@ -1,20 +1,20 @@
 <?php
 
-namespace Saw\Standalone\Controller;
+namespace Maestroprog\Saw\Standalone\Controller;
 
 use Esockets\debug\Log;
-use Saw\Command\CommandHandler;
-use Saw\Command\ThreadKnow;
-use Saw\Command\ThreadResult;
-use Saw\Command\ThreadRun;
-use Saw\Entity\Worker;
-use Saw\Service\CommandDispatcher;
-use Saw\Thread\AbstractThread;
-use Saw\Thread\ControlledThread;
-use Saw\Thread\Pool\ControllerThreadPoolIndex;
-use Saw\Thread\Pool\PoolOfUniqueThreads;
-use Saw\Thread\Pool\ThreadLinker;
-use Saw\Thread\StubThread;
+use Maestroprog\Saw\Command\CommandHandler;
+use Maestroprog\Saw\Command\ThreadKnow;
+use Maestroprog\Saw\Command\ThreadResult;
+use Maestroprog\Saw\Command\ThreadRun;
+use Maestroprog\Saw\Entity\Worker;
+use Maestroprog\Saw\Service\CommandDispatcher;
+use Maestroprog\Saw\Thread\AbstractThread;
+use Maestroprog\Saw\Thread\ControlledThread;
+use Maestroprog\Saw\Thread\Pool\ControllerThreadPoolIndex;
+use Maestroprog\Saw\Thread\Pool\PoolOfUniqueThreads;
+use Maestroprog\Saw\Thread\Pool\ThreadLinker;
+use Maestroprog\Saw\Thread\StubThread;
 
 /**
  * Распределитель потоков по воркерам.

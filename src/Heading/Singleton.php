@@ -1,6 +1,6 @@
 <?php
 
-namespace Saw\Heading;
+namespace Maestroprog\Saw\Heading;
 
 abstract class Singleton
 {

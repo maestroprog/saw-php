@@ -1,16 +1,16 @@
 <?php
 
-namespace Saw\Standalone;
+namespace Maestroprog\Saw\Standalone;
 
 use Esockets\Server;
-use Saw\Config\ControllerConfig;
-use Saw\Service\CommandDispatcher;
-use Saw\Service\WorkerStarter;
-use Saw\Standalone\Controller\ControllerDebugger;
-use Saw\Standalone\Controller\CycleInterface;
-use Saw\Standalone\Controller\ThreadDistributor;
-use Saw\Standalone\Controller\WorkerBalance;
-use Saw\Standalone\Controller\WorkerPool;
+use Maestroprog\Saw\Config\ControllerConfig;
+use Maestroprog\Saw\Service\CommandDispatcher;
+use Maestroprog\Saw\Service\WorkerStarter;
+use Maestroprog\Saw\Standalone\Controller\ControllerDebugger;
+use Maestroprog\Saw\Standalone\Controller\CycleInterface;
+use Maestroprog\Saw\Standalone\Controller\ThreadDistributor;
+use Maestroprog\Saw\Standalone\Controller\WorkerBalance;
+use Maestroprog\Saw\Standalone\Controller\WorkerPool;
 
 /**
  * Ядро контроллера.

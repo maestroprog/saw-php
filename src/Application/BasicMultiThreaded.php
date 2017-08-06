@@ -1,13 +1,13 @@
 <?php
 
-namespace Saw\Application;
+namespace Maestroprog\Saw\Application;
 
-use Saw\Application\Context\ContextInterface;
-use Saw\Application\Context\ContextPool;
-use Saw\Memory\SharedMemoryInterface;
-use Saw\Thread\AbstractThread;
-use Saw\Thread\MultiThreadingInterface;
-use Saw\Thread\MultiThreadingProvider;
+use Maestroprog\Saw\Application\Context\ContextInterface;
+use Maestroprog\Saw\Application\Context\ContextPool;
+use Maestroprog\Saw\Memory\SharedMemoryInterface;
+use Maestroprog\Saw\Thread\AbstractThread;
+use Maestroprog\Saw\Thread\MultiThreadingInterface;
+use Maestroprog\Saw\Thread\MultiThreadingProvider;
 
 abstract class BasicMultiThreaded implements ApplicationInterface, MultiThreadingInterface
 {

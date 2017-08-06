@@ -1,9 +1,9 @@
 <?php
 
-namespace Saw\Thread\Runner;
+namespace Maestroprog\Saw\Thread\Runner;
 
-use Saw\Thread\AbstractThread;
-use Saw\Thread\Pool\AbstractThreadPool;
+use Maestroprog\Saw\Thread\AbstractThread;
+use Maestroprog\Saw\Thread\Pool\AbstractThreadPool;
 
 class ThreadRunner implements ThreadRunnerInterface
 {

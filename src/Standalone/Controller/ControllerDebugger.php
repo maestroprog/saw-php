@@ -1,13 +1,13 @@
 <?php
 
-namespace Saw\Standalone\Controller;
+namespace Maestroprog\Saw\Standalone\Controller;
 
 use Esockets\Client;
-use Saw\Command\CommandHandler;
-use Saw\Command\DebugCommand;
-use Saw\Command\DebugData;
-use Saw\Entity\Worker;
-use Saw\Service\CommandDispatcher;
+use Maestroprog\Saw\Command\CommandHandler;
+use Maestroprog\Saw\Command\DebugCommand;
+use Maestroprog\Saw\Command\DebugData;
+use Maestroprog\Saw\Entity\Worker;
+use Maestroprog\Saw\Service\CommandDispatcher;
 
 class ControllerDebugger
 {

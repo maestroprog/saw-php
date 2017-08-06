@@ -3,18 +3,27 @@
 namespace tests\Standalone\Worker;
 
 use Esockets\Client;
-use Saw\Application\ApplicationInterface;
-use Saw\Saw;
-use Saw\Service\CommandDispatcher;
-use Saw\Standalone\Worker\WorkerThreadCreator;
-use Saw\Thread\Pool\ContainerOfThreadPools;
-use Saw\Thread\Pool\PoolOfUniqueThreads;
+use Maestroprog\Saw\Application\ApplicationInterface;
+use Maestroprog\Saw\Saw;
+use Maestroprog\Saw\Service\CommandDispatcher;
+use Maestroprog\Saw\Standalone\Worker\WorkerThreadCreator;
+use Maestroprog\Saw\Thread\Pool\ContainerOfThreadPools;
+use Maestroprog\Saw\Thread\Pool\PoolOfUniqueThreads;
+use PHPUnit\Framework\TestCase;
 
-class WorkerThreadCreatorTest extends \PHPUnit_Framework_TestCase
+/**
+ * @covers \Maestroprog\Saw\Standalone\Worker\WorkerThreadCreator
+ */
+class WorkerThreadCreatorTest extends TestCase
 {
+    /**
+     * Тестирование отправки воркером команды об известном потоке.
+     *
+     * @return WorkerThreadCreator
+     */
     public function testWorkerSendKnowOfCreatedThread()
     {
-        Saw::instance()->init(require __DIR__ . '/../../../sample/config/saw.php')->instanceWorker();
+        Saw::instance()->init(__DIR__ . '/../../../sample/config.php')->instanceWorker();
         $app = $this->createMock(ApplicationInterface::class);
         $app->method('getId')->willReturn('1');
         Saw::factory()->getApplicationContainer()->add($app);
@@ -26,22 +35,25 @@ class WorkerThreadCreatorTest extends \PHPUnit_Framework_TestCase
         $client = $this->createMock(Client::class);
         $threadCreator = new WorkerThreadCreator($poolsContainer, $dispatcher, $client);
 
-        $client->expects($this->once())
+        $client
+            ->expects($this->once())
             ->method('send')
             ->willReturn(true);
 
+        $threadCreator->thread('TEST', function () {
+        });
         $threadCreator->thread('TEST', function () {
         });
         return $threadCreator;
     }
 
     /**
-     * @param $threadCreator WorkerThreadCreator
-     * @depends testWorkerSendKnowOfCreatedThread
-     */
-    public function testNotAddCurrentlyAddedThread(WorkerThreadCreator $threadCreator)
-    {
-        $threadCreator->thread('TEST', function () {
-        });
-    }
+     * Тестирование ситуации когда поток уже добавлен, и сообщение отправлять не нужно.
+     *
+     * @*param $threadCreator WorkerThreadCreator
+     * @*depends testWorkerSendKnowOfCreatedThread
+     *
+     * public function testNotAddCurrentlyAddedThread(WorkerThreadCreator $threadCreator)
+     * {
+     * }*/
 }

@@ -1,8 +1,8 @@
 <?php
 
-namespace Saw\Command;
+namespace Maestroprog\Saw\Command;
 
-use Saw\Thread\AbstractThread;
+use Maestroprog\Saw\Thread\AbstractThread;
 
 /**
  * Общая команда "Результат выполнения потока".

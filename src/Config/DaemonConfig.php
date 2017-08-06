@@ -1,9 +1,9 @@
 <?php
 
-namespace Saw\Config;
+namespace Maestroprog\Saw\Config;
 
 use Esockets\base\AbstractAddress;
-use Saw\Saw;
+use Maestroprog\Saw\Saw;
 
 class DaemonConfig
 {

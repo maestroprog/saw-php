@@ -1,17 +1,17 @@
 <?php
 
-namespace Saw\Standalone\Worker;
+namespace Maestroprog\Saw\Standalone\Worker;
 
 use Esockets\Client;
-use Saw\Application\ApplicationContainer;
-use Saw\Command\CommandHandler;
-use Saw\Command\ThreadResult;
-use Saw\Command\ThreadRun;
-use Saw\Service\CommandDispatcher;
-use Saw\Thread\AbstractThread;
-use Saw\Thread\Pool\AbstractThreadPool;
-use Saw\Thread\Pool\PoolOfUniqueThreads;
-use Saw\Thread\Runner\ThreadRunnerDisablingSupportInterface;
+use Maestroprog\Saw\Application\ApplicationContainer;
+use Maestroprog\Saw\Command\CommandHandler;
+use Maestroprog\Saw\Command\ThreadResult;
+use Maestroprog\Saw\Command\ThreadRun;
+use Maestroprog\Saw\Service\CommandDispatcher;
+use Maestroprog\Saw\Thread\AbstractThread;
+use Maestroprog\Saw\Thread\Pool\AbstractThreadPool;
+use Maestroprog\Saw\Thread\Pool\PoolOfUniqueThreads;
+use Maestroprog\Saw\Thread\Runner\ThreadRunnerDisablingSupportInterface;
 
 final class WorkerThreadRunner implements ThreadRunnerDisablingSupportInterface
 {

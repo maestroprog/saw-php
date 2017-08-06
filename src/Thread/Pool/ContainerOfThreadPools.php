@@ -1,6 +1,6 @@
 <?php
 
-namespace Saw\Thread\Pool;
+namespace Maestroprog\Saw\Thread\Pool;
 
 final class ContainerOfThreadPools implements \Countable
 {

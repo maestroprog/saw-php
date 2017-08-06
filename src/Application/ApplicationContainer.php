@@ -1,10 +1,10 @@
 <?php
 
-namespace Saw\Application;
+namespace Maestroprog\Saw\Application;
 
-use Saw\Application\ApplicationInterface as App;
-use Saw\Thread\Pool\ContainerOfThreadPools;
-use Saw\Thread\Pool\PoolOfUniqueThreads;
+use Maestroprog\Saw\Application\ApplicationInterface as App;
+use Maestroprog\Saw\Thread\Pool\ContainerOfThreadPools;
+use Maestroprog\Saw\Thread\Pool\PoolOfUniqueThreads;
 
 /**
  * Контейнер приложений.

@@ -1,6 +1,6 @@
 <?php
 
-namespace Saw\Service;
+namespace Maestroprog\Saw\Service;
 
 use Esockets\base\AbstractAddress;
 use Esockets\base\exception\ConnectionException;

@@ -1,13 +1,13 @@
 <?php
 
-namespace Saw\Service;
+namespace Maestroprog\Saw\Service;
 
-use Saw\ValueObject\ProcessStatus;
+use Maestroprog\Saw\ValueObject\ProcessStatus;
 
 /**
  * Сервис, организующий запуск воркера.
  */
-final class WorkerStarter
+class WorkerStarter
 {
     private $executor;
     private $cmd;

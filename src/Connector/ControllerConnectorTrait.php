@@ -1,6 +1,6 @@
 <?php
 
-namespace Saw\Connector;
+namespace Maestroprog\Saw\Connector;
 
 use Esockets\Client;
 

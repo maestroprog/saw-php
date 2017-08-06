@@ -1,16 +1,16 @@
 <?php
 
-namespace Saw\Standalone\Worker;
+namespace Maestroprog\Saw\Standalone\Worker;
 
 use Esockets\Client;
-use Saw\Command\CommandHandler;
-use Saw\Command\ThreadKnow;
-use Saw\Saw;
-use Saw\Service\CommandDispatcher;
-use Saw\Thread\AbstractThread;
-use Saw\Thread\Creator\ThreadCreator;
-use Saw\Thread\Pool\ContainerOfThreadPools;
-use Saw\Thread\ThreadWithCode;
+use Maestroprog\Saw\Command\CommandHandler;
+use Maestroprog\Saw\Command\ThreadKnow;
+use Maestroprog\Saw\Saw;
+use Maestroprog\Saw\Service\CommandDispatcher;
+use Maestroprog\Saw\Thread\AbstractThread;
+use Maestroprog\Saw\Thread\Creator\ThreadCreator;
+use Maestroprog\Saw\Thread\Pool\ContainerOfThreadPools;
+use Maestroprog\Saw\Thread\ThreadWithCode;
 
 final class WorkerThreadCreator extends ThreadCreator
 {

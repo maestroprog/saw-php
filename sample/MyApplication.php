@@ -2,9 +2,9 @@
 
 namespace {
 
-    use Saw\Application\BasicMultiThreaded;
-    use Saw\Saw;
-    use Saw\Thread\AbstractThread;
+    use Maestroprog\Saw\Application\BasicMultiThreaded;
+    use Maestroprog\Saw\Saw;
+    use Maestroprog\Saw\Thread\AbstractThread;
 
     class MyApplication extends BasicMultiThreaded
     {

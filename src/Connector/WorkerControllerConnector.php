@@ -1,12 +1,12 @@
 <?php
 
-namespace Saw\Connector;
+namespace Maestroprog\Saw\Connector;
 
 use Esockets\base\AbstractAddress;
 use Esockets\base\exception\ConnectionException;
 use Esockets\Client;
-use Saw\Service\CommandDispatcher;
-use Saw\Service\ControllerStarter;
+use Maestroprog\Saw\Service\CommandDispatcher;
+use Maestroprog\Saw\Service\ControllerStarter;
 
 final class WorkerControllerConnector implements ControllerConnectorInterface
 {

@@ -1,17 +1,17 @@
 <?php
 
-namespace Saw;
+namespace Maestroprog\Saw;
 
 use Esockets\base\Configurator;
-use Saw\Application\ApplicationInterface;
-use Saw\Config\ApplicationConfig;
-use Saw\Config\ControllerConfig;
-use Saw\Config\DaemonConfig;
-use Saw\Service\ApplicationLoader;
-use Saw\Standalone\Controller;
-use Saw\Standalone\Debugger;
-use Saw\Standalone\Worker;
-use Saw\ValueObject\SawEnv;
+use Maestroprog\Saw\Application\ApplicationInterface;
+use Maestroprog\Saw\Config\ApplicationConfig;
+use Maestroprog\Saw\Config\ControllerConfig;
+use Maestroprog\Saw\Config\DaemonConfig;
+use Maestroprog\Saw\Service\ApplicationLoader;
+use Maestroprog\Saw\Standalone\Controller;
+use Maestroprog\Saw\Standalone\Debugger;
+use Maestroprog\Saw\Standalone\Worker;
+use Maestroprog\Saw\ValueObject\SawEnv;
 
 /**
  * Класс-синглтон, реализующий загрузку Saw приложения Saw.
@@ -65,11 +65,13 @@ final class Saw
     /**
      * Инициализация фреймворка с заданным конфигом.
      *
-     * @param array $config
+     * @param string $configPath
      * @return Saw
      */
-    public function init(array $config): self
+    public function init(string $configPath): self
     {
+        $config = require_once $configPath;
+        // todo include config
         foreach (['saw', 'factory', 'daemon', 'sockets', 'application', 'controller'] as $check) {
             if (!isset($config[$check]) || !is_array($config[$check])) {
                 $config[$check] = [];
