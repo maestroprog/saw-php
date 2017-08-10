@@ -9,7 +9,7 @@ abstract class Singleton
     /**
      * @return static|self
      */
-    public static function instance(): self
+    public static function instance()
     {
         if (!isset(static::$instance[static::class])) {
             static::$instance[static::class] = new static();

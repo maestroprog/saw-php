@@ -24,6 +24,9 @@
     "maestroprog/esockets": "dev-2.1-dev",
     "maestroprog/container": "dev-master"
   },
+  "require-dev": {
+    "satooshi/php-coveralls": "^1.0"
+  },
   "minimum-stability": "dev",
   "repositories": [
     {
@@ -37,8 +40,7 @@
   ],
   "autoload": {
     "psr-4": {
-      "Maestroprog\\Saw\\": "src/",
-      "satooshi/php-coveralls": "^1.0"
+      "Maestroprog\\Saw\\": "src/"
     }
   }
 }

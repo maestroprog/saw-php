@@ -3,20 +3,28 @@
 namespace Maestroprog\Saw;
 
 use Esockets\base\Configurator;
+use Maestroprog\Container\Container;
+use Maestroprog\Saw\Application\ApplicationContainer;
 use Maestroprog\Saw\Application\ApplicationInterface;
 use Maestroprog\Saw\Config\ApplicationConfig;
 use Maestroprog\Saw\Config\ControllerConfig;
 use Maestroprog\Saw\Config\DaemonConfig;
+use Maestroprog\Saw\Connector\ControllerConnectorInterface;
+use Maestroprog\Saw\Di\SawContainer;
+use Maestroprog\Saw\Heading\Singleton;
 use Maestroprog\Saw\Service\ApplicationLoader;
+use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Standalone\Controller;
+use Maestroprog\Saw\Standalone\ControllerCore;
 use Maestroprog\Saw\Standalone\Debugger;
 use Maestroprog\Saw\Standalone\Worker;
+use Maestroprog\Saw\Standalone\WorkerCore;
 use Maestroprog\Saw\ValueObject\SawEnv;
 
 /**
  * Класс-синглтон, реализующий загрузку Saw приложения Saw.
  */
-final class Saw
+final class Saw extends Singleton
 {
     const ERROR_APPLICATION_CLASS_NOT_EXISTS = 1;
     const ERROR_WRONG_APPLICATION_CLASS = 2;
@@ -24,6 +32,11 @@ final class Saw
 
     private static $instance;
     private static $debug;
+
+    /**
+     * @var Container
+     */
+    private $container;
 
     /**
      * @var SawFactory
@@ -106,6 +119,15 @@ final class Saw
             });
         }
 
+        $this->container = Container::instance();
+        $this->container->register(new SawContainer(
+            $config['factory'],
+            new DaemonConfig($config['daemon']),
+            new Configurator($config['sockets']),
+            new ControllerConfig($config['controller']),
+            SawEnv::web()
+        ));
+
         return $this;
     }
 
@@ -122,7 +144,10 @@ final class Saw
      */
     public function instanceApp(string $appClass): ApplicationInterface
     {
-        return self::factory()->getApplicationContainer()->add($this->applicationLoader->instanceApp($appClass));
+        return $this
+            ->container
+            ->get(ApplicationContainer::class)
+            ->add($this->applicationLoader->instanceApp($appClass));
     }
 
     /**
@@ -134,10 +159,10 @@ final class Saw
     {
         $this->factory->setEnvironment(SawEnv::controller());
         return new Controller(
-            $this->factory->getControllerCore(),
-            $this->factory->getControllerServer(),
-            $this->factory->getCommandDispatcher(),
-            $this->factory->getDaemonConfig()->getControllerPid()
+            $this->container->get(ControllerCore::class),
+            $this->container->get('controllerServer'),
+            $this->container->get(CommandDispatcher::class),
+            $this->container->getDaemonConfig()->getControllerPid() // todo
         );
     }
 
@@ -145,32 +170,14 @@ final class Saw
     {
         $this->factory->setEnvironment(SawEnv::worker());
         return new Worker(
-            $this->factory->getWorkerCore(),
-            $this->factory->getControllerConnector()
+            $this->container->get(WorkerCore::class),
+            $this->container->get(ControllerConnectorInterface::class)
         );
     }
 
     public function instanceDebugger(): Debugger
     {
         $this->factory->setEnvironment(SawEnv::worker());
-        return new Debugger($this->factory->getControllerConnector());
-    }
-
-    /**
-     * for singleton pattern
-     */
-    private function __clone()
-    {
-        ;
-    }
-
-    private function __sleep()
-    {
-        ;
-    }
-
-    private function __wakeup()
-    {
-        ;
+        return new Debugger($this->container->get(ControllerConnectorInterface::class));
     }
 }
