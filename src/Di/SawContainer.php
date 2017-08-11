@@ -53,23 +53,6 @@ class SawContainer extends AbstractBasicContainer
         SawEnv $env
     )
     {
-        $workDir = __DIR__;
-        if (!isset($config['controller_starter'])) {
-            // todo config path
-            $config['controller_starter'] = <<<CMD
--r "require_once '{$workDir}/src/bootstrap.php';
-\Maestroprog\Saw\Saw::instance()->init(require __DIR__ . '/../sample/config/saw.php')->instanceController()->start();"
-CMD;
-        }
-        if (!isset($config['worker_starter'])) {
-            $config['worker_starter'] = <<<CMD
--r "require_once __DIR__ . '/../src/bootstrap.php';
-\Maestroprog\Saw\Saw::instance()
-    ->init(require __DIR__ . '/../sample/config/saw.php')
-    ->instanceWorker()
-    ->start();"
-CMD;
-        }
         $this->config = $config;
         $this->daemonConfig = $daemonConfig;
         $this->socketConfigurator = $socketConfigurator;
@@ -172,7 +155,7 @@ CMD;
     public function getWorkerCore(): WorkerCore
     {
         return new WorkerCore(
-            $this->get('controllerClient'),
+            $this->get('ControllerClient'),
             $this->get(CommandDispatcher::class),
             $this->get(ApplicationContainer::class),
             Saw::instance()->getApplicationLoader()
@@ -227,7 +210,7 @@ CMD;
     private function getWebControllerConnector(): WebControllerConnector
     {
         return new WebControllerConnector(
-            $this->get('controllerClient'),
+            $this->get('ControllerClient'),
             $this->daemonConfig->getControllerAddress(),
             $this->get(CommandDispatcher::class),
             $this->get(ControllerStarter::class)
@@ -241,7 +224,7 @@ CMD;
     private function getWorkerControllerConnector(): WorkerControllerConnector
     {
         return new WorkerControllerConnector(
-            $this->get('controllerClient'),
+            $this->get('ControllerClient'),
             $this->daemonConfig->getControllerAddress(),
             $this->get(CommandDispatcher::class),
             $this->get(ControllerStarter::class)
@@ -255,7 +238,7 @@ CMD;
     private function getWorkerThreadRunner(): WorkerThreadRunner
     {
         return new WorkerThreadRunner(
-            $this->get('controllerClient'),
+            $this->get('ControllerClient'),
             $this->get(CommandDispatcher::class),
             $this->get(ApplicationContainer::class)
         );
@@ -279,7 +262,7 @@ CMD;
         return new WorkerThreadCreator(
             $this->get(ContainerOfThreadPools::class),
             $this->get(CommandDispatcher::class),
-            $this->get('controllerClient')
+            $this->get('ControllerClient')
         );
     }
 

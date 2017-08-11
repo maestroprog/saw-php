@@ -26,7 +26,7 @@ class WorkerThreadCreatorTest extends TestCase
         Saw::instance()->init(__DIR__ . '/../../../sample/config.php')->instanceWorker();
         $app = $this->createMock(ApplicationInterface::class);
         $app->method('getId')->willReturn('1');
-        Saw::factory()->getApplicationContainer()->add($app);
+        Saw::instance()->getApplicationContainer()->add($app);
 
         $poolsContainer = new ContainerOfThreadPools();
         $pool = new PoolOfUniqueThreads();

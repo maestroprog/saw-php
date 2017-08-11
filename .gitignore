@@ -1,5 +1,6 @@
 /*.sock
 *.log
+*.pid
 phpunit.phar
 composer.lock
 /vendor

@@ -4,6 +4,7 @@ namespace Maestroprog\Saw\Service;
 
 use Maestroprog\Saw\Application\ApplicationInterface;
 use Maestroprog\Saw\Config\ApplicationConfig;
+use Maestroprog\Saw\Saw;
 use Maestroprog\Saw\SawFactory;
 
 /**
@@ -15,7 +16,7 @@ final class ApplicationLoader
     private $applicationConfig;
     private $factory;
 
-    public function __construct(ApplicationConfig $config, SawFactory $factory)
+    public function __construct(ApplicationConfig $config, Saw $factory)
     {
         $this->applicationConfig = $config;
         $this->factory = $factory;

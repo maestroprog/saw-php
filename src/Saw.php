@@ -4,6 +4,7 @@ namespace Maestroprog\Saw;
 
 use Esockets\base\Configurator;
 use Maestroprog\Container\Container;
+use Maestroprog\Container\ContainerCompiler;
 use Maestroprog\Saw\Application\ApplicationContainer;
 use Maestroprog\Saw\Application\ApplicationInterface;
 use Maestroprog\Saw\Config\ApplicationConfig;
@@ -30,7 +31,31 @@ final class Saw extends Singleton
     const ERROR_WRONG_APPLICATION_CLASS = 2;
     const ERROR_WRONG_CONFIG = 3;
 
-    private static $instance;
+    /**
+     * @var array
+     */
+    private $config;
+
+    /**
+     * @var DaemonConfig
+     */
+    private $daemonConfig;
+
+    /**
+     * @var Configurator
+     */
+    private $socketConfigurator;
+
+    /**
+     * @var ControllerConfig
+     */
+    private $controllerConfig;
+
+    /**
+     * @var SawEnv
+     */
+    private $environment;
+
     private static $debug;
 
     /**
@@ -39,32 +64,9 @@ final class Saw extends Singleton
     private $container;
 
     /**
-     * @var SawFactory
-     */
-    private $factory;
-    /**
      * @var ApplicationLoader
      */
     private $applicationLoader;
-
-    /**
-     * @return self
-     */
-    public static function instance(): self
-    {
-        return self::$instance ?? self::$instance = new self();
-    }
-
-    private function __construct()
-    {
-        defined('INTERVAL') or define('INTERVAL', 10000);
-        defined('SAW_DIR') or define('SAW_DIR', __DIR__);
-    }
-
-    public static function factory(): SawFactory
-    {
-        return self::instance()->factory;
-    }
 
     /**
      * @return ApplicationInterface
@@ -72,7 +74,7 @@ final class Saw extends Singleton
      */
     public static function getCurrentApp(): ApplicationInterface
     {
-        return self::instance()->factory()->getApplicationContainer()->getCurrentApp();
+        return self::instance()->container->get(ApplicationLoader::class)->getCurrentApp();
     }
 
     /**
@@ -83,6 +85,8 @@ final class Saw extends Singleton
      */
     public function init(string $configPath): self
     {
+        defined('INTERVAL') or define('INTERVAL', 10000);
+        defined('SAW_DIR') or define('SAW_DIR', __DIR__);
         $config = require_once $configPath;
         // todo include config
         foreach (['saw', 'factory', 'daemon', 'sockets', 'application', 'controller'] as $check) {
@@ -94,17 +98,39 @@ final class Saw extends Singleton
             self::$debug = (bool)$config['saw']['debug'];
         }
 
+        $workDir = __DIR__;
+        if (!isset($config['controller_starter'])) {
+            // todo config path
+            $config['controller_starter'] = <<<CMD
+-r "require_once '{$workDir}/bootstrap.php';
+\Maestroprog\Saw\Saw::instance()
+    ->init('{$workDir}/../config/saw.php')
+    ->instanceController()
+    ->start();"
+CMD;
+        }
+        if (!isset($config['worker_starter'])) {
+            $config['worker_starter'] = <<<CMD
+-r "require_once '{$workDir}/bootstrap.php';
+\Maestroprog\Saw\Saw::instance()
+    ->init('{$workDir}/../config/saw.php')
+    ->instanceWorker()
+    ->start();"
+CMD;
+        }
+        /*
         $this->factory = new SawFactory(
             $config['factory'],
             new DaemonConfig($config['daemon']),
             new Configurator($config['sockets']),
             new ControllerConfig($config['controller']),
             SawEnv::web()
-        );
+        );*/
+//        $this->environment = SawEnv::web();
 
         $this->applicationLoader = new ApplicationLoader(
             new ApplicationConfig($config['application']),
-            $this->factory
+            $this
         );
 
         if (!self::$debug) {
@@ -121,12 +147,14 @@ final class Saw extends Singleton
 
         $this->container = Container::instance();
         $this->container->register(new SawContainer(
-            $config['factory'],
-            new DaemonConfig($config['daemon']),
-            new Configurator($config['sockets']),
-            new ControllerConfig($config['controller']),
-            SawEnv::web()
+            $this->config = $config,
+            $this->daemonConfig = new DaemonConfig($config['daemon']),
+            $this->config = new Configurator($config['sockets']),
+            $this->controllerConfig = new ControllerConfig($config['controller']),
+            $this->environment = SawEnv::web()
         ));
+//        $compiler = new ContainerCompiler($this->container);
+//        $compiler->compile('/var/tmp/');
 
         return $this;
     }
@@ -157,18 +185,18 @@ final class Saw extends Singleton
      */
     public function instanceController(): Controller
     {
-        $this->factory->setEnvironment(SawEnv::controller());
+        $this->environment = SawEnv::controller();
         return new Controller(
             $this->container->get(ControllerCore::class),
-            $this->container->get('controllerServer'),
+            $this->container->get('ControllerServer'),
             $this->container->get(CommandDispatcher::class),
-            $this->container->getDaemonConfig()->getControllerPid() // todo
+            $this->daemonConfig->getControllerPid() // todo
         );
     }
 
     public function instanceWorker(): Worker
     {
-        $this->factory->setEnvironment(SawEnv::worker());
+        $this->environment = SawEnv::worker();
         return new Worker(
             $this->container->get(WorkerCore::class),
             $this->container->get(ControllerConnectorInterface::class)
@@ -177,7 +205,35 @@ final class Saw extends Singleton
 
     public function instanceDebugger(): Debugger
     {
-        $this->factory->setEnvironment(SawEnv::worker());
+        $this->environment = SawEnv::worker();
         return new Debugger($this->container->get(ControllerConnectorInterface::class));
+    }
+
+    const VAR_POINTER = '@';
+
+    public function instanceArguments(array $arguments, array $variables = []): array
+    {
+        $arguments = array_map(function ($argument) use ($variables) {
+            if (is_array($argument)) {
+                $arguments = [];
+                if (isset($argument['arguments'])) {
+                    $arguments = $this->instanceArguments($argument['arguments'], $variables);
+                }
+                if (isset($argument['service'])) {
+                    $argument = $this->container->get($argument['service']);
+                } else {
+                    $argument = $arguments;
+                }
+            } else {
+                $char = substr($argument, 0, 1);
+                if (self::VAR_POINTER === $char) {
+                    $argument = $variables[substr($argument, 1)] ?? null;
+                } else {
+                    $argument = $this->container->get($argument);
+                }
+            }
+            return $argument;
+        }, $arguments);
+        return $arguments;
     }
 }

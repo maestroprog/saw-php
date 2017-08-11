@@ -13,6 +13,6 @@ if (PHP_SAPI !== 'cli') {
 
 require_once __DIR__ . '/../src/bootstrap.php';
 \Maestroprog\Saw\Saw::instance()
-    ->init(require __DIR__ . '/../config/saw.php')
+    ->init(__DIR__ . '/../config/saw.php')
     ->instanceWorker()
     ->start();

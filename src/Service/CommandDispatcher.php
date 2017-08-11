@@ -40,8 +40,11 @@ final class CommandDispatcher
     public function add(array $commands): self
     {
         foreach ($commands as $command) {
-            if (isset($this->know[$command->getName()]) || !class_exists($command->getClass())) {
-                throw new \Exception(sprintf('Cannot add command %s.', $command->getName()));
+            if (isset($this->know[$command->getName()])) {
+                throw new \Exception(sprintf('Cannot add command "%s", command exists.', $command->getName()));
+            }
+            if (!class_exists($command->getClass())) {
+                throw new \Exception(sprintf('Cannot add command "%s", Class not exists.', $command->getName()));
             }
             $this->know[$command->getName()] = $command;
         }
@@ -59,11 +62,11 @@ final class CommandDispatcher
     public function create(string $command, Client $client): AbstractCommand
     {
         if (!isset($this->know[$command])) {
-            throw new \Exception(sprintf('I don\'t know command %s', $command));
+            throw new \Exception(sprintf('I don\'t know command "%s"', $command));
         }
         $class = $this->know[$command]->getClass();
         if (!class_exists($class)) {
-            throw new \Exception(sprintf('I don\'t know Class %s', $class));
+            throw new \Exception(sprintf('I don\'t know Class "%s"', $class));
         }
         static $id = 0;
         $this->created[$id] = $command = AbstractCommand::create($class, ++$id, $client);
@@ -83,7 +86,7 @@ final class CommandDispatcher
     {
         $command = $data['command'];
         if (!isset($this->know[$command])) {
-            throw new \Exception(sprintf('I don\'t know command %s', $command));
+            throw new \Exception(sprintf('I don\'t know command "%s"', $command));
         }
         $commandEntity = $this->know[$command];
         /** @var $command AbstractCommand */
