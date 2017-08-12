@@ -32,10 +32,6 @@
   "repositories": [
     {
       "type": "vcs",
-      "url": "https://github.com/maestroprog/workmanager"
-    },
-    {
-      "type": "vcs",
       "url": "https://github.com/maestroprog/di-container"
     }
   ],
