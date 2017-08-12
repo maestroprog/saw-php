@@ -29,27 +29,24 @@ class SharedMemoryOnSocket implements SharedMemoryInterface
 
                 }),
             ]);
-        $this->memory = new \SplDoublyLinkedList();
     }
 
     public function has(string $varName, bool $withLocking = false): bool
     {
-        if ($withLocking) {
-            
-        }
-        if ($this->memory->offsetExists($varName)) {
-
-        }
+        // todo await end of running command! SERIOUSLY! THIS IS VERY IMPORTANT!
     }
 
     public function remove(string $varName)
     {
-        $this->memory->offsetUnset($varName);
+        $this
+            ->connector
+            ->getCommandDispatcher()
+            ->create(MemoryFree::class, $this->connector->getClient())
+            ->run(['key' => $varName]);
     }
 
     public function read(string $varName, bool $withLocking = true)
     {
-        // TODO: Implement read() method.
     }
 
     public function write(string $varName, $variable, bool $unlock = true): bool

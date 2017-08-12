@@ -34,6 +34,11 @@ interface SharedMemoryInterface extends MemoryInterface
      */
     public function write(string $varName, $variable, bool $unlock = true): bool;
 
+    /**
+     * @param string $varName
+     * @return mixed
+     * @throws MemoryLockException
+     */
     public function lock(string $varName);
 
     public function unlock(string $varName);
