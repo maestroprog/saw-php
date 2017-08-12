@@ -91,7 +91,6 @@ class WorkerBalance implements CycleInterface
                 // убиваем запущенный процесс, если он ещё работает
                 $this->workerRun->kill();
             }
-            Log::log('Can not run worker!');
         } else {
             // so good; всё ок
         }

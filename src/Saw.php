@@ -42,11 +42,6 @@ final class Saw extends Singleton
     private $daemonConfig;
 
     /**
-     * @var Configurator
-     */
-    private $socketConfigurator;
-
-    /**
      * @var ControllerConfig
      */
     private $controllerConfig;
@@ -64,6 +59,11 @@ final class Saw extends Singleton
     private $container;
 
     /**
+     * @var SawContainer
+     */
+    private $sawContainer;
+
+    /**
      * @var ApplicationLoader
      */
     private $applicationLoader;
@@ -74,7 +74,7 @@ final class Saw extends Singleton
      */
     public static function getCurrentApp(): ApplicationInterface
     {
-        return self::instance()->container->get(ApplicationLoader::class)->getCurrentApp();
+        return self::instance()->container->get(ApplicationContainer::class)->getCurrentApp();
     }
 
     /**
@@ -146,12 +146,12 @@ CMD;
         }
 
         $this->container = Container::instance();
-        $this->container->register(new SawContainer(
+        $this->container->register($this->sawContainer = new SawContainer(
             $this->config = $config,
             $this->daemonConfig = new DaemonConfig($config['daemon']),
             $this->config = new Configurator($config['sockets']),
             $this->controllerConfig = new ControllerConfig($config['controller']),
-            $this->environment = SawEnv::web()
+            SawEnv::web()
         ));
 //        $compiler = new ContainerCompiler($this->container);
 //        $compiler->compile('/var/tmp/');
@@ -185,7 +185,7 @@ CMD;
      */
     public function instanceController(): Controller
     {
-        $this->environment = SawEnv::controller();
+        $this->sawContainer->setEnvironment(SawEnv::controller());
         return new Controller(
             $this->container->get(ControllerCore::class),
             $this->container->get('ControllerServer'),
@@ -196,7 +196,7 @@ CMD;
 
     public function instanceWorker(): Worker
     {
-        $this->environment = SawEnv::worker();
+        $this->sawContainer->setEnvironment(SawEnv::worker());
         return new Worker(
             $this->container->get(WorkerCore::class),
             $this->container->get(ControllerConnectorInterface::class)
@@ -205,7 +205,7 @@ CMD;
 
     public function instanceDebugger(): Debugger
     {
-        $this->environment = SawEnv::worker();
+        $this->sawContainer->setEnvironment(SawEnv::worker());
         return new Debugger($this->container->get(ControllerConnectorInterface::class));
     }
 

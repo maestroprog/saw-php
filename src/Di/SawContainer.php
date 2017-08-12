@@ -60,6 +60,11 @@ class SawContainer extends AbstractBasicContainer
         $this->environment = $env;
     }
 
+    public function setEnvironment(SawEnv $environment)
+    {
+        $this->environment = $environment;
+    }
+
     public function getControllerStarter(): ControllerStarter
     {
         return new ControllerStarter(
@@ -101,7 +106,7 @@ class SawContainer extends AbstractBasicContainer
     {
         if ($this->environment->isWeb()) {
             return $this->getWebControllerConnector(); // use internal
-        } elseif ($this->environment->isWeb()) {
+        } elseif ($this->environment->isWorker()) {
             return $this->getWorkerControllerConnector(); // use internal
         }
         throw new \LogicException('Unknown using ControllerConnector');

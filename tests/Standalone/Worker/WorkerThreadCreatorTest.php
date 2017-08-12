@@ -3,6 +3,8 @@
 namespace tests\Standalone\Worker;
 
 use Esockets\Client;
+use Maestroprog\Container\Container;
+use Maestroprog\Saw\Application\ApplicationContainer;
 use Maestroprog\Saw\Application\ApplicationInterface;
 use Maestroprog\Saw\Saw;
 use Maestroprog\Saw\Service\CommandDispatcher;
@@ -26,7 +28,7 @@ class WorkerThreadCreatorTest extends TestCase
         Saw::instance()->init(__DIR__ . '/../../../sample/config.php')->instanceWorker();
         $app = $this->createMock(ApplicationInterface::class);
         $app->method('getId')->willReturn('1');
-        Saw::instance()->getApplicationContainer()->add($app);
+        Container::instance()->get(ApplicationContainer::class)->add($app);
 
         $poolsContainer = new ContainerOfThreadPools();
         $pool = new PoolOfUniqueThreads();
