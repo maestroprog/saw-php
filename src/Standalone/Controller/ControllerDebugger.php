@@ -22,7 +22,7 @@ class ControllerDebugger
         $this->commandDispatcher = $commandDispatcher;
         $this->threadDistributor = $threadDistributor;
 
-        $commandDispatcher->add([
+        $commandDispatcher->addHandlers([
             new CommandHandler(DebugCommand::class, function (DebugCommand $context) {
                 $data = $this->query($context);
                 $this->commandDispatcher->create(DebugData::NAME, $context->getPeer())

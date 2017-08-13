@@ -18,7 +18,7 @@ class Debugger
     )
     {
         $this->connector = $connector;
-        $connector->getCommandDispatcher()->add([
+        $connector->getCommandDispatcher()->addHandlers([
             new CommandHandler(DebugCommand::class),
             new CommandHandler(DebugData::class, function (DebugData $context) {
                 $this->output($context);

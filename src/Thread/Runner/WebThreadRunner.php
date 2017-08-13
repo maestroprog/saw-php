@@ -25,7 +25,7 @@ class WebThreadRunner implements ThreadRunnerInterface
         $this->runThreads = new RunnableThreadPool();
 
         $this->commandDispatcher
-            ->add([
+            ->addHandlers([
                 new CommandHandler(ThreadRun::class),
                 /*new CommandHandler(
                     ThreadResult::NAME,

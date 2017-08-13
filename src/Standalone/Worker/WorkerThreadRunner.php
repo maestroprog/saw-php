@@ -37,7 +37,7 @@ final class WorkerThreadRunner implements ThreadRunnerDisablingSupportInterface
         $this->runThreadPool = new PoolOfUniqueThreads();
 
         $this->commandDispatcher
-            ->add([
+            ->addHandlers([
                 new CommandHandler(
                     ThreadResult::class, function (ThreadResult $context) {
                     $this->runThreadPool

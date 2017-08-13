@@ -33,22 +33,21 @@ final class CommandDispatcher
     /**
      * Добавляет новую команду в список известных команд.
      *
-     * @param CommandHandler[] $commands
-     * @return CommandDispatcher
-     * @throws \Exception
+     * @param CommandHandler[] $handlers
+     * @return void
+     * @throws \RuntimeException
      */
-    public function add(array $commands): self
+    public function addHandlers(array $handlers)
     {
-        foreach ($commands as $command) {
-            if (isset($this->know[$command->getName()])) {
-                throw new \Exception(sprintf('Cannot add command "%s", command exists.', $command->getName()));
+        foreach ($handlers as $handler) {
+            if (isset($this->know[$handler->getName()])) {
+                throw new \RuntimeException(sprintf('Cannot add handler "%s", handler exists.', $handler->getName()));
             }
-            if (!class_exists($command->getClass())) {
-                throw new \Exception(sprintf('Cannot add command "%s", Class not exists.', $command->getName()));
+            if (!class_exists($handler->getClass())) {
+                throw new \RuntimeException(sprintf('Cannot add handler "%s", command class not exists.', $handler->getName()));
             }
-            $this->know[$command->getName()] = $command;
+            $this->know[$handler->getName()] = $handler;
         }
-        return $this;
     }
 
     /**
@@ -66,11 +65,10 @@ final class CommandDispatcher
         }
         $class = $this->know[$command]->getClass();
         if (!class_exists($class)) {
-            throw new \Exception(sprintf('I don\'t know Class "%s"', $class));
+            throw new \Exception(sprintf('I don\'t know class "%s"', $class));
         }
         static $id = 0;
-        $this->created[$id] = $command = AbstractCommand::create($class, ++$id, $client);
-        return $command;
+        return $this->created[$id] = AbstractCommand::create($class, ++$id, $client);
     }
 
     /**
@@ -108,7 +106,7 @@ final class CommandDispatcher
         // смотрим, в каком состоянии находится поступившая к нам команда
         switch ($command->getState()) {
             case AbstractCommand::STATE_NEW:
-                throw new \RuntimeException('Команду даже не запустили!');
+                throw new \LogicException('Команду даже не запустили!');
                 // why??
                 // такого состояния не может быть..
                 break;
@@ -127,7 +125,7 @@ final class CommandDispatcher
                 }
                 break;
             case AbstractCommand::STATE_RES:
-                $command->dispatch($data['data']);
+                $command->dispatchResult($data['data']);
                 unset($this->created[$command->getId()]);
                 break;
         }
@@ -139,10 +137,5 @@ final class CommandDispatcher
             && isset($data['state'])
             && isset($data['id'])
             && isset($data['data']);
-    }
-
-    public function remember(int $commandId): AbstractCommand
-    {
-        return $this->created[$commandId] ?? null;
     }
 }

@@ -24,7 +24,7 @@ final class WorkerThreadCreator extends ThreadCreator
         $this->client = $client;
 
         $this->commandDispatcher
-            ->add([
+            ->addHandlers([
                 new CommandHandler(ThreadKnow::class),
             ]);
     }

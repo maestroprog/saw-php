@@ -11,14 +11,15 @@ use Maestroprog\Saw\Connector\ControllerConnectorInterface;
 class SharedMemoryOnSocket implements SharedMemoryInterface
 {
     private $connector;
-    private $memory;
+    private $dispatcher;
 
     public function __construct(ControllerConnectorInterface $connector)
     {
         $this->connector = $connector;
+        $this->dispatcher = $connector->getCommandDispatcher();
         $connector
             ->getCommandDispatcher()
-            ->add([
+            ->addHandlers([
                 new CommandHandler(MemoryRequest::class, function (MemoryRequest $context) {
 
                 }),
@@ -33,7 +34,14 @@ class SharedMemoryOnSocket implements SharedMemoryInterface
 
     public function has(string $varName, bool $withLocking = false): bool
     {
+        return $this
+            ->connector
+            ->getCommandDispatcher()
+            ->create(MemoryRequest::class)
+            ->on
+            ->run(['key' => $varName]);
         // todo await end of running command! SERIOUSLY! THIS IS VERY IMPORTANT!
+
     }
 
     public function remove(string $varName)

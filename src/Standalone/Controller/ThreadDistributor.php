@@ -81,7 +81,7 @@ class ThreadDistributor implements CycleInterface
         // связывальщик потоков
         $this->threadLinks = new ThreadLinker();
 
-        $commandDispatcher->add([
+        $commandDispatcher->addHandlers([
             new CommandHandler(
                 ThreadKnow::class, function (ThreadKnow $context) {
                 static $threadId = 0;
@@ -115,8 +115,7 @@ class ThreadDistributor implements CycleInterface
                     $context->getRunId(),
                     $context->getResult()
                 );
-            }
-            ),
+            }),
         ]);
     }
 

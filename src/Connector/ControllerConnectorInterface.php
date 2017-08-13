@@ -5,9 +5,10 @@ namespace Maestroprog\Saw\Connector;
 use Esockets\base\SenderInterface;
 use Esockets\Client;
 use Maestroprog\Saw\Service\CommandDispatcher;
+use Maestroprog\Saw\Service\CommandDispatcherProviderInterface;
 use Maestroprog\Saw\Standalone\Controller\CycleInterface;
 
-interface ControllerConnectorInterface extends SenderInterface, CycleInterface
+interface ControllerConnectorInterface extends SenderInterface, CycleInterface, CommandDispatcherProviderInterface
 {
 
     /**
@@ -23,9 +24,4 @@ interface ControllerConnectorInterface extends SenderInterface, CycleInterface
      * @return Client
      */
     public function getClient(): Client;
-
-    /**
-     * @return CommandDispatcher
-     */
-    public function getCommandDispatcher(): CommandDispatcher;
 }

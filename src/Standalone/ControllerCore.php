@@ -47,7 +47,7 @@ final class ControllerCore implements CycleInterface
         $this->threadDistributor = new ThreadDistributor($commandDispatcher, $this->workerPool, $this->workerBalance);
         $this->debugger = new ControllerDebugger($commandDispatcher, $this->threadDistributor);
 
-        $commandDispatcher->add([
+        $commandDispatcher->addHandlers([
         ]);
     }
 

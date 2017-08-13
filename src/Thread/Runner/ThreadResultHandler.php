@@ -15,7 +15,7 @@ class ThreadResultHandler
         $this->threadRunner = $threadRunner;
         $this->commandDispatcher = $commandDispatcher;
 
-        $this->commandDispatcher->add([
+        $this->commandDispatcher->addHandlers([
         ]);
     }
 }

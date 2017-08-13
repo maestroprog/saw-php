@@ -47,7 +47,7 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
 
         $this->threadPool = new RunnableThreadPool();
 
-        $commandDispatcher->add([
+        $commandDispatcher->addHandlers([
             new CommandHandler(
                 ThreadRun::class, function (ThreadRun $context) {
                 // выполняем задачу

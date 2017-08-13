@@ -50,7 +50,7 @@ class WorkerBalance implements CycleInterface
         $this->workerPool = $workerPool;
         $this->workerMaxCount = $workerMaxCount;
 
-        $commandDispatcher->add([
+        $commandDispatcher->addHandlers([
             new CommandHandler(WorkerAdd::class, function (WorkerAdd $context) {
                 if (is_null($this->workerRun) || !$this->workerRun instanceof ProcessStatus) {
                     throw new \LogicException('Некорректное состояние запуска воркера.');

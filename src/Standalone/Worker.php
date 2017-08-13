@@ -39,7 +39,7 @@ final class Worker
         $this->client = $connector->getClient();
         $this->commandDispatcher = $connector->getCommandDispatcher();
 
-        $this->commandDispatcher->add([
+        $this->commandDispatcher->addHandlers([
             new CommandHandler(WorkerAdd::class),
             new CommandHandler(
                 WorkerDelete::class, function (AbstractCommand $context) {
