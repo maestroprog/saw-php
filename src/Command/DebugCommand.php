@@ -2,21 +2,39 @@
 
 namespace Maestroprog\Saw\Command;
 
+use Esockets\Client;
+
 class DebugCommand extends AbstractCommand
 {
     const NAME = 'dbgc';
 
-    public $needData = [
-        'query',
-    ];
+    private $query;
+    private $arguments;
+
+    public function __construct(Client $client, string $query, array $arguments = null)
+    {
+        parent::__construct($client);
+        $this->query = $query;
+        $this->arguments = $arguments;
+    }
 
     public function getQuery(): string
     {
-        return $this->data['query'];
+        return $this->query;
     }
 
     public function getArguments(): array
     {
-        return (array)$this->data['arguments'] ?? [];
+        return $this->arguments ?? [];
+    }
+
+    public function toArray(): array
+    {
+        return ['query' => $this->query, 'arguments' => $this->arguments];
+    }
+
+    public static function fromArray(array $data, Client $client)
+    {
+        return new self($client, $data['query'], $data['arguments']);
     }
 }

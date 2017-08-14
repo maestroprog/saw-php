@@ -2,21 +2,27 @@
 
 namespace Maestroprog\Saw\Command;
 
-class MemoryFree extends AbstractCommand implements AsyncCommandInterface
+use Esockets\Client;
+
+final class MemoryFree extends AbstractCommand
 {
     const NAME = 'fmem';
 
-    protected $needData = ['key'];
+    private $key;
 
-    public function __construct(string $key)
+    public function __construct(Client $client, string $key)
     {
-        $this->data['key'] = $key;
+        parent::__construct($client);
+        $this->key = $key;
     }
 
     public function toArray(): array
     {
         return ['key' => $this->key];
     }
-}
 
-// идея - коммандхендлер создавать и в нем делать run runasync
+    public static function fromArray(array $data, Client $client)
+    {
+        return new self($client, $data['key']);
+    }
+}

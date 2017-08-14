@@ -8,6 +8,7 @@ use Maestroprog\Saw\Application\ApplicationContainer;
 use Maestroprog\Saw\Application\ApplicationInterface;
 use Maestroprog\Saw\Saw;
 use Maestroprog\Saw\Service\CommandDispatcher;
+use Maestroprog\Saw\Service\Commander;
 use Maestroprog\Saw\Standalone\Worker\WorkerThreadCreator;
 use Maestroprog\Saw\Thread\Pool\ContainerOfThreadPools;
 use Maestroprog\Saw\Thread\Pool\PoolOfUniqueThreads;
@@ -33,7 +34,9 @@ class WorkerThreadCreatorTest extends TestCase
         $poolsContainer = new ContainerOfThreadPools();
         $pool = new PoolOfUniqueThreads();
         $poolsContainer->add(1, $pool);
-        $dispatcher = new CommandDispatcher();
+
+
+
         $client = $this->createMock(Client::class);
         $threadCreator = new WorkerThreadCreator($poolsContainer, $dispatcher, $client);
 

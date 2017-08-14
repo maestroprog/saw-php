@@ -22,6 +22,8 @@ use Maestroprog\Saw\Service\Commander;
 use Maestroprog\Saw\Service\ControllerStarter;
 use Maestroprog\Saw\Service\Executor;
 use Maestroprog\Saw\Service\WorkerStarter;
+use Maestroprog\Saw\Standalone\Controller\ControllerWorkCycle;
+use Maestroprog\Saw\Standalone\Controller\CycleInterface;
 use Maestroprog\Saw\Standalone\ControllerCore;
 use Maestroprog\Saw\Standalone\Worker\WorkerThreadCreator;
 use Maestroprog\Saw\Standalone\Worker\WorkerThreadRunner;
@@ -149,6 +151,7 @@ class SawContainer extends AbstractBasicContainer
         return new ControllerCore(
             $this->get(Server::class),
             $this->get(CommandDispatcher::class),
+            $this->get(Commander::class),
             $this->get(WorkerStarter::class),
             $this->controllerConfig
         );
@@ -164,6 +167,7 @@ class SawContainer extends AbstractBasicContainer
         return new WorkerCore(
             $this->get('ControllerClient'),
             $this->get(CommandDispatcher::class),
+            $this->get(Commander::class),
             $this->get(ApplicationContainer::class),
             Saw::instance()->getApplicationLoader()
         );
@@ -218,9 +222,46 @@ class SawContainer extends AbstractBasicContainer
     public function getCommander(): Commander
     {
         return new Commander(
-            $this->get(ControllerConnectorInterface::class),
+            $this->get('WorkCycle'),
             $this->get('ContainerOfCommands')
         );
+    }
+
+    public function getWorkCycle(): CycleInterface
+    {
+        if ($this->environment->isWeb()) {
+            return $this->getWebWorkCycle();
+        } elseif ($this->environment->isWorker()) {
+            return $this->getWorkerWorkCycle();
+        }
+        return $this->getControllerWorkCycle();
+    }
+
+    /**
+     * @return CycleInterface
+     * @internal
+     */
+    private function getControllerWorkCycle(): CycleInterface
+    {
+        return new ControllerWorkCycle($this->get('ControllerServer'));
+    }
+
+    /**
+     * @return CycleInterface
+     * @internal
+     */
+    private function getWorkerWorkCycle(): CycleInterface
+    {
+        return $this->get(ControllerConnectorInterface::class);
+    }
+
+    /**
+     * @return CycleInterface
+     * @internal
+     */
+    private function getWebWorkCycle(): CycleInterface
+    {
+        return $this->get(ControllerConnectorInterface::class);
     }
 
     /**
@@ -260,6 +301,7 @@ class SawContainer extends AbstractBasicContainer
         return new WorkerThreadRunner(
             $this->get('ControllerClient'),
             $this->get(CommandDispatcher::class),
+            $this->get(Commander::class),
             $this->get(ApplicationContainer::class)
         );
     }
@@ -270,7 +312,7 @@ class SawContainer extends AbstractBasicContainer
      */
     private function getWebThreadRunner(): WebThreadRunner
     {
-        return new WebThreadRunner($this->get(ControllerConnectorInterface::class));
+        return new WebThreadRunner($this->get(ControllerConnectorInterface::class), $this->get(Commander::class));
     }
 
     /**
@@ -281,7 +323,7 @@ class SawContainer extends AbstractBasicContainer
     {
         return new WorkerThreadCreator(
             $this->get(ContainerOfThreadPools::class),
-            $this->get(CommandDispatcher::class),
+            $this->get(Commander::class),
             $this->get('ControllerClient')
         );
     }

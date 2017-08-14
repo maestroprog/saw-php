@@ -6,6 +6,7 @@ use Esockets\Client;
 use Esockets\debug\Log;
 use Esockets\Server;
 use Maestroprog\Saw\Service\CommandDispatcher;
+use Maestroprog\Saw\Standalone\Controller\ControllerWorkCycle;
 
 /**
  * Класс демон-программы контроллера.
@@ -21,6 +22,7 @@ final class Controller
     const CLIENT_CONTROLLER = 4; // контроллер. (зарезервировано)
     const CLIENT_DEBUG = 5; // отладчик
 
+    private $workCycle;
     private $core;
     private $server;
     private $commandDispatcher;
@@ -31,18 +33,15 @@ final class Controller
      */
     private $work = true;
 
-    /**
-     * @var bool включить вызов pcntl_dispatch_signals()
-     */
-    private $dispatchSignals = false;
-
     public function __construct(
+        ControllerWorkCycle $workCycle,
         ControllerCore $core,
         Server $server,
         CommandDispatcher $commandDispatcher,
         string $myPidFile
     )
     {
+        $this->workCycle = $workCycle;
         $this->core = $core;
         $this->server = $server;
         $this->myPidFile = $myPidFile;
@@ -60,7 +59,6 @@ final class Controller
             pcntl_signal(SIGINT, function ($sig) {
                 $this->stop();
             });
-            $this->dispatchSignals = true;
         }
 
         if (false === file_put_contents($this->myPidFile, getmypid())) {
@@ -83,15 +81,7 @@ final class Controller
     public function work()
     {
         while ($this->work) {
-            if ($this->dispatchSignals) {
-                pcntl_signal_dispatch();
-            }
-            try {
-                $this->server->find();
-            } catch (\RuntimeException $e) {
-                ; // todo
-                throw $e;
-            }
+            $this->workCycle->work();
             $this->core->work();
         }
     }

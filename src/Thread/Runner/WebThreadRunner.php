@@ -6,6 +6,7 @@ use Maestroprog\Saw\Command\CommandHandler;
 use Maestroprog\Saw\Command\ThreadResult;
 use Maestroprog\Saw\Command\ThreadRun;
 use Maestroprog\Saw\Connector\ControllerConnectorInterface;
+use Maestroprog\Saw\Service\Commander;
 use Maestroprog\Saw\Thread\AbstractThread;
 use Maestroprog\Saw\Thread\Pool\AbstractThreadPool;
 use Maestroprog\Saw\Thread\Pool\RunnableThreadPool;
@@ -14,19 +15,19 @@ class WebThreadRunner implements ThreadRunnerInterface
 {
     private $client;
     private $commandDispatcher;
-
+    private $commander;
     private $runThreads;
 
-    public function __construct(ControllerConnectorInterface $connector)
+    public function __construct(ControllerConnectorInterface $connector, Commander $commander)
     {
         $this->client = $connector->getClient();
         $this->commandDispatcher = $connector->getCommandDispatcher();
+        $this->commander = $commander;
 
         $this->runThreads = new RunnableThreadPool();
 
         $this->commandDispatcher
             ->addHandlers([
-                new CommandHandler(ThreadRun::class),
                 /*new CommandHandler(
                     ThreadResult::NAME,
                     ThreadResult::class,
@@ -34,13 +35,12 @@ class WebThreadRunner implements ThreadRunnerInterface
                         $this->setResultByRunId($context->getRunId(), $context->getResult());
                     }
                 ),*/
-                new CommandHandler(
-                    ThreadResult::class, function (ThreadResult $context) {
-                    $this->runThreads
+                new CommandHandler(ThreadResult::class, function (ThreadResult $context) {
+                    $this
+                        ->runThreads
                         ->getThreadById($context->getRunId())
                         ->setResult($context->getResult());
-                }
-                ),
+                }),
             ]);
     }
 
@@ -53,9 +53,14 @@ class WebThreadRunner implements ThreadRunnerInterface
         foreach ($threads as $thread) {
             $this->runThreads->add($thread);
             try {
-                $this->commandDispatcher
-                    ->create(ThreadRun::NAME, $this->client)
-                    ->run(ThreadRun::serializeThread($thread));
+                $this->commander
+                    ->runAsync(new ThreadRun(
+                        $this->client,
+                        $thread->getId(),
+                        $thread->getApplicationId(),
+                        $thread->getUniqueId(),
+                        $thread->getArguments()
+                    ));
             } catch (\Throwable $e) {
                 $thread->run();
                 var_dump($e->getTraceAsString());

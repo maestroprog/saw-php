@@ -3,8 +3,10 @@
 namespace tests\Standalone\Controller {
 
     use Esockets\Client;
-    use Esockets\debug\Log;
+    use Maestroprog\Saw\Command\ContainerOfCommands;
+    use Maestroprog\Saw\Connector\ControllerConnectorInterface;
     use Maestroprog\Saw\Entity\Worker;
+    use Maestroprog\Saw\Service\Commander;
     use Maestroprog\Saw\Thread\StubThread;
     use PHPUnit\Framework\TestCase;
     use Maestroprog\Saw\Command\AbstractCommand;
@@ -31,13 +33,40 @@ namespace tests\Standalone\Controller {
          */
         public function testWork()
         {
+            $connector = new class implements ControllerConnectorInterface
+            {
+                public function getCommandDispatcher(): CommandDispatcher
+                {
+                    // TODO: Implement getCommandDispatcher() method.
+                }
+
+                public function connect()
+                {
+                    // TODO: Implement connect() method.
+                }
+
+                public function getClient(): Client
+                {
+                    // TODO: Implement getClient() method.
+                }
+
+                public function work()
+                {
+                    // TODO: Implement work() method.
+                }
+
+                public function send($data): bool
+                {
+                    // TODO: Implement send() method.
+                }
+            };
             /**
              * @var $workerStarter WorkerStarter|\PHPUnit_Framework_MockObject_MockObject
              */
             $workerStarter = $this->createMock(WorkerStarter::class);
-            $commandDispatcher = new CommandDispatcher();
+            $commandDispatcher = new CommandDispatcher($cmdContainer = new ContainerOfCommands());
             $workerPool = new WorkerPool();
-            $balancer = new WorkerBalance($workerStarter, $commandDispatcher, $workerPool, 1);
+            $balancer = new WorkerBalance($workerStarter, $commandDispatcher, new Commander($connector, $cmdContainer), $workerPool, 1);
 
             /**
              * @var $client Client|\PHPUnit_Framework_MockObject_MockObject

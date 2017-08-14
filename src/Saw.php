@@ -15,6 +15,7 @@ use Maestroprog\Saw\Di\SawContainer;
 use Maestroprog\Saw\Heading\Singleton;
 use Maestroprog\Saw\Service\ApplicationLoader;
 use Maestroprog\Saw\Service\CommandDispatcher;
+use Maestroprog\Saw\Service\Commander;
 use Maestroprog\Saw\Standalone\Controller;
 use Maestroprog\Saw\Standalone\ControllerCore;
 use Maestroprog\Saw\Standalone\Debugger;
@@ -187,6 +188,7 @@ CMD;
     {
         $this->sawContainer->setEnvironment(SawEnv::controller());
         return new Controller(
+            $this->container->get('WorkCycle'),
             $this->container->get(ControllerCore::class),
             $this->container->get('ControllerServer'),
             $this->container->get(CommandDispatcher::class),
@@ -199,14 +201,18 @@ CMD;
         $this->sawContainer->setEnvironment(SawEnv::worker());
         return new Worker(
             $this->container->get(WorkerCore::class),
-            $this->container->get(ControllerConnectorInterface::class)
+            $this->container->get(ControllerConnectorInterface::class),
+            $this->container->get(Commander::class)
         );
     }
 
     public function instanceDebugger(): Debugger
     {
         $this->sawContainer->setEnvironment(SawEnv::worker());
-        return new Debugger($this->container->get(ControllerConnectorInterface::class));
+        return new Debugger(
+            $this->container->get(ControllerConnectorInterface::class),
+            $this->container->get(Commander::class)
+        );
     }
 
     const VAR_POINTER = '@';

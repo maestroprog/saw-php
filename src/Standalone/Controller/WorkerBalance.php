@@ -8,6 +8,7 @@ use Maestroprog\Saw\Command\WorkerAdd;
 use Maestroprog\Saw\Command\WorkerDelete;
 use Maestroprog\Saw\Entity\Worker;
 use Maestroprog\Saw\Service\CommandDispatcher;
+use Maestroprog\Saw\Service\Commander;
 use Maestroprog\Saw\Service\WorkerStarter;
 use Maestroprog\Saw\Thread\AbstractThread;
 use Maestroprog\Saw\ValueObject\ProcessStatus;
@@ -22,6 +23,7 @@ class WorkerBalance implements CycleInterface
 
     private $workerStarter;
     private $commandDispatcher;
+    private $commander;
     private $workerPool;
     private $workerMaxCount;
 
@@ -41,12 +43,14 @@ class WorkerBalance implements CycleInterface
     public function __construct(
         WorkerStarter $workerStarter,
         CommandDispatcher $commandDispatcher,
+        Commander $commander,
         WorkerPool $workerPool,
         int $workerMaxCount
     )
     {
         $this->workerStarter = $workerStarter;
         $this->commandDispatcher = $commandDispatcher;
+        $this->commander = $commander;
         $this->workerPool = $workerPool;
         $this->workerMaxCount = $workerMaxCount;
 
@@ -59,12 +63,10 @@ class WorkerBalance implements CycleInterface
                     // если pid запущенного процесса не соответсвует pid-у который сообщил воркер
                     return false;
                 }*/
-                $this->addWorker(new Worker($this->workerRun, $context->getPeer()));
-                return true;
+                $this->addWorker(new Worker($this->workerRun, $context->getClient()));
             }),
-            new CommandHandler(
-                WorkerDelete::class, function (WorkerDelete $context) {
-                $this->workerPool->removeById($context->getPeer()->getConnectionResource()->getId());
+            new CommandHandler(WorkerDelete::class, function (WorkerDelete $context) {
+                $this->workerPool->removeById($context->getClient()->getConnectionResource()->getId());
             }),
         ]);
     }
@@ -120,7 +122,7 @@ class WorkerBalance implements CycleInterface
      */
     public function removeWorker(Worker $worker)
     {
-        $this->commandDispatcher->create(WorkerDelete::NAME, $worker->getClient())->run();
+        $this->commander->runAsync(new WorkerDelete($worker->getClient()));
         $this->workerPool->remove($worker);
         // TODO
         // нужно запилить механизм перехвата невыполненных задач

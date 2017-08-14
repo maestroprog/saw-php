@@ -5,6 +5,7 @@ namespace Maestroprog\Saw\Standalone;
 use Esockets\Server;
 use Maestroprog\Saw\Config\ControllerConfig;
 use Maestroprog\Saw\Service\CommandDispatcher;
+use Maestroprog\Saw\Service\Commander;
 use Maestroprog\Saw\Service\WorkerStarter;
 use Maestroprog\Saw\Standalone\Controller\ControllerDebugger;
 use Maestroprog\Saw\Standalone\Controller\CycleInterface;
@@ -21,6 +22,7 @@ final class ControllerCore implements CycleInterface
 {
     private $server;
     private $commandDispatcher;
+    private $commander;
 
     private $workerPool;
     private $workerBalance;
@@ -30,25 +32,34 @@ final class ControllerCore implements CycleInterface
     public function __construct(
         Server $server,
         CommandDispatcher $commandDispatcher,
+        Commander $commander,
         WorkerStarter $workerStarter,
         ControllerConfig $config
     )
     {
         $this->server = $server;
         $this->commandDispatcher = $commandDispatcher;
+        $this->commander = $commander;
 
         $this->workerPool = new WorkerPool();
         $this->workerBalance = new WorkerBalance(
             $workerStarter,
             $commandDispatcher,
+            $this->commander,
             $this->workerPool,
             $config->getWorkerMaxCount()
         );
-        $this->threadDistributor = new ThreadDistributor($commandDispatcher, $this->workerPool, $this->workerBalance);
-        $this->debugger = new ControllerDebugger($commandDispatcher, $this->threadDistributor);
-
-        $commandDispatcher->addHandlers([
-        ]);
+        $this->threadDistributor = new ThreadDistributor(
+            $this->commandDispatcher,
+            $this->commander,
+            $this->workerPool,
+            $this->workerBalance
+        );
+        $this->debugger = new ControllerDebugger(
+            $commandDispatcher,
+            $this->commander,
+            $this->threadDistributor
+        );
     }
 
     public function work()

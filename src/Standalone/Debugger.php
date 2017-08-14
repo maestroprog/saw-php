@@ -8,21 +8,23 @@ use Maestroprog\Saw\Command\CommandHandler;
 use Maestroprog\Saw\Command\DebugCommand;
 use Maestroprog\Saw\Command\DebugData;
 use Maestroprog\Saw\Connector\ControllerConnectorInterface;
+use Maestroprog\Saw\Service\Commander;
 
 class Debugger
 {
     private $connector;
+    private $commander;
 
     public function __construct(
-        ControllerConnectorInterface $connector
+        ControllerConnectorInterface $connector,
+        Commander $commander
     )
     {
         $this->connector = $connector;
+        $this->commander = $commander;
         $connector->getCommandDispatcher()->addHandlers([
-            new CommandHandler(DebugCommand::class),
             new CommandHandler(DebugData::class, function (DebugData $context) {
                 $this->output($context);
-                return true;
             }),
         ]);
     }
@@ -34,7 +36,9 @@ class Debugger
                 return;
             }
             if (is_array($data) && $this->connector->getCommandDispatcher()->valid($data)) {
-                $this->connector->getCommandDispatcher()
+                $this
+                    ->connector
+                    ->getCommandDispatcher()
                     ->dispatch($data, $this->connector->getClient());
             } else {
                 Log::log('Invalid data', $data);
@@ -44,7 +48,6 @@ class Debugger
             Log::log('i disconnected!');
             exit;
         });
-
 
         if (!$this->connector->getClient()->isConnected()) {
             try {
@@ -70,15 +73,12 @@ class Debugger
             }
             $this->connector->work();
             if ($cmd = fgets(STDIN)) {
-                $this->connector->getCommandDispatcher()
-                    ->create(DebugCommand::NAME, $this->connector->getClient())
-                    ->onSuccess(function () {
-
-                    })
-                    ->onError(function () use ($cmd) {
-                        throw new \RuntimeException('Cannot exec cmd: ' . $cmd);
-                    })
-                    ->run(['query' => trim($cmd)]);
+                $this->commander->runAsync(
+                    (new DebugCommand($this->connector->getClient(), trim($cmd)))
+                        ->onError(function () use ($cmd) {
+                            throw new \RuntimeException('Cannot exec cmd: ' . $cmd);
+                        })
+                );
             }
             usleep(100000);
         }

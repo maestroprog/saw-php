@@ -2,6 +2,7 @@
 
 namespace Maestroprog\Saw\Command;
 
+use Esockets\Client;
 use Maestroprog\Saw\Thread\AbstractThread;
 
 /**
@@ -11,30 +12,47 @@ use Maestroprog\Saw\Thread\AbstractThread;
  *
  * Результат выполнения команды - успешный/неуспешный прием результата выполнения потока.
  */
-class ThreadResult extends AbstractCommand
+final class ThreadResult extends AbstractCommand
 {
     const NAME = 'tres';
 
-    protected $needData = ['run_id', 'application_id', 'unique_id', 'result'];
+    private $runId;
+    private $applicationId;
+    private $uniqueId;
+    private $result;
+
+    public function __construct(Client $client, int $runId, string $appId, string $uniqueId, $result)
+    {
+        parent::__construct($client);
+        $this->runId = $runId;
+        $this->applicationId = $appId;
+        $this->uniqueId = $uniqueId;
+        $this->result = $result;
+    }
 
     public function getRunId(): int
     {
-        return $this->data['run_id'];
+        return $this->runId;
     }
 
     public function getApplicationId(): string
     {
-        return $this->data['application_id'];
+        return $this->applicationId;
     }
 
     public function getUniqueId(): string
     {
-        return $this->data['unique_id'];
+        return $this->uniqueId;
     }
 
+    /**
+     * WARNING! Переопределяет родительский метод.
+     *
+     * @return mixed
+     */
     public function getResult()
     {
-        return $this->data['result'];
+        return $this->result;
     }
 
     /**
@@ -43,14 +61,24 @@ class ThreadResult extends AbstractCommand
      *
      * @param AbstractThread $thread
      * @return array
+     * @deprecated
      */
     public static function serializeTask(AbstractThread $thread): array
     {
+    }
+
+    public function toArray(): array
+    {
         return [
-            'run_id' => $thread->getId(),
-            'application_id' => $thread->getApplicationId(),
-            'unique_id' => $thread->getUniqueId(),
-            'result' => $thread->getResult(),
+            'run_id' => $this->getRunId(),
+            'application_id' => $this->getApplicationId(),
+            'unique_id' => $this->getUniqueId(),
+            'result' => $this->getResult(),
         ];
+    }
+
+    public static function fromArray(array $data, Client $client)
+    {
+        return new self($client, $data['run_id'], $data['application_id'], $data['unique_id'], $data['result']);
     }
 }

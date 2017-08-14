@@ -2,14 +2,27 @@
 
 namespace Maestroprog\Saw\Command;
 
-class MemoryRequest extends AbstractCommand
+use Esockets\Client;
+
+final class MemoryRequest extends AbstractCommand
 {
     const NAME = 'rmem';
 
-    protected $needData = ['key'];
+    private $key;
 
-    public function getKey(): string
+    public function __construct(Client $client, string $key)
     {
-        return $this->data['key'];
+        parent::__construct($client);
+        $this->key = $key;
+    }
+
+    public function toArray(): array
+    {
+        return ['key' => $this->key];
+    }
+
+    public static function fromArray(array $data, Client $client)
+    {
+        return new self($client, $data['key']);
     }
 }

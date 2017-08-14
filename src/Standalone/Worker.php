@@ -9,6 +9,7 @@ use Maestroprog\Saw\Command\CommandHandler;
 use Maestroprog\Saw\Command\WorkerAdd;
 use Maestroprog\Saw\Command\WorkerDelete;
 use Maestroprog\Saw\Connector\ControllerConnectorInterface;
+use Maestroprog\Saw\Service\Commander;
 
 /**
  * Воркер, использующийся воркер-скриптом.
@@ -21,6 +22,7 @@ final class Worker
     private $connector;
     private $client;
     private $commandDispatcher;
+    private $commander;
 
     private $work = true;
 
@@ -31,21 +33,20 @@ final class Worker
 
     public function __construct(
         WorkerCore $core,
-        ControllerConnectorInterface $connector
+        ControllerConnectorInterface $connector,
+        Commander $commander
     )
     {
         $this->core = $core;
         $this->connector = $connector;
         $this->client = $connector->getClient();
         $this->commandDispatcher = $connector->getCommandDispatcher();
+        $this->commander = $commander;
 
         $this->commandDispatcher->addHandlers([
-            new CommandHandler(WorkerAdd::class),
-            new CommandHandler(
-                WorkerDelete::class, function (AbstractCommand $context) {
+            new CommandHandler(WorkerDelete::class, function (AbstractCommand $context) {
                 $this->stop();
-            }
-            )
+            })
         ]);
     }
 
@@ -56,15 +57,14 @@ final class Worker
     {
         if (extension_loaded('pcntl')) {
             pcntl_signal(SIGINT, function ($sig) {
-                $this->commandDispatcher
-                    ->create(WorkerDelete::NAME, $this->client)
+                $this->commander->runAsync((new WorkerDelete($this->client))
                     ->onSuccess(function () {
                         $this->stop();
                     })
                     ->onError(function () {
                         throw new \RuntimeException('Cannot delete this worker from controller.');
                     })
-                    ->run();
+                );
             });
             $this->dispatchSignals = true;
         }
@@ -113,19 +113,19 @@ final class Worker
 
             switch ($data) {
                 case 'ACCEPT':
-                    $this->commandDispatcher
-                        ->create(WorkerAdd::NAME, $this->client)
-                        ->onError(function () {
-                            $this->stop();
-                        })
-                        ->onSuccess(function () {
-                            $this->core->run();
-                        })
-                        ->run(['pid' => getmypid()]);
+                    $this->commander->runAsync(
+                        (new WorkerAdd($this->client, getmygid()))
+                            ->onError(function () {
+                                $this->stop();
+                            })
+                            ->onSuccess(function () {
+                                $this->core->run();
+                            })
+                    );
                     break;
                 case 'INVALID':
                     throw new \RuntimeException('Is an invalid worker.');
-                    break;
+                // no break
                 case 'BYE':
                     $this->stop();
                     break;

@@ -9,6 +9,7 @@ use Maestroprog\Saw\Command\ThreadResult;
 use Maestroprog\Saw\Command\ThreadRun;
 use Maestroprog\Saw\Entity\Worker;
 use Maestroprog\Saw\Service\CommandDispatcher;
+use Maestroprog\Saw\Service\Commander;
 use Maestroprog\Saw\Thread\AbstractThread;
 use Maestroprog\Saw\Thread\ControlledThread;
 use Maestroprog\Saw\Thread\Pool\ControllerThreadPoolIndex;
@@ -21,7 +22,7 @@ use Maestroprog\Saw\Thread\StubThread;
  */
 class ThreadDistributor implements CycleInterface
 {
-    private $commandDispatcher;
+    private $commander;
     private $workerPool;
     private $workerBalance;
 
@@ -62,11 +63,12 @@ class ThreadDistributor implements CycleInterface
 
     public function __construct(
         CommandDispatcher $commandDispatcher,
+        Commander $commander,
         WorkerPool $workerPool,
         WorkerBalance $workerBalance
     )
     {
-        $this->commandDispatcher = $commandDispatcher;
+        $this->commander = $commander;
         $this->workerPool = $workerPool;
         $this->workerBalance = $workerBalance;
 
@@ -88,7 +90,7 @@ class ThreadDistributor implements CycleInterface
                 $thread = new StubThread(++$threadId, $context->getApplicationId(), $context->getUniqueId());
                 // добавление потока в список известных
                 $this->threadKnow(
-                    $this->workerPool->getById($context->getPeer()->getConnectionResource()->getId()),
+                    $this->workerPool->getById($context->getClient()->getConnectionResource()->getId()),
                     $thread
                 );
             }
@@ -100,7 +102,7 @@ class ThreadDistributor implements CycleInterface
                     $context->getRunId(),
                     $context->getApplicationId(),
                     $context->getUniqueId(),
-                    $context->getPeer()
+                    $context->getClient()
                 ))->setArguments($context->getArguments());
 
                 // добавление потока в очередь выполнения
@@ -111,7 +113,7 @@ class ThreadDistributor implements CycleInterface
                 ThreadResult::class, function (ThreadResult $context) {
                 // получение и обработка результата выполнения потока
                 $this->threadResult(
-                    $this->workerPool->getById($context->getPeer()->getConnectionResource()->getId()),
+                    $this->workerPool->getById($context->getClient()->getConnectionResource()->getId()),
                     $context->getRunId(),
                     $context->getResult()
                 );
@@ -183,17 +185,26 @@ class ThreadDistributor implements CycleInterface
         // todo check ---
 
         /** @var $command ThreadRun */
-        $this->commandDispatcher->create(ThreadRun::NAME, $worker->getClient())
-            ->onError(function () use ($sourceThread) {
-                Log::log('Error run task ' . $sourceThread->getUniqueId());
-                throw new \RuntimeException('Error run thread.');
-                //todo
-            })
+        $this
+            ->commander
+            ->runAsync(
+                (new ThreadRun(
+                    $worker->getClient(),
+                    $runThread->getId(),
+                    $runThread->getApplicationId(),
+                    $runThread->getUniqueId(),
+                    $runThread->getArguments()
+                ))
+                    ->onError(function () use ($sourceThread) {
+                        Log::log('Error run task ' . $sourceThread->getUniqueId());
+                        throw new \RuntimeException('Error run thread.');
+                        //todo
+                    })
             /*->onSuccess(function () use ($worker, $sourceThread, $runThread) {
                 // todo end check
 
             })*/
-            ->run(ThreadRun::serializeThread($runThread));
+            );
     }
 
     /**
@@ -222,13 +233,20 @@ class ThreadDistributor implements CycleInterface
             throw new \LogicException('Unknown thread object!');
         }
 
-        $this->commandDispatcher->create(ThreadResult::NAME, $sourceThread->getThreadFrom())
-            ->onError(function () {
-                //todo
-            })
-            /*->onSuccess(function () use ($sourceThread, $runThread) {
-            })*/
-            ->run(ThreadResult::serializeTask($sourceThread));
+        $this->commander->runAsync(
+            (new ThreadResult(
+                $sourceThread->getThreadFrom(),
+                $sourceThread->getId(),
+                $sourceThread->getApplicationId(),
+                $sourceThread->getUniqueId(),
+                $sourceThread->getResult()
+            ))
+                ->onError(function () {
+                    //todo
+                })
+        /*->onSuccess(function () use ($sourceThread, $runThread) {
+        })*/
+        );
     }
 
     /**

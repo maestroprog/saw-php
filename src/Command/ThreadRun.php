@@ -2,6 +2,7 @@
 
 namespace Maestroprog\Saw\Command;
 
+use Esockets\Client;
 use Maestroprog\Saw\Thread\AbstractThread;
 
 /**
@@ -11,48 +12,42 @@ use Maestroprog\Saw\Thread\AbstractThread;
  *
  * Результат выполнения команды - успешный/неуспешный запуск выполнения задачи.
  */
-class ThreadRun extends AbstractCommand
+final class ThreadRun extends AbstractCommand
 {
     const NAME = 'trun';
 
-    protected $needData = ['application_id', 'unique_id', 'run_id'];
+    private $runId;
+    private $applicationId;
+    private $uniqueId;
+    private $arguments;
 
-    public function handle(array $data): AbstractCommand
+    public function __construct(Client $client, int $runId, string $appId, string $uniqueId, array $arguments = null)
     {
-        /*foreach ($this->needData as $key) {
-            if (isset($data[$key])) {
-                $this->data[$key] = $data[$key];
-            }
-        }*/
-        if (isset($data['arguments'])) {
-            $this->data['arguments'] = $data['arguments'];
-        }
-        return parent::handle($data);
-    }
-
-    public function getApplicationId(): string
-    {
-        return $this->data['application_id'];
-    }
-
-    public function getUniqueId(): string
-    {
-        return $this->data['unique_id'];
+        parent::__construct($client);
+        $this->runId = $runId;
+        $this->applicationId = $appId;
+        $this->uniqueId = $uniqueId;
+        $this->arguments = $arguments;
     }
 
     public function getRunId(): int
     {
-        return $this->data['run_id'];
+        return $this->runId;
     }
 
-    public function getFromDsc()
+    public function getApplicationId(): string
     {
-        return $this->data['from_dsc'] ?? null;
+        return $this->applicationId;
+    }
+
+    public function getUniqueId(): string
+    {
+        return $this->uniqueId;
     }
 
     public function getArguments(): array
     {
-        return $this->data['arguments'] ?? [];
+        return $this->arguments ?? [];
     }
 
     /**
@@ -61,14 +56,25 @@ class ThreadRun extends AbstractCommand
      *
      * @param AbstractThread $thread
      * @return array
+     * @deprecated
      */
     public static function serializeThread(AbstractThread $thread): array
     {
+    }
+
+
+    public function toArray(): array
+    {
         return [
-            'application_id' => $thread->getApplicationId(),
-            'run_id' => $thread->getId(),
-            'unique_id' => $thread->getUniqueId(),
-            'arguments' => $thread->getArguments(),
+            'run_id' => $this->getRunId(),
+            'application_id' => $this->getApplicationId(),
+            'unique_id' => $this->getUniqueId(),
+            'arguments' => $this->getArguments(),
         ];
+    }
+
+    public static function fromArray(array $data, Client $client)
+    {
+        return new self($client, $data['run_id'], $data['application_id'], $data['unique_id'], $data['arguments']);
     }
 }

@@ -8,6 +8,7 @@ use Maestroprog\Saw\Command\CommandHandler;
 use Maestroprog\Saw\Command\ThreadResult;
 use Maestroprog\Saw\Command\ThreadRun;
 use Maestroprog\Saw\Service\CommandDispatcher;
+use Maestroprog\Saw\Service\Commander;
 use Maestroprog\Saw\Thread\AbstractThread;
 use Maestroprog\Saw\Thread\Pool\AbstractThreadPool;
 use Maestroprog\Saw\Thread\Pool\PoolOfUniqueThreads;
@@ -17,6 +18,7 @@ final class WorkerThreadRunner implements ThreadRunnerDisablingSupportInterface
 {
     private $client;
     private $commandDispatcher;
+    private $commander;
     private $applicationContainer;
 
     private $threadPool;
@@ -26,11 +28,13 @@ final class WorkerThreadRunner implements ThreadRunnerDisablingSupportInterface
     public function __construct(
         Client $client,
         CommandDispatcher $commandDispatcher,
+        Commander $commander,
         ApplicationContainer $applicationContainer
     )
     {
         $this->client = $client;
         $this->commandDispatcher = $commandDispatcher;
+        $this->commander = $commander;
         $this->applicationContainer = $applicationContainer;
 
         $this->threadPool = new PoolOfUniqueThreads();
@@ -38,13 +42,11 @@ final class WorkerThreadRunner implements ThreadRunnerDisablingSupportInterface
 
         $this->commandDispatcher
             ->addHandlers([
-                new CommandHandler(
-                    ThreadResult::class, function (ThreadResult $context) {
+                new CommandHandler(ThreadResult::class, function (ThreadResult $context) {
                     $this->runThreadPool
                         ->getThreadById($context->getRunId())
                         ->setResult($context->getResult());
-                }
-                ),
+                }),
             ]);
     }/*
 
@@ -83,9 +85,13 @@ final class WorkerThreadRunner implements ThreadRunnerDisablingSupportInterface
             foreach ($threads as $thread) {
                 $this->runThreadPool->add($thread);
                 try {
-                    $this->commandDispatcher
-                        ->create(ThreadRun::NAME, $this->client)
-                        ->run(ThreadRun::serializeThread($thread));
+                    $this->commander->runAsync(new ThreadRun(
+                        $this->client,
+                        $thread->getId(),
+                        $thread->getApplicationId(),
+                        $thread->getUniqueId(),
+                        $thread->getArguments()
+                    ));
                 } catch (\Throwable $e) {
                     $thread->run();
                     var_dump($e->getTraceAsString());

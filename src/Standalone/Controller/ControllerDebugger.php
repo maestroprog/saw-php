@@ -8,31 +8,32 @@ use Maestroprog\Saw\Command\DebugCommand;
 use Maestroprog\Saw\Command\DebugData;
 use Maestroprog\Saw\Entity\Worker;
 use Maestroprog\Saw\Service\CommandDispatcher;
+use Maestroprog\Saw\Service\Commander;
 
 class ControllerDebugger
 {
     private $commandDispatcher;
+    private $commander;
     private $threadDistributor;
 
     public function __construct(
         CommandDispatcher $commandDispatcher,
+        Commander $commander,
         ThreadDistributor $threadDistributor
     )
     {
         $this->commandDispatcher = $commandDispatcher;
+        $this->commander = $commander;
         $this->threadDistributor = $threadDistributor;
 
         $commandDispatcher->addHandlers([
             new CommandHandler(DebugCommand::class, function (DebugCommand $context) {
                 $data = $this->query($context);
-                $this->commandDispatcher->create(DebugData::NAME, $context->getPeer())
-                    ->run($data);
-                return true;
+                $this->commander->runAsync(DebugData::fromArray($data, $context->getClient()));
             }),
             new CommandHandler(DebugData::class, function (DebugData $context) {
                 if ($this->debuggerClient instanceof Client) {
-                    $this->commandDispatcher->create(DebugData::NAME, $this->debuggerClient)
-                        ->run($context->getData());
+                    $this->commander->runAsync(DebugData::fromArray($context->toArray(), $this->debuggerClient));
                 }
             }),
         ]);
@@ -87,13 +88,10 @@ class ControllerDebugger
 
     protected function fullStat(DebugCommand $command): array
     {
-        $this->debuggerClient = $command->getPeer();
+        $this->debuggerClient = $command->getClient();
         foreach ($this->threadDistributor->getWorkerPool() as $worker) {
-            /**
-             * @var Worker $worker
-             */
-            $this->commandDispatcher->create(DebugCommand::NAME, $worker->getClient())
-                ->run(['query' => 'fullstat']);
+            /** @var Worker $worker */
+            $this->commander->runAsync(new DebugCommand($worker->getClient(), 'fullstat'));
         }
         return [
             'Workers count' => $this->threadDistributor->getWorkerPool()->count(),

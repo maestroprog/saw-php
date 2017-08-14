@@ -2,6 +2,8 @@
 
 namespace Maestroprog\Saw\Command;
 
+use Esockets\Client;
+
 /**
  * Команда "Новый известный поток".
  * От воркера отправляется контроллеру для извещения о новом потоке, который воркер узнал.
@@ -9,11 +11,19 @@ namespace Maestroprog\Saw\Command;
  *
  * Результат выполнения команды - успешное/неуспешное добавление в известные команды.
  */
-class ThreadKnow extends AbstractCommand
+final class ThreadKnow extends AbstractCommand
 {
     const NAME = 'tadd';
 
-    protected $needData = ['application_id', 'unique_id'];
+    private $applicationId;
+    private $uniqueId;
+
+    public function __construct(Client $client, string $appId, string $uniqueId)
+    {
+        parent::__construct($client);
+        $this->applicationId = $appId;
+        $this->uniqueId = $uniqueId;
+    }
 
     /**
      * Вернёт уникальный идентификатор приложения,
@@ -23,7 +33,7 @@ class ThreadKnow extends AbstractCommand
      */
     public function getApplicationId(): string
     {
-        return $this->data['application_id'];
+        return $this->applicationId;
     }
 
     /**
@@ -33,6 +43,16 @@ class ThreadKnow extends AbstractCommand
      */
     public function getUniqueId(): string
     {
-        return $this->data['unique_id'];
+        return $this->uniqueId;
+    }
+
+    public function toArray(): array
+    {
+        return ['application_id' => $this->applicationId, 'unique_id' => $this->uniqueId];
+    }
+
+    public static function fromArray(array $data, Client $client)
+    {
+        return new self($client, $data['application_id'], $data['unique_id']);
     }
 }

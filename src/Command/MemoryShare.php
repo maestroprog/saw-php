@@ -2,19 +2,29 @@
 
 namespace Maestroprog\Saw\Command;
 
-class MemoryShare extends AbstractCommand
+use Esockets\Client;
+
+final class MemoryShare extends AbstractCommand
 {
     const NAME = 'smem';
 
-    protected $needData = ['key', 'data'];
+    private $key;
+    private $data;
 
-    public function getKey(): string
+    public function __construct(Client $client, string $key, $data)
     {
-        return $this->data['key'];
+        parent::__construct($client);
+        $this->key = $key;
+        $this->data = $data;
     }
 
-    public function getData(): array
+    public function toArray(): array
     {
-        return $this->data['data'];
+        return ['key' => $this->key];
+    }
+
+    public static function fromArray(array $data, Client $client)
+    {
+        return new self($client, $data['key'], $data);
     }
 }

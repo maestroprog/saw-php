@@ -2,6 +2,8 @@
 
 namespace Maestroprog\Saw\Command;
 
+use Esockets\Client;
+
 /**
  * Команда воркера "Воркер стартовал".
  * От воркера отправляется контроллеру для извещения.
@@ -9,11 +11,17 @@ namespace Maestroprog\Saw\Command;
  *
  * Результат выполнения - успешное/неуспешное добавление воркера в список известных.
  */
-class WorkerAdd extends AbstractCommand
+final class WorkerAdd extends AbstractCommand
 {
     const NAME = 'wadd';
 
-    protected $needData = ['pid'];
+    private $pid;
+
+    public function __construct(Client $client, int $pid)
+    {
+        parent::__construct($client);
+        $this->pid = $pid;
+    }
 
     /**
      * Вернёт pid, о котором сообщил воркер.
@@ -22,6 +30,16 @@ class WorkerAdd extends AbstractCommand
      */
     public function getPid(): int
     {
-        return $this->data['pid'];
+        return $this->pid;
+    }
+
+    public function toArray(): array
+    {
+        return ['pid' => $this->pid];
+    }
+
+    public static function fromArray(array $data, Client $client)
+    {
+        return new self($client, $data['pid']);
     }
 }
