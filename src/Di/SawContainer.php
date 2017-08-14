@@ -5,6 +5,7 @@ namespace Maestroprog\Saw\Di;
 use Esockets\base\Configurator;
 use Esockets\Client;
 use Esockets\Server;
+use Maestroprog\Saw\Command\ContainerOfCommands;
 use Maestroprog\Saw\Config\ControllerConfig;
 use Maestroprog\Saw\Config\DaemonConfig;
 use Maestroprog\Saw\Saw;
@@ -17,6 +18,7 @@ use Maestroprog\Saw\Connector\WorkerControllerConnector;
 use Maestroprog\Saw\Memory\SharedMemoryInterface;
 use Maestroprog\Saw\Memory\SharedMemoryOnSocket;
 use Maestroprog\Saw\Service\CommandDispatcher;
+use Maestroprog\Saw\Service\Commander;
 use Maestroprog\Saw\Service\ControllerStarter;
 use Maestroprog\Saw\Service\Executor;
 use Maestroprog\Saw\Service\WorkerStarter;
@@ -128,7 +130,7 @@ class SawContainer extends AbstractBasicContainer
 
     public function getCommandDispatcher(): CommandDispatcher
     {
-        return new CommandDispatcher();
+        return new CommandDispatcher($this->get(ContainerOfCommands::class));
     }
 
     public function getThreadRunner(): ThreadRunnerInterface
@@ -205,6 +207,19 @@ class SawContainer extends AbstractBasicContainer
             $this->get(ThreadCreatorInterface::class),
             $this->get(ThreadRunnerInterface::class),
             $this->get(SynchronizerInterface::class)
+        );
+    }
+
+    public function getContainerOfCommands(): ContainerOfCommands
+    {
+        return new ContainerOfCommands();
+    }
+
+    public function getCommander(): Commander
+    {
+        return new Commander(
+            $this->get(ControllerConnectorInterface::class),
+            $this->get('ContainerOfCommands')
         );
     }
 

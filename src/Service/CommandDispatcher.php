@@ -6,12 +6,17 @@ use Esockets\Client;
 use Esockets\debug\Log;
 use Maestroprog\Saw\Command\AbstractCommand;
 use Maestroprog\Saw\Command\CommandHandler;
+use Maestroprog\Saw\Command\ContainerOfCommands;
 
 /**
  * Диспетчер команд.
  */
 final class CommandDispatcher
 {
+    const STATE_NEW = 0;
+    const STATE_RUN = 1;
+    const STATE_RES = 2;
+
     /**
      * Команды, которые мы знаем.
      *
@@ -26,8 +31,11 @@ final class CommandDispatcher
      */
     private $created = [];
 
-    public function __construct()
+    private $runCommands;
+
+    public function __construct(ContainerOfCommands $runCommands)
     {
+        $this->runCommands = $runCommands;
     }
 
     /**
@@ -57,6 +65,8 @@ final class CommandDispatcher
      * @param Client $client
      * @return AbstractCommand
      * @throws \Exception
+     *
+     * @deprecated
      */
     public function create(string $command, Client $client): AbstractCommand
     {
@@ -88,13 +98,14 @@ final class CommandDispatcher
         }
         $commandEntity = $this->know[$command];
         /** @var $command AbstractCommand */
-        if ($data['state'] == AbstractCommand::STATE_RES) {
+        if ($data['state'] == self::STATE_RES) {
             if (isset($this->created[$data['id']])) {
                 // обрабатываем только созданные задачи
                 $command = $this->created[$data['id']];
                 $command->reset($data['state'], $data['code']);
             } else {
                 // несуществующие залоггируем
+                // todo exception
                 Log::log(var_export($data, true));
                 return;
             }
@@ -105,12 +116,12 @@ final class CommandDispatcher
         $command->handle($data['data']);
         // смотрим, в каком состоянии находится поступившая к нам команда
         switch ($command->getState()) {
-            case AbstractCommand::STATE_NEW:
+            case self::STATE_NEW:
                 throw new \LogicException('Команду даже не запустили!');
                 // why??
                 // такого состояния не может быть..
                 break;
-            case AbstractCommand::STATE_RUN:
+            case self::STATE_RUN:
                 // если команда поступила на выполнение -  выполняем
                 try {
                     if ($commandEntity->exec($command) !== false) {
@@ -124,7 +135,7 @@ final class CommandDispatcher
                     throw $e;
                 }
                 break;
-            case AbstractCommand::STATE_RES:
+            case self::STATE_RES:
                 $command->dispatchResult($data['data']);
                 unset($this->created[$command->getId()]);
                 break;

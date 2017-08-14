@@ -6,9 +6,6 @@ use Esockets\Client;
 
 abstract class AbstractCommand
 {
-    const STATE_NEW = 0;
-    const STATE_RUN = 1;
-    const STATE_RES = 2;
 
     const RES_VOID = 0;
     const RES_SUCCESS = 1;

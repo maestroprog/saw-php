@@ -33,10 +33,10 @@ final class CommandHandler
      * Вызывает callback handler для выполнения команды.
      *
      * @param AbstractCommand $context
-     * @return bool
+     * @return bool todo not bool
      * @throws \RuntimeException
      */
-    public function exec(AbstractCommand $context): bool
+    public function exec(AbstractCommand $context)
     {
         return call_user_func($this->callbackHandler, $context);
     }
