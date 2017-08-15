@@ -63,6 +63,7 @@ final class Commander
             'command' => $command->getCommandName(),
             'state' => CommandDispatcher::STATE_RUN,
             'id' => $cmdId,
+            'code' => CommandDispatcher::CODE_VOID,
             'data' => $command->toArray()
         ])) {
             throw new \RuntimeException(sprintf('Fail run command "%s".', $command->getCommandName()));

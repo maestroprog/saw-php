@@ -83,7 +83,7 @@ abstract class AbstractCommand
      */
     public function dispatchResult($result, int $code)
     {
-        $this->result = $result;
+        $this->accomplishedResult = $result;
         $this->accomplished = true;
         switch ($code) {
             case CommandDispatcher::CODE_SUCCESS:

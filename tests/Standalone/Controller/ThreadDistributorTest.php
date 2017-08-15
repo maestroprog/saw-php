@@ -4,6 +4,9 @@ namespace tests\Standalone\Controller;
 
 use Esockets\Client;
 use Esockets\dummy\DummyConnectionResource;
+use Maestroprog\Saw\Command\ContainerOfCommands;
+use Maestroprog\Saw\Service\Commander;
+use Maestroprog\Saw\Standalone\Controller\CycleInterface;
 use PHPUnit\Framework\TestCase;
 use Maestroprog\Saw\Command\AbstractCommand;
 use Maestroprog\Saw\Command\ThreadResult;
@@ -20,7 +23,6 @@ use Maestroprog\Saw\Thread\StubThread;
  * @covers \Maestroprog\Saw\Command\AbstractCommand
  * @covers \Maestroprog\Saw\Command\ThreadResult
  * @covers \Maestroprog\Saw\Command\ThreadRun
- * @covers \Maestroprog\Saw\Command\CommandCode
  * @covers \Maestroprog\Saw\Command\CommandHandler
  * @covers \Maestroprog\Saw\Entity\Worker
  * @covers \Maestroprog\Saw\Service\CommandDispatcher
@@ -43,7 +45,7 @@ class ThreadDistributorTest extends TestCase
      * 3. Постановка ему потока на выполнение
      * 4. Ожидание результата выполнения потока
      * 5. Принятие, обработка результата выполнения потка
-     * 6. Отправка результата выполнения потока
+     * 6. Отправка результата выполнения потока.
      */
     public function testWork()
     {
@@ -53,7 +55,15 @@ class ThreadDistributorTest extends TestCase
             }
         ];
 
-        $commandDispatcher = new CommandDispatcher();
+        $commandDispatcher = new CommandDispatcher($cmds = new ContainerOfCommands());
+        $commander = new Commander(new class implements CycleInterface
+        {
+            public function work()
+            {
+                // TODO: Implement work() method.
+            }
+        }, $cmds);
+
         $workerPool = new WorkerPool();
         /**
          * @var $workerBalance WorkerBalance|\PHPUnit_Framework_MockObject_MockObject
@@ -101,6 +111,7 @@ class ThreadDistributorTest extends TestCase
 
         $threadDistributor = new ThreadDistributor(
             $commandDispatcher,
+            $commander,
             $workerPool,
             $workerBalance
         );
@@ -126,23 +137,26 @@ class ThreadDistributorTest extends TestCase
                     switch ($data['command']) {
                         case ThreadRun::NAME:
                             // ожидается, что поток успешно запущен
-                            $this->assertEquals(AbstractCommand::STATE_RES, $data['state']);
-                            $this->assertEquals(AbstractCommand::RES_SUCCESS, $data['code']);
+                            $this->assertEquals(CommandDispatcher::STATE_RES, $data['state']);
+                            $this->assertEquals(CommandDispatcher::CODE_SUCCESS, $data['code']);
                             break;
                         case ThreadResult::NAME:
                             // ожидается, что результат выполнения потока успешный, и равен 3 (1 + 2)
-                            $this->assertEquals(AbstractCommand::STATE_RUN, $data['state']);
-                            $this->assertEquals(AbstractCommand::RES_VOID, $data['code']);
+                            $this->assertEquals(CommandDispatcher::STATE_RUN, $data['state']);
+                            $this->assertEquals(CommandDispatcher::CODE_VOID, $data['code']);
                             $this->assertEquals(3, $data['data']['result']);
 
                             // сообщим контроллеру, что результат успешно обработан
-                            $command = AbstractCommand::create(
-                                ThreadResult::class,
-                                $data['id'],
-                                $webClient
-                            );
-                            $command->handle($data);
-                            $command->success();
+//                            $command = ThreadResult::fromArray($data['data'], $webClient);
+                            $webClient->send([
+                                'id' => $data['id'],
+                                'data' => [],
+                                'command' => ThreadResult::NAME,
+                                'code' => CommandDispatcher::CODE_SUCCESS,
+                                'state' => CommandDispatcher::STATE_RES,
+                            ]);
+//                            $command->handle($data);
+//                            $command->success();
                             break;
                     }
                     return true;
@@ -158,7 +172,7 @@ class ThreadDistributorTest extends TestCase
                     switch ($data['command']) {
                         case ThreadRun::NAME:
                             // ожидается, что пришла команда на выполнение нового потока с аргументами
-                            $this->assertEquals(AbstractCommand::STATE_RUN, $data['state']);
+                            $this->assertEquals(CommandDispatcher::STATE_RUN, $data['state']);
                             $this->assertContains([1, 2], $data['data'], 'Thread must contain arguments!');
                             $thread = new StubThread(
                                 $data['data']['run_id'],
@@ -166,15 +180,16 @@ class ThreadDistributorTest extends TestCase
                                 $data['data']['unique_id']
                             );
                             // сообщим контроллеру об успешном запуске потока
-                            $command = AbstractCommand::instance(
-                                ThreadRun::class,
-                                1,
-                                $workerClient,
-                                AbstractCommand::STATE_RES,
-                                AbstractCommand::RES_SUCCESS
-                            );
-                            $command->handle($data);
-                            $command->success();
+//                            $command = ThreadRun::fromArray($data['data'], $workerClient);
+//                            $command->handle($data);
+//                            $command->success();
+                            $workerClient->send([
+                                'id' => $data['id'],
+                                'data' => [],
+                                'command' => ThreadRun::NAME,
+                                'code' => CommandDispatcher::CODE_SUCCESS,
+                                'state' => CommandDispatcher::STATE_RES,
+                            ]);
 
                             // выполним код потока
                             $result = call_user_func_array(
@@ -183,14 +198,25 @@ class ThreadDistributorTest extends TestCase
                             );
                             $thread->setResult($result);
                             $delayRun[] = function () use ($workerClient, $thread) {
-                                AbstractCommand::create(ThreadResult::class, 1, $workerClient)
-                                    ->run(ThreadResult::serializeTask($thread));
+                                $workerClient->send([
+                                    'id' => 1,
+                                    'command' => ThreadResult::NAME,
+                                    'state' => CommandDispatcher::STATE_RUN,
+                                    'code' => CommandDispatcher::CODE_VOID,
+                                    'data' => (new ThreadResult(
+                                        $workerClient,
+                                        $thread->getId(),
+                                        $thread->getApplicationId(),
+                                        $thread->getUniqueId(),
+                                        $thread->getResult()
+                                    ))->toArray()
+                                ]);
                             };
                             break;
                         case ThreadResult::NAME:
                             // ожидается, что результат выполнения потока успешно получен
-                            $this->assertEquals(AbstractCommand::STATE_RES, $data['state']);
-                            $this->assertEquals(AbstractCommand::RES_SUCCESS, $data['code']);
+                            $this->assertEquals(CommandDispatcher::STATE_RES, $data['state']);
+                            $this->assertEquals(CommandDispatcher::CODE_SUCCESS, $data['code']);
                             break;
                     }
                     return true;
@@ -219,8 +245,19 @@ class ThreadDistributorTest extends TestCase
         $testThread = (new StubThread(1, 'empty', 'TEST1'))->setArguments([1, 2]);
 
         // 1. Принятие потока и постановка его в очередь.
-        AbstractCommand::create(ThreadRun::class, 1, $webClient)
-            ->run(ThreadRun::serializeThread($testThread));
+        $webClient->send([
+            'id' => 1,
+            'command' => ThreadRun::NAME,
+            'state' => CommandDispatcher::STATE_RUN,
+            'code' => CommandDispatcher::CODE_VOID,
+            'data' => (new ThreadRun(
+                $webClient,
+                $testThread->getId(),
+                $testThread->getApplicationId(),
+                $testThread->getUniqueId(),
+                $testThread->getArguments()
+            ))->toArray()
+        ]);
 
         // 2. Нахождение свободного воркера
         // 3. Постановка ему потока на выполнение
