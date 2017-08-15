@@ -23,17 +23,11 @@ namespace tests\Standalone\Controller {
      */
     class WorkerBalanceTest extends TestCase
     {
-        /**
-         * Тестирование корректной работы воркера.
-         * План теста:
-         * 1. Запуск пустого балансировщика
-         * 2. Балансировщик запускает первый экземпляр воркера (ловим этот момент)
-         * 3. Эмулируем успешное подключение воркера к контроллеру, подтверждение работы в балансировщике
-         * 4. Эмулируем успешное завершение работы воркера
-         */
-        public function testWork()
+        private static $connector;
+
+        public static function setUpBeforeClass()
         {
-            $connector = new class implements ControllerConnectorInterface
+            self::$connector = new class implements ControllerConnectorInterface
             {
                 public function getCommandDispatcher(): CommandDispatcher
                 {
@@ -60,13 +54,26 @@ namespace tests\Standalone\Controller {
                     // TODO: Implement send() method.
                 }
             };
+        }
+
+        /**
+         * Тестирование корректной работы воркера.
+         * План теста:
+         * 1. Запуск пустого балансировщика
+         * 2. Балансировщик запускает первый экземпляр воркера (ловим этот момент)
+         * 3. Эмулируем успешное подключение воркера к контроллеру, подтверждение работы в балансировщике
+         * 4. Эмулируем успешное завершение работы воркера
+         */
+        public function testWork()
+        {
             /**
              * @var $workerStarter WorkerStarter|\PHPUnit_Framework_MockObject_MockObject
              */
             $workerStarter = $this->createMock(WorkerStarter::class);
             $commandDispatcher = new CommandDispatcher($cmdContainer = new ContainerOfCommands());
+            $commander = new Commander(self::$connector, $cmdContainer);
             $workerPool = new WorkerPool();
-            $balancer = new WorkerBalance($workerStarter, $commandDispatcher, new Commander($connector, $cmdContainer), $workerPool, 1);
+            $balancer = new WorkerBalance($workerStarter, $commandDispatcher, $commander, $workerPool, 1);
 
             /**
              * @var $client Client|\PHPUnit_Framework_MockObject_MockObject
@@ -111,8 +118,8 @@ namespace tests\Standalone\Controller {
                                 if ($addSuccess) {
                                     $deleteSuccess = true;
                                 }
-                                $this->assertEquals(AbstractCommand::STATE_RES, $data['state']);
-                                $this->assertEquals(AbstractCommand::RES_SUCCESS, $data['code']);
+                                $this->assertEquals(CommandDispatcher::STATE_RES, $data['state']);
+                                $this->assertEquals(CommandDispatcher::CODE_SUCCESS, $data['code']);
                                 break;
                         }
                         return true;
@@ -127,13 +134,14 @@ namespace tests\Standalone\Controller {
             $balancer->work();
 
             // 3. Эмулируем успешное подключение воркера к контроллеру, подтверждение работы в балансировщике
-            AbstractCommand::create(WorkerAdd::class, 1, $client)->run(['pid' => 1]);
+
+            $commander->runAsync(new WorkerAdd($client, 1));
 
             $this->assertTrue($workerPool->isExistsById(0), 'Worker with id = 0 must be exists!');
             $this->assertEquals(1, $workerPool->getById(0)->getProcessResource()->getPid());
 
             // 4. Эмулируем успешное завершение работы воркера
-            AbstractCommand::create(WorkerDelete::class, 2, $client)->run();
+            $commander->runAsync(new WorkerDelete($client));
             $this->assertEmpty($workerPool);
 
             $this->assertTrue($addSuccess, 'WorkerAdd must be success run.');
@@ -147,9 +155,10 @@ namespace tests\Standalone\Controller {
         {
             /** @var $workerStarter WorkerStarter|\PHPUnit_Framework_MockObject_MockObject */
             $workerStarter = $this->createMock(WorkerStarter::class);
-            $commandDispatcher = new CommandDispatcher();
+            $commandDispatcher = new CommandDispatcher($cmds = new ContainerOfCommands());
+            $commander = new Commander(self::$connector, $cmds);
             $workerPool = new WorkerPool();
-            $balancer = new WorkerBalance($workerStarter, $commandDispatcher, $workerPool, 1);
+            $balancer = new WorkerBalance($workerStarter, $commandDispatcher, $commander, $workerPool, 1);
 
             /** @var ProcessStatus|\PHPUnit_Framework_MockObject_MockObject $processStatus */
             $processStatus = $this
@@ -201,9 +210,10 @@ namespace tests\Standalone\Controller {
              */
             $workerStarter = $this->createMock(WorkerStarter::class);
             $workerStarter->expects($this->once())->method('start')->willReturn($processStatus);
-            $commandDispatcher = new CommandDispatcher();
+            $commandDispatcher = new CommandDispatcher($cmds = new ContainerOfCommands());
+            $commander = new Commander(self::$connector, $cmds);
             $workerPool = new WorkerPool();
-            $balancer = new WorkerBalance($workerStarter, $commandDispatcher, $workerPool, 1);
+            $balancer = new WorkerBalance($workerStarter, $commandDispatcher, $commander, $workerPool, 1);
 
             $balancer->work();
             $runningProperty = (new \ReflectionObject($balancer))->getProperty('running');

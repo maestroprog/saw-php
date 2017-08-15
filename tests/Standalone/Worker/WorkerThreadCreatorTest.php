@@ -6,9 +6,11 @@ use Esockets\Client;
 use Maestroprog\Container\Container;
 use Maestroprog\Saw\Application\ApplicationContainer;
 use Maestroprog\Saw\Application\ApplicationInterface;
+use Maestroprog\Saw\Command\ContainerOfCommands;
 use Maestroprog\Saw\Saw;
 use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\Commander;
+use Maestroprog\Saw\Standalone\Controller\CycleInterface;
 use Maestroprog\Saw\Standalone\Worker\WorkerThreadCreator;
 use Maestroprog\Saw\Thread\Pool\ContainerOfThreadPools;
 use Maestroprog\Saw\Thread\Pool\PoolOfUniqueThreads;
@@ -35,10 +37,9 @@ class WorkerThreadCreatorTest extends TestCase
         $pool = new PoolOfUniqueThreads();
         $poolsContainer->add(1, $pool);
 
-
-
+        $commander = new Commander($this->createMock(CycleInterface::class), new ContainerOfCommands());
         $client = $this->createMock(Client::class);
-        $threadCreator = new WorkerThreadCreator($poolsContainer, $dispatcher, $client);
+        $threadCreator = new WorkerThreadCreator($poolsContainer, $commander, $client);
 
         $client
             ->expects($this->once())
