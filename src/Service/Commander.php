@@ -24,15 +24,17 @@ final class Commander
      * т.е. дожидается результата выполнения команды.
      *
      * @param AbstractCommand $command
+     * @param int $timeout Время ожидания выполнения команды
      * @return AbstractCommand
      * @throws \RuntimeException
      */
-    public function runSync(AbstractCommand $command): AbstractCommand
+    public function runSync(AbstractCommand $command, int $timeout): AbstractCommand
     {
+        $started = microtime(true);
         $this->send($command);
         do {
             $this->workDispatcher->work();
-        } while (!$command->isAccomplished());
+        } while (!$command->isAccomplished() && (microtime(true) - $started) < $timeout);
         return $command;
     }
 

@@ -2,16 +2,19 @@
 
 namespace Maestroprog\Saw\Memory;
 
-class LocalizedMemory implements LocalizedMemoryInterface
+class LocalizedShareableMemory implements MemoryInterface, ShareableMemoryInterface
 {
     private $sharedMemory;
 
+    /**
+     * @var \ArrayObject
+     */
     private $memory;
 
     public function __construct(SharedMemoryInterface $sharedMemory)
     {
         $this->sharedMemory = $sharedMemory;
-        $this->memory = new \SplDoublyLinkedList();
+        $this->free();
     }
 
     public function share(string $varName)
@@ -45,5 +48,23 @@ class LocalizedMemory implements LocalizedMemoryInterface
     public function remove(string $varName)
     {
         $this->memory->offsetUnset($varName);
+    }
+
+    public function list(string $prefix = null): array
+    {
+        if (null !== $prefix) {
+            return array_filter($this->memory->getArrayCopy(), function ($key) use ($prefix) {
+                if (0 !== strpos($key, $prefix)) {
+                    return false;
+                }
+                return true;
+            }, ARRAY_FILTER_USE_KEY);
+        }
+        return $this->memory->getArrayCopy();
+    }
+
+    public function free()
+    {
+        $this->memory = new \ArrayObject();
     }
 }

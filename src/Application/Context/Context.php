@@ -53,6 +53,16 @@ class Context implements ContextInterface
         // TODO: Implement canRemoved() method.
     }
 
+    public function list(string $prefix = null): array
+    {
+        // TODO: Implement list() method.
+    }
+
+    public function free()
+    {
+        // TODO: Implement free() method.
+    }
+
     public function __sleep()
     {
         // TODO: Implement __sleep() method.

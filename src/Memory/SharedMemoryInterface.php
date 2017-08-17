@@ -10,6 +10,7 @@ namespace Maestroprog\Saw\Memory;
  */
 interface SharedMemoryInterface extends MemoryInterface
 {
+    const READ_TIMEOUT = 2000; // 2 second
     const LOCK_TIMEOUT = 1000; // 1 second
 
     /**
@@ -36,10 +37,14 @@ interface SharedMemoryInterface extends MemoryInterface
 
     /**
      * @param string $varName
-     * @return mixed
+     * @return void
      * @throws MemoryLockException
      */
     public function lock(string $varName);
 
+    /**
+     * @param string $varName
+     * @return void
+     */
     public function unlock(string $varName);
 }
