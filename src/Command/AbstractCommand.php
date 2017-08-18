@@ -14,6 +14,7 @@ abstract class AbstractCommand
     private $onError;
 
     private $accomplished = false;
+    private $successful;
     protected $accomplishedResult;
 
     final public static function isValidClass(string $class): bool
@@ -53,6 +54,11 @@ abstract class AbstractCommand
         return $this->accomplished;
     }
 
+    public function isSuccessful(): bool
+    {
+        return $this->successful;
+    }
+
     /**
      * @return mixed
      */
@@ -85,6 +91,7 @@ abstract class AbstractCommand
     {
         $this->accomplishedResult = $result;
         $this->accomplished = true;
+        $this->successfull = CommandDispatcher::CODE_SUCCESS === $code;
         switch ($code) {
             case CommandDispatcher::CODE_SUCCESS:
                 if (is_callable($this->onSuccess)) {

@@ -11,6 +11,7 @@ namespace Maestroprog\Saw\Memory;
 interface SharedMemoryInterface extends MemoryInterface
 {
     const READ_TIMEOUT = 2000; // 2 second
+    const WRITE_TIMEOUT = 5000; // 5 second
     const LOCK_TIMEOUT = 1000; // 1 second
 
     /**

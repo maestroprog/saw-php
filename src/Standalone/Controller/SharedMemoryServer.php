@@ -2,14 +2,16 @@
 
 namespace Maestroprog\Saw\Standalone\Controller;
 
+use Esockets\Client;
 use Maestroprog\Saw\Command\CommandHandler;
 use Maestroprog\Saw\Command\MemoryRequest;
+use Maestroprog\Saw\Command\MemoryShare;
 use Maestroprog\Saw\Memory\MemoryLockException;
 use Maestroprog\Saw\Memory\SharedMemoryInterface;
 use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\Commander;
 
-final class TransActiveMemory implements SharedMemoryInterface
+final class SharedMemoryServer implements SharedMemoryInterface
 {
     const SIZE_LIMITER = 1000;
     const LOCK_LIMITER = 100;
@@ -19,42 +21,48 @@ final class TransActiveMemory implements SharedMemoryInterface
 
     private $currentSize;
 
-    private $clients;
-    private $index;
+    private $memory;
     private $locked;
 
     public function __construct(CommandDispatcher $dispatcher, Commander $commander)
     {
+        // todo without index
         $this->dispatcher = $dispatcher;
         $this->commander = $commander;
 
         $this->currentSize = self::SIZE_LIMITER;
 
         $this->clients = new \SplDoublyLinkedList();
-        $this->index = new \ArrayObject();
+        $this->memory = new \ArrayObject();
         $this->locked = new \ArrayObject();
 
         $this
             ->dispatcher
             ->addHandlers([
                 new CommandHandler(MemoryRequest::class, function (MemoryRequest $context) {
-                    try {
-                        if ($context->isNoResult()) {
-                            $result = $this->has($context->getKey(), $context->isLock());
-                        } else {
-                            $result = $this->read($context->getKey(), $context->isLock());
-                        }
-                    } catch (MemoryLockException $e) {
-                        return false;
+                    if ($context->isNoResult()) {
+                        $result = $this->has($context->getKey(), $context->isLock());
+                    } else {
+                        $result = $this->read($context->getKey(), $context->isLock());
                     }
                     return $result;
+                }),
+                new CommandHandler(MemoryShare::class, function (MemoryShare $context) {
+                    return $this->write($context->getKey(), $context->getVariable(), $context->isUnlock());
                 }),
             ]);
     }
 
+    private $ccIndex;
+
+    private function dispatchClient(Client $client)
+    {
+        $this->ccIndex = $client->getConnectionResource()->getId();
+    }
+
     public function has(string $varName, bool $withLocking = false): bool
     {
-        $thereIs = $this->index->offsetExists($varName);
+        $thereIs = $this->memory->offsetExists($varName);
         if ($withLocking) {
             $this->lock($varName);
         }
@@ -66,10 +74,10 @@ final class TransActiveMemory implements SharedMemoryInterface
         if ($this->locked($varName)) {
             throw new MemoryLockException('Cannot read currently locked "' . $varName . '".');
         }
-        if (!$this->index->offsetExists($varName)) {
+        if (!$this->memory->offsetExists($varName)) {
             throw new \OutOfBoundsException('Cannot read undefined "' . $varName . '".');
         }
-        $client = $this->index->offsetGet($varName);
+        $client = $this->memory->offsetGet($varName);
         return $this->commander->runSync(
             new MemoryRequest($this->clients->offsetGet($client), $varName, false, $withLocking),
             self::READ_TIMEOUT
@@ -78,7 +86,7 @@ final class TransActiveMemory implements SharedMemoryInterface
 
     public function write(string $varName, $variable, bool $unlock = true): bool
     {
-        // TODO: Implement write() method. todo random share!!! Not current worker(client)
+        // todo check current client lock
     }
 
     public function lock(string $varName)
