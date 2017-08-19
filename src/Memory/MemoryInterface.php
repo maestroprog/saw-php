@@ -20,7 +20,7 @@ interface MemoryInterface
      *
      * @param string $varName
      * @return mixed
-     * @throws \OutOfBoundsException
+     * @throws \OutOfBoundsException Если переменная не существует
      */
     public function read(string $varName);
 
@@ -37,7 +37,7 @@ interface MemoryInterface
      * Удаляет переменную из памяти.
      *
      * @param string void
-     * @throws MemoryLockException
+     * @throws \OutOfBoundsException Если переменная не существует
      */
     public function remove(string $varName);
 

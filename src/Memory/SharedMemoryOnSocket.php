@@ -3,10 +3,10 @@
 namespace Maestroprog\Saw\Memory;
 
 use Esockets\Client;
-use Maestroprog\Saw\Command\MemoryFree;
-use Maestroprog\Saw\Command\MemoryLock;
-use Maestroprog\Saw\Command\MemoryRequest;
-use Maestroprog\Saw\Command\MemoryShare;
+use Maestroprog\Saw\Command\VariableFree;
+use Maestroprog\Saw\Command\VariableLock;
+use Maestroprog\Saw\Command\VariableRequest;
+use Maestroprog\Saw\Command\VariableShare;
 use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\Commander;
 
@@ -29,7 +29,7 @@ final class SharedMemoryOnSocket implements SharedMemoryInterface
     public function has(string $varName, bool $withLocking = false): bool
     {
         // todo withLocking without value
-        $cmd = new MemoryRequest($this->client, $varName);
+        $cmd = new VariableRequest($this->client, $varName);
 
         return $this
             ->commander
@@ -37,16 +37,10 @@ final class SharedMemoryOnSocket implements SharedMemoryInterface
             ->getAccomplishedResult();
     }
 
-    public function remove(string $varName)
-    {
-        $cmd = new MemoryFree($this->client, $varName);
-        $this->commander->runAsync($cmd);
-    }
-
     public function read(string $varName, bool $withLocking = true)
     {
         // todo withLocking
-        $cmd = new MemoryRequest($this->client, $varName, false, $withLocking);
+        $cmd = new VariableRequest($this->client, $varName, false, $withLocking);
 
         return $this
             ->commander
@@ -56,12 +50,12 @@ final class SharedMemoryOnSocket implements SharedMemoryInterface
 
     public function write(string $varName, $variable, bool $unlock = true): bool
     {
-        $cmd = new MemoryShare($this->client, $varName, $variable, $unlock);
+        $cmd = new VariableShare($this->client, $varName, $variable, $unlock);
 
         try {
             //todo async! thinking -- really?
             $cmd = $this->commander->runSync($cmd, self::WRITE_TIMEOUT);
-            if (!$cmd->isAccomplished() || !$cmd->getAccomplishedResult()) {
+            if (!$cmd->isAccomplished() || !$cmd->isSuccessful()) {
                 return false;
             }
         } catch (\RuntimeException $e) {
@@ -70,14 +64,20 @@ final class SharedMemoryOnSocket implements SharedMemoryInterface
         return true;
     }
 
+    public function remove(string $varName)
+    {
+        $cmd = new VariableFree($this->client, $varName);
+        $this->commander->runAsync($cmd);
+    }
+
     public function lock(string $varName)
     {
         $message = null;
         $cmd = $this
             ->commander
             ->runSync(
-                (new MemoryLock($this->client, $varName, true))
-                    ->onError(function (MemoryLock $context) use (&$message) {
+                (new VariableLock($this->client, $varName, true))
+                    ->onError(function (VariableLock $context) use (&$message) {
                         $message = $context->getAccomplishedResult();
                     }),
                 self::LOCK_TIMEOUT
@@ -94,8 +94,8 @@ final class SharedMemoryOnSocket implements SharedMemoryInterface
         $cmd = $this
             ->commander
             ->runSync(
-                (new MemoryLock($this->client, $varName, false))
-                    ->onError(function (MemoryLock $context) use (&$message) {
+                (new VariableLock($this->client, $varName, false))
+                    ->onError(function (VariableLock $context) use (&$message) {
                         $message = $context->getAccomplishedResult();
                     }),
                 self::LOCK_TIMEOUT

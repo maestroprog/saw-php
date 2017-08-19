@@ -8,6 +8,8 @@ use Esockets\Server;
 use Maestroprog\Saw\Command\ContainerOfCommands;
 use Maestroprog\Saw\Config\ControllerConfig;
 use Maestroprog\Saw\Config\DaemonConfig;
+use Maestroprog\Saw\Memory\LocalMemory;
+use Maestroprog\Saw\Memory\MemoryInterface;
 use Maestroprog\Saw\Saw;
 use Maestroprog\Container\AbstractBasicContainer;
 use Maestroprog\Saw\Application\ApplicationContainer;
@@ -24,6 +26,7 @@ use Maestroprog\Saw\Service\Executor;
 use Maestroprog\Saw\Service\WorkerStarter;
 use Maestroprog\Saw\Standalone\Controller\ControllerWorkCycle;
 use Maestroprog\Saw\Standalone\Controller\CycleInterface;
+use Maestroprog\Saw\Standalone\Controller\SharedMemoryServer;
 use Maestroprog\Saw\Standalone\ControllerCore;
 use Maestroprog\Saw\Standalone\Worker\WorkerThreadCreator;
 use Maestroprog\Saw\Standalone\Worker\WorkerThreadRunner;
@@ -99,6 +102,20 @@ class SawContainer extends AbstractBasicContainer
             $phpPath = $this->config['executor'];
         }
         return new Executor($phpPath);
+    }
+
+    public function getLocalMemory(): MemoryInterface
+    {
+        return new LocalMemory();
+    }
+
+    public function getSharedMemoryServer(): SharedMemoryServer
+    {
+        return new SharedMemoryServer(
+            $this->get(LocalMemory::class),
+            $this->get(CommandDispatcher::class),
+            $this->get(Commander::class)
+        );
     }
 
     public function getSharedMemoryClient(): SharedMemoryInterface

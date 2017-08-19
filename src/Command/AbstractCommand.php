@@ -91,7 +91,7 @@ abstract class AbstractCommand
     {
         $this->accomplishedResult = $result;
         $this->accomplished = true;
-        $this->successfull = CommandDispatcher::CODE_SUCCESS === $code;
+        $this->successful = CommandDispatcher::CODE_SUCCESS === $code;
         switch ($code) {
             case CommandDispatcher::CODE_SUCCESS:
                 if (is_callable($this->onSuccess)) {

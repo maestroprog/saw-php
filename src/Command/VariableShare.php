@@ -4,9 +4,9 @@ namespace Maestroprog\Saw\Command;
 
 use Esockets\Client;
 
-final class MemoryShare extends AbstractCommand
+final class VariableShare extends AbstractCommand
 {
-    const NAME = 'smem';
+    const NAME = 'svar';
 
     private $key;
     private $variable;

@@ -4,9 +4,9 @@ namespace Maestroprog\Saw\Command;
 
 use Esockets\Client;
 
-final class MemoryLock extends AbstractCommand
+final class VariableLock extends AbstractCommand
 {
-    const NAME = 'lmem';
+    const NAME = 'lvar';
 
     private $key;
     private $lock;

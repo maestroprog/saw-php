@@ -4,9 +4,9 @@ namespace Maestroprog\Saw\Command;
 
 use Esockets\Client;
 
-final class MemoryRequest extends AbstractCommand
+final class VariableRequest extends AbstractCommand
 {
-    const NAME = 'rmem';
+    const NAME = 'rvar';
 
     private $key;
     private $noResult;

@@ -4,8 +4,11 @@ namespace Maestroprog\Saw\Standalone\Controller;
 
 use Esockets\Client;
 use Maestroprog\Saw\Command\CommandHandler;
-use Maestroprog\Saw\Command\MemoryRequest;
-use Maestroprog\Saw\Command\MemoryShare;
+use Maestroprog\Saw\Command\VariableFree;
+use Maestroprog\Saw\Command\VariableLock;
+use Maestroprog\Saw\Command\VariableRequest;
+use Maestroprog\Saw\Command\VariableShare;
+use Maestroprog\Saw\Memory\MemoryInterface;
 use Maestroprog\Saw\Memory\MemoryLockException;
 use Maestroprog\Saw\Memory\SharedMemoryInterface;
 use Maestroprog\Saw\Service\CommandDispatcher;
@@ -13,33 +16,28 @@ use Maestroprog\Saw\Service\Commander;
 
 final class SharedMemoryServer implements SharedMemoryInterface
 {
-    const SIZE_LIMITER = 1000;
-    const LOCK_LIMITER = 100;
+    const LOCK_LIMITER = 100; // todo use it
 
     private $dispatcher;
     private $commander;
 
-    private $currentSize;
-
     private $memory;
     private $locked;
 
-    public function __construct(CommandDispatcher $dispatcher, Commander $commander)
+    public function __construct(MemoryInterface $memory, CommandDispatcher $dispatcher, Commander $commander)
     {
-        // todo without index
+        $this->memory = $memory;
         $this->dispatcher = $dispatcher;
         $this->commander = $commander;
 
-        $this->currentSize = self::SIZE_LIMITER;
-
-        $this->clients = new \SplDoublyLinkedList();
-        $this->memory = new \ArrayObject();
         $this->locked = new \ArrayObject();
 
         $this
             ->dispatcher
             ->addHandlers([
-                new CommandHandler(MemoryRequest::class, function (MemoryRequest $context) {
+                new CommandHandler(VariableRequest::class, function (VariableRequest $context) {
+                    $this->dispatchClient($context->getClient());
+
                     if ($context->isNoResult()) {
                         $result = $this->has($context->getKey(), $context->isLock());
                     } else {
@@ -47,8 +45,24 @@ final class SharedMemoryServer implements SharedMemoryInterface
                     }
                     return $result;
                 }),
-                new CommandHandler(MemoryShare::class, function (MemoryShare $context) {
+                new CommandHandler(VariableShare::class, function (VariableShare $context) {
+                    $this->dispatchClient($context->getClient());
+
                     return $this->write($context->getKey(), $context->getVariable(), $context->isUnlock());
+                }),
+                new CommandHandler(VariableFree::class, function (VariableShare $context) {
+                    $this->dispatchClient($context->getClient());
+
+                    $this->remove($context->getKey());
+                }),
+                new CommandHandler(VariableLock::class, function (VariableLock $context) {
+                    $this->dispatchClient($context->getClient());
+
+                    if ($context->isLock()) {
+                        $this->lock($context->getKey());
+                    } else {
+                        $this->unlock($context->getKey());
+                    }
                 }),
             ]);
     }
@@ -62,7 +76,7 @@ final class SharedMemoryServer implements SharedMemoryInterface
 
     public function has(string $varName, bool $withLocking = false): bool
     {
-        $thereIs = $this->memory->offsetExists($varName);
+        $thereIs = $this->memory->has($varName);
         if ($withLocking) {
             $this->lock($varName);
         }
@@ -71,22 +85,30 @@ final class SharedMemoryServer implements SharedMemoryInterface
 
     public function read(string $varName, bool $withLocking = true)
     {
-        if ($this->locked($varName)) {
+        if ($this->locked($varName) && !$this->lockedByThisUser($varName)) {
             throw new MemoryLockException('Cannot read currently locked "' . $varName . '".');
         }
-        if (!$this->memory->offsetExists($varName)) {
-            throw new \OutOfBoundsException('Cannot read undefined "' . $varName . '".');
-        }
-        $client = $this->memory->offsetGet($varName);
-        return $this->commander->runSync(
-            new MemoryRequest($this->clients->offsetGet($client), $varName, false, $withLocking),
-            self::READ_TIMEOUT
-        )->getAccomplishedResult();
+        return $this->memory->read($varName);
     }
 
     public function write(string $varName, $variable, bool $unlock = true): bool
     {
-        // todo check current client lock
+        if ($this->locked($varName) && !$this->lockedByThisUser($varName)) {
+            return false;
+        }
+        $result = $this->memory->write($varName, $variable);
+        if ($unlock) {
+            $this->unlock($varName);
+        }
+        return $result;
+    }
+
+    public function remove(string $varName)
+    {
+        if ($this->locked($varName) && !$this->lockedByThisUser($varName)) {
+            throw new MemoryLockException('Cannot remove currently locked "' . $varName . '".');
+        }
+        $this->memory->remove($varName);
     }
 
     public function lock(string $varName)
@@ -94,33 +116,37 @@ final class SharedMemoryServer implements SharedMemoryInterface
         if ($this->locked->offsetExists($varName)) {
             throw new MemoryLockException('Cannot lock currently locked "' . $varName . '".');
         }
-        $this->locked->offsetSet($varName, true);
+        $this->locked->offsetSet($varName, $this->ccIndex);
     }
 
     public function unlock(string $varName)
     {
-        if ($this->locked->offsetExists($varName)) {
-            $this->locked->offsetUnset($varName);
+        if (!$this->locked($varName)) {
+            return;
         }
-    }
-
-    public function remove(string $varName)
-    {
-        // TODO: Implement remove() method.
+        if (!$this->lockedByThisUser($varName)) {
+            throw new MemoryLockException('Cannot unlock currently locked "' . $varName . '" by other user.');
+        }
+        $this->locked->offsetUnset($varName);
     }
 
     public function list(string $prefix = null): array
     {
-        // TODO: Implement list() method.
+        return $this->memory->list($prefix);
     }
 
     public function free()
     {
-        // TODO: Implement free() method.
+        $this->memory = new \ArrayObject();
     }
 
     private function locked(string $varName): bool
     {
         return $this->locked->offsetExists($varName);
+    }
+
+    private function lockedByThisUser(string $varName): bool
+    {
+        return $this->ccIndex === $this->locked[$varName] ?? 0;
     }
 }

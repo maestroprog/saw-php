@@ -2,19 +2,15 @@
 
 namespace Maestroprog\Saw\Memory;
 
-class LocalizedShareableMemory implements MemoryInterface, ShareableMemoryInterface
+final class LocalizedShareableMemory implements MemoryInterface, ShareableMemoryInterface
 {
+    private $memory;
     private $sharedMemory;
 
-    /**
-     * @var \ArrayObject
-     */
-    private $memory;
-
-    public function __construct(SharedMemoryInterface $sharedMemory)
+    public function __construct(LocalMemory $localMemory, SharedMemoryInterface $sharedMemory)
     {
+        $this->memory = $localMemory;
         $this->sharedMemory = $sharedMemory;
-        $this->free();
     }
 
     public function share(string $varName)
@@ -31,40 +27,31 @@ class LocalizedShareableMemory implements MemoryInterface, ShareableMemoryInterf
 
     public function has(string $varName): bool
     {
-        return $this->memory->offsetExists($varName);
+        return $this->memory->has($varName);
     }
 
     public function read(string $varName)
     {
-        return $this->memory->offsetGet($varName);
+        return $this->memory->read($varName);
     }
 
     public function write(string $varName, $variable): bool
     {
-        $this->memory->offsetSet($varName, $variable);
-        return true;
+        return $this->memory->write($varName, $variable);
     }
 
     public function remove(string $varName)
     {
-        $this->memory->offsetUnset($varName);
+        $this->memory->remove($varName);
     }
 
     public function list(string $prefix = null): array
     {
-        if (null !== $prefix) {
-            return array_filter($this->memory->getArrayCopy(), function ($key) use ($prefix) {
-                if (0 !== strpos($key, $prefix)) {
-                    return false;
-                }
-                return true;
-            }, ARRAY_FILTER_USE_KEY);
-        }
-        return $this->memory->getArrayCopy();
+        return $this->memory->list($prefix);
     }
 
     public function free()
     {
-        $this->memory = new \ArrayObject();
+        $this->memory->free();
     }
 }
