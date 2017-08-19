@@ -2,7 +2,7 @@
 
 namespace Maestroprog\Saw\Memory;
 
-class PersistentMemory implements MemoryInterface
+final class PersistentMemory implements MemoryInterface
 {
     private $memory;
     private $longTermMemory;
@@ -13,26 +13,45 @@ class PersistentMemory implements MemoryInterface
         $this->memory = $storage;
         $this->longTermMemory = $longTermMemory;
         $this->shortTermMemory = $cache;
+        // todo copying/moving variables to longterm and shortterm memory
     }
 
     public function has(string $varName): bool
     {
-        // TODO: Implement has() method.
+        if ($this->shortTermMemory->has($varName)) {
+            return true;
+        }
+        if ($this->longTermMemory->has($varName)) {
+            return true;
+        }
+        return $this->memory->has($varName);
     }
 
     public function read(string $varName)
     {
-        // TODO: Implement read() method.
+        if ($this->shortTermMemory->has($varName)) {
+            return $this->shortTermMemory->read($varName);
+        }
+        if ($this->longTermMemory->has($varName)) {
+            return $this->longTermMemory->read($varName);
+        }
+        return $this->memory->read($varName);
     }
 
     public function write(string $varName, $variable): bool
     {
-        // TODO: Implement write() method.
+        return $this->memory->write($varName, $variable);
     }
 
     public function remove(string $varName)
     {
-        // TODO: Implement remove() method.
+        if ($this->shortTermMemory->has($varName)) {
+            $this->shortTermMemory->remove($varName);
+        }
+        if ($this->longTermMemory->has($varName)) {
+            $this->longTermMemory->remove($varName);
+        }
+        $this->memory->remove($varName);
     }
 
     public function list(string $prefix = null): array

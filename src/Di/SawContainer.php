@@ -121,7 +121,6 @@ class SawContainer extends AbstractBasicContainer
     public function getSharedMemoryClient(): SharedMemoryInterface
     {
         return new SharedMemoryOnSocket(
-            $this->get(CommandDispatcher::class),
             $this->get(Commander::class),
             $this->get('ControllerClient') // todo connector
         );

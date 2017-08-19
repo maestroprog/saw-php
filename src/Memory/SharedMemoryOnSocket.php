@@ -7,23 +7,17 @@ use Maestroprog\Saw\Command\VariableFree;
 use Maestroprog\Saw\Command\VariableLock;
 use Maestroprog\Saw\Command\VariableRequest;
 use Maestroprog\Saw\Command\VariableShare;
-use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\Commander;
 
 final class SharedMemoryOnSocket implements SharedMemoryInterface
 {
-    private $dispatcher;
     private $commander;
     private $client;
 
-    public function __construct(
-        CommandDispatcher $dispatcher,
-        Commander $commander,
-        Client $client
-    )
+    public function __construct(Commander $commander, Client $client)
     {
-        $this->dispatcher = $dispatcher;
         $this->commander = $commander;
+        $this->client = $client;
     }
 
     public function has(string $varName, bool $withLocking = false): bool
