@@ -135,7 +135,7 @@ namespace tests\Standalone\Controller {
 
             // 3. Эмулируем успешное подключение воркера к контроллеру, подтверждение работы в балансировщике
 
-            $commander->runAsync(new WorkerAdd($client, 1));
+            $commander->runAsync(new WorkerAdd($client, 2));
 
             $this->assertTrue($workerPool->isExistsById(0), 'Worker with id = 0 must be exists!');
             $this->assertEquals(1, $workerPool->getById(0)->getProcessResource()->getPid());
