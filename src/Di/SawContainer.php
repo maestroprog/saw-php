@@ -79,7 +79,7 @@ class SawContainer extends AbstractBasicContainer
             $this->get(Client::class),
             $this->daemonConfig->getControllerAddress(),
             $this->daemonConfig->hasControllerPath()
-                ? '-f ' . $this->daemonConfig->getControllerPath()
+                ? '-f ' . $this->daemonConfig->getControllerPath() . ' ' . $this->daemonConfig->getConfigPath()
                 : $this->config['controller_starter'],
             $this->daemonConfig->getControllerPid()
         );
@@ -90,7 +90,7 @@ class SawContainer extends AbstractBasicContainer
         return new WorkerStarter(
             $this->get(Executor::class),
             $this->daemonConfig->hasWorkerPath()
-                ? '-f ' . $this->daemonConfig->getWorkerPath()
+                ? '-f ' . $this->daemonConfig->getWorkerPath() . ' ' . $this->daemonConfig->getConfigPath()
                 : $this->config['worker_starter']
         );
     }

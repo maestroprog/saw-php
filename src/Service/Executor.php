@@ -10,7 +10,7 @@ final class Executor
     /**
      * @var string path to php binaries
      */
-    public $phpBinaryPath = 'php';
+    public $phpBinaryPath = '/usr/bin/php';
 
     public function __construct(string $phpBinaryPath = null)
     {
@@ -27,7 +27,7 @@ final class Executor
      */
     public function exec($cmd): ProcessStatus
     {
-        $cmd = sprintf('%s %s', $this->phpBinaryPath, $cmd);
+        $cmd = sprintf('%s %s', $this->phpBinaryPath, $cmd . ' &');
         if (PHP_OS === 'WINNT') {
             $cmd = str_replace('/', '\\', $cmd);
             $cmd = str_replace('\\', '\\\\', $cmd);
@@ -37,9 +37,12 @@ final class Executor
             define('STDOUT', fopen('php://stdout', 'w'));
             define('STDERR', fopen('php://stderr', 'w'));
         }
-        $pipes = [STDIN, STDOUT, STDERR];
+        $pipes = [['file', 'a.log', 'a'], ['file', 'b.log', 'a'], ['file', 'c.log', 'a'],];
+//        $pipes = [STDIN, STDOUT, STDERR];
+//        $pipes = [];
+        $pipec = [];
         Log::log($cmd);
-        $resource = proc_open($cmd, [], $pipes, null, null, null);
+        $resource = proc_open($cmd, $pipes, $pipec, null, null, null);
         if (false === $resource) {
             throw new \RuntimeException('Cannot be run ' . $cmd);
         }

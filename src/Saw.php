@@ -105,7 +105,7 @@ final class Saw extends Singleton
             $config['controller_starter'] = <<<CMD
 -r "require_once '{$workDir}/bootstrap.php';
 \Maestroprog\Saw\Saw::instance()
-    ->init('{$workDir}/../config/saw.php')
+    ->init('{$configPath}')
     ->instanceController()
     ->start();"
 CMD;
@@ -114,7 +114,7 @@ CMD;
             $config['worker_starter'] = <<<CMD
 -r "require_once '{$workDir}/bootstrap.php';
 \Maestroprog\Saw\Saw::instance()
-    ->init('{$workDir}/../config/saw.php')
+    ->init('{$configPath}')
     ->instanceWorker()
     ->start();"
 CMD;
@@ -149,7 +149,7 @@ CMD;
         $this->container = Container::instance();
         $this->container->register($this->sawContainer = new SawContainer(
             $this->config = $config,
-            $this->daemonConfig = new DaemonConfig($config['daemon']),
+            $this->daemonConfig = new DaemonConfig($config['daemon'], $configPath),
             $this->config = new Configurator($config['sockets']),
             $this->controllerConfig = new ControllerConfig($config['controller']),
             SawEnv::web()

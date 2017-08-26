@@ -19,6 +19,7 @@ final class DebugData extends AbstractCommand
     {
         parent::__construct($client);
         $this->type = $type;
+        $this->result = $result;
     }
 
     public function getType(): string
@@ -44,7 +45,7 @@ final class DebugData extends AbstractCommand
 
     public function toArray(): array
     {
-        return ['type' => $this->type];
+        return ['type' => $this->type, 'result' => $this->result];
     }
 
     public static function fromArray(array $data, Client $client)

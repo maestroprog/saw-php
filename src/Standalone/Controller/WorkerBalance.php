@@ -59,10 +59,10 @@ class WorkerBalance implements CycleInterface
                 if (is_null($this->workerRun) || !$this->workerRun instanceof ProcessStatus) {
                     throw new \LogicException('Некорректное состояние запуска воркера.');
                 }
-                /*if ($context->getPid() !== $this->workerRun->getPid()) {
+                if ($context->getPid() !== $this->workerRun->getPid() + 1) {
                     // если pid запущенного процесса не соответсвует pid-у который сообщил воркер
-                    return false;
-                }*/
+                    throw new \RuntimeException('Unknown worker');
+                }
                 $this->addWorker(new Worker($this->workerRun, $context->getClient()));
             }),
             new CommandHandler(WorkerDelete::class, function (WorkerDelete $context) {

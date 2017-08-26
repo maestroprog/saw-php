@@ -89,6 +89,7 @@ final class Controller
     public function stop()
     {
         $this->work = false;
+        unlink($this->myPidFile);
         $this->server->disconnect();
     }
 

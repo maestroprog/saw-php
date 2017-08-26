@@ -43,21 +43,21 @@ namespace {
         {
             $header = microtime(true);
             $this->header = $this->thread('FOR1', function () {
-                for ($i = 0; $i < 1000000; $i++) {
+                for ($i = 0; $i < 10000000; $i++) {
                     ;
                 }
                 return 1;
             });
             $header = ($article = microtime(true)) - $header;
             $this->article = $this->thread('FOR2', function () {
-                for ($i = 0; $i < 1000000; $i++) {
+                for ($i = 0; $i < 10000000; $i++) {
                     ;
                 }
                 return 2;
             });
             $article = ($footer = microtime(true)) - $article;
             $this->footer = $this->thread('FOR3', function () {
-                for ($i = 0; $i < 1000000; $i++) {
+                for ($i = 0; $i < 10000000; $i++) {
                     ;
                 }
                 return 3;

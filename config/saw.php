@@ -5,10 +5,10 @@ return [
         'debug' => true,
     ],
     'daemon' => [
-        'controller_path' => __DIR__ . '/../../daemon/controller.php',
+        'controller_path' => __DIR__ . '/../bin/controller.php',
         'controller_pid' => __DIR__ . '/controller.pid',
 //        'mediator_path' => __DIR__ . '/../../daemon/mediator.php',
-        'worker_path' => __DIR__ . '/../../daemon/worker.php',
+        'worker_path' => __DIR__ . '/../bin/worker.php',
         'listen_address' => new \Esockets\socket\Ipv4Address('0.0.0.0', 59090),
         'controller_address' => new \Esockets\socket\Ipv4Address('127.0.0.1', 59090),
     ],
@@ -24,4 +24,7 @@ return [
     'application' => [],
     'factory' => require __DIR__ . '/factory.php',
     'sockets' => require __DIR__ . '/esockets_debug.php',
+    'multiThreading' => [
+//        'disabled' => true,
+    ]
 ];

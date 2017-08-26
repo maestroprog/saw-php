@@ -71,7 +71,7 @@ final class Worker
 
         $this->client->onReceive($this->onRead());
         $this->client->onDisconnect(function () {
-            Log::log('i disconnected!');
+            Log::log('i (worker) disconnected!!!');
             $this->work = false;
         });
 
@@ -114,7 +114,7 @@ final class Worker
             switch ($data) {
                 case 'ACCEPT':
                     $this->commander->runAsync(
-                        (new WorkerAdd($this->client, getmygid()))
+                        (new WorkerAdd($this->client, getmypid()))
                             ->onError(function () {
                                 $this->stop();
                             })

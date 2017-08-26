@@ -100,7 +100,7 @@ final class CommandDispatcher
                 $data['code'] = self::CODE_SUCCESS;
             } catch (\Throwable $e) {
                 // todo рефакторинг
-                $data['data'] = serialize($e);
+                $data['data'] = $e->getMessage();
                 $data['code'] = self::CODE_ERROR;
             } finally {
                 $data['state'] = self::STATE_RES;
