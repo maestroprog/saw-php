@@ -21,6 +21,7 @@
     "email": "maestroprog@gmail.com"
   },
   "require": {
+    "qwerty-php/app-interface": "@dev",
     "maestroprog/esockets": "dev-2.1-dev",
     "maestroprog/di-container": "^1.0"
   },
@@ -29,7 +30,12 @@
     "satooshi/php-coveralls": "^1.0"
   },
   "minimum-stability": "dev",
-  "repositories": [],
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "git@github.com:qwerty-php/app-interface.git"
+    }
+  ],
   "autoload": {
     "psr-4": {
       "Maestroprog\\Saw\\": "src/"

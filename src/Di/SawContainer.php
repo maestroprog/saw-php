@@ -69,6 +69,13 @@ class SawContainer extends AbstractBasicContainer
 
     public function setEnvironment(SawEnv $environment)
     {
+        if (!$this->environment->canChangeTo($environment)) {
+            throw new \LogicException(sprintf(
+                'Cannot change env "%s" to "%s".',
+                $this->environment,
+                $environment
+            ));
+        }
         $this->environment = $environment;
     }
 

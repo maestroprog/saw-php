@@ -3,10 +3,11 @@
 namespace Maestroprog\Saw;
 
 use Esockets\base\Configurator;
+use Maestroprog\Container\AbstractCompiledContainer;
 use Maestroprog\Container\Container;
 use Maestroprog\Container\ContainerCompiler;
 use Maestroprog\Saw\Application\ApplicationContainer;
-use Maestroprog\Saw\Application\ApplicationInterface;
+use Qwerty\Application\ApplicationInterface;
 use Maestroprog\Saw\Config\ApplicationConfig;
 use Maestroprog\Saw\Config\ControllerConfig;
 use Maestroprog\Saw\Config\DaemonConfig;
@@ -47,15 +48,10 @@ final class Saw extends Singleton
      */
     private $controllerConfig;
 
-    /**
-     * @var SawEnv
-     */
-    private $environment;
-
     private static $debug;
 
     /**
-     * @var Container
+     * @var Container|AbstractCompiledContainer|\CompiledContainer
      */
     private $container;
 
@@ -88,7 +84,10 @@ final class Saw extends Singleton
     {
         defined('INTERVAL') or define('INTERVAL', 10000);
         defined('SAW_DIR') or define('SAW_DIR', __DIR__);
-        $config = require_once $configPath;
+        $config = array_merge(
+            require_once SAW_DIR . '/../config/saw.php',
+            require_once $configPath
+        );
         // todo include config
         foreach (['saw', 'factory', 'daemon', 'sockets', 'application', 'controller'] as $check) {
             if (!isset($config[$check]) || !is_array($config[$check])) {
@@ -119,15 +118,6 @@ CMD;
     ->start();"
 CMD;
         }
-        /*
-        $this->factory = new SawFactory(
-            $config['factory'],
-            new DaemonConfig($config['daemon']),
-            new Configurator($config['sockets']),
-            new ControllerConfig($config['controller']),
-            SawEnv::web()
-        );*/
-//        $this->environment = SawEnv::web();
 
         $this->applicationLoader = new ApplicationLoader(
             new ApplicationConfig($config['application']),
@@ -154,8 +144,8 @@ CMD;
             $this->controllerConfig = new ControllerConfig($config['controller']),
             SawEnv::web()
         ));
-//        $compiler = new ContainerCompiler($this->container);
-//        $compiler->compile('/var/tmp/');
+        $compiler = new ContainerCompiler($this->container);
+        $compiler->compile('build/container.php');
 
         return $this;
     }
@@ -175,7 +165,7 @@ CMD;
     {
         return $this
             ->container
-            ->get(ApplicationContainer::class)
+            ->getApplicationContainer()
             ->add($this->applicationLoader->instanceApp($appClass));
     }
 

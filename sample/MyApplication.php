@@ -1,104 +1,106 @@
 <?php
 
-namespace {
+use Maestroprog\Saw\Application\BasicMultiThreaded;
+use Maestroprog\Saw\Saw;
+use Maestroprog\Saw\Thread\AbstractThread;
 
-    use Maestroprog\Saw\Application\BasicMultiThreaded;
-    use Maestroprog\Saw\Saw;
-    use Maestroprog\Saw\Thread\AbstractThread;
+class MyApplication extends BasicMultiThreaded
+{
+    const ID = 'saw.sample.www';
+    /**
+     * @var AbstractThread
+     */
+    private $header;
+    /**
+     * @var AbstractThread
+     */
+    private $article;
+    /**
+     * @var AbstractThread
+     */
+    private $footer;
 
-    class MyApplication extends BasicMultiThreaded
+    /**
+     * @var DemoView
+     */
+    private $view;
+
+    /**
+     * @var AbstractThread
+     */
+    private $times;
+
+    private $t;
+
+    public function init()
     {
-        const ID = 'saw.sample.www';
-        /**
-         * @var AbstractThread
-         */
-        private $header;
-        /**
-         * @var AbstractThread
-         */
-        private $article;
-        /**
-         * @var AbstractThread
-         */
-        private $footer;
-
-        /**
-         * @var DemoView
-         */
-        private $view;
-
-        /**
-         * @var AbstractThread
-         */
-        private $times;
-
-        private $t;
-
-        public function init()
-        {
-            $this->t = microtime(true);
-        }
-
-        protected function main()
-        {
-            $header = microtime(true);
-            $this->header = $this->thread('FOR1', function () {
-                for ($i = 0; $i < 10000000; $i++) {
-                    ;
-                }
-                return 1;
-            });
-            $header = ($article = microtime(true)) - $header;
-            $this->article = $this->thread('FOR2', function () {
-                for ($i = 0; $i < 10000000; $i++) {
-                    ;
-                }
-                return 2;
-            });
-            $article = ($footer = microtime(true)) - $article;
-            $this->footer = $this->thread('FOR3', function () {
-                for ($i = 0; $i < 10000000; $i++) {
-                    ;
-                }
-                return 3;
-            });
-            $footer = microtime(true) - $footer;
-            $this->view = new DemoView('<h1>header</h1><p>article</p><h6>footer</h6>');
-            $this->times = $this->threadArguments(
-                'TIMESTAMPS',
-                function (float $header, float $article, float $footer) {
-                    return $this->view->build(compact('header', 'article', 'footer'));
-                },
-                [$header, $article, $footer]
-            );
-        }
-
-        public function end()
-        {
-            $time = microtime(true);
-            $this->synchronizeAll();
-            var_dump('ended', microtime(true) - $time);
-            var_dump(microtime(true) - $this->t);
-            echo $this->header->getResult(),
-            $this->article->getResult(),
-            $this->footer->getResult(),
-            $this->times->getResult();
-        }
+        $this->t = microtime(true);
     }
 
-    class DemoView
+    public function prepare()
     {
-        private $template;
+        return null;
+    }
 
-        public function __construct(string $template)
-        {
-            $this->template = $template;
-        }
+    protected function main($prepared)
+    {
+        $header = microtime(true);
+        $this->header = $this->thread('FOR1', function () {
+            for ($i = 0; $i < 10000000; $i++) {
+                ;
+            }
+            return 1;
+        });
+        $header = ($article = microtime(true)) - $header;
+        $this->article = $this->thread('FOR2', function () {
+            for ($i = 0; $i < 10000000; $i++) {
+                ;
+            }
+            return 2;
+        });
+        $article = ($footer = microtime(true)) - $article;
+        $this->footer = $this->thread('FOR3', function () {
+            for ($i = 0; $i < 10000000; $i++) {
+                ;
+            }
+            return 3;
+        });
+        $footer = microtime(true) - $footer;
+        $this->view = new DemoView('<h1>header</h1><p>article</p><h6>footer</h6>');
+        $this->times = $this->threadArguments(
+            'TIMESTAMPS',
+            function (float $header, float $article, float $footer) {
+                return $this->view->build(compact('header', 'article', 'footer'));
+            },
+            [$header, $article, $footer]
+        );
+    }
 
-        public function build(array $variables): string
-        {
-            return Saw::getCurrentApp()->getId() . ' : '
-                . str_replace(array_keys($variables), $variables, $this->template);
-        }
+    public function end()
+    {
+        $time = microtime(true);
+        $this->synchronizeAll();
+        var_dump('ended', microtime(true) - $time);
+        var_dump(microtime(true) - $this->t);
+        echo $this->header->getResult(),
+        $this->article->getResult(),
+        $this->footer->getResult(),
+        $this->times->getResult();
+    }
+}
+
+class DemoView
+{
+    private $template;
+
+    public function __construct(string $template)
+    {
+        $this->template = $template;
+    }
+
+    public function build(array $variables): string
+    {
+        return Saw::getCurrentApp()->getId() . ' : '
+            . str_replace(array_keys($variables), $variables, $this->template);
     }
 }

@@ -33,20 +33,18 @@ final class Executor
             $cmd = str_replace('\\', '\\\\', $cmd);
         }
         if (PHP_SAPI !== 'cli') {
-            define('STDIN', fopen('php://stdin', 'r'));
-            define('STDOUT', fopen('php://stdout', 'w'));
+//            define('STDIN', fopen('php://stdin', 'r'));
+//            define('STDOUT', fopen('php://stdout', 'w'));
             define('STDERR', fopen('php://stderr', 'w'));
         }
-        $pipes = [['file', 'a.log', 'a'], ['file', 'b.log', 'a'], ['file', 'c.log', 'a'],];
-//        $pipes = [STDIN, STDOUT, STDERR];
-//        $pipes = [];
-        $pipec = [];
+        $pipes = [['pipe', 'r'], ['pipe', 'w'], STDERR];
+        $pipesOpened = [];
         Log::log($cmd);
-        $resource = proc_open($cmd, $pipes, $pipec, null, null, null);
+        $resource = proc_open($cmd, $pipes, $pipesOpened, null, null, ['bypass_shell' => true]);
         if (false === $resource) {
             throw new \RuntimeException('Cannot be run ' . $cmd);
         }
-        return new ProcessStatus($resource);
+        return new ProcessStatus($resource, $pipesOpened);
     }
 
     /**

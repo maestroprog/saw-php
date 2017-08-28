@@ -8,6 +8,7 @@ use Maestroprog\Saw\Memory\SharedMemoryInterface;
 use Maestroprog\Saw\Thread\AbstractThread;
 use Maestroprog\Saw\Thread\MultiThreadingInterface;
 use Maestroprog\Saw\Thread\MultiThreadingProvider;
+use Qwerty\Application\ApplicationInterface;
 
 abstract class BasicMultiThreaded implements ApplicationInterface, MultiThreadingInterface
 {
@@ -37,22 +38,21 @@ abstract class BasicMultiThreaded implements ApplicationInterface, MultiThreadin
     public function context(): ContextInterface
     {
         return $this
-            ->contextPool
-            ->add();
+            ->contextPool;
     }
 
     /**
      * Описывает основной поток выполнения приложения.
      * Этот метод должен содержать запуск остальных потоков приложения.
      *
+     * @param mixed $prepared Результаты выполнения метода prepare()
      * @return void
      */
-    abstract protected function main();
+    abstract protected function main($prepared);
 
     final public function run()
     {
-        $this->init(); // todo check
-        $this->main();
+        $this->main($this->prepare());
 
         $runningResult = $this->multiThreadingProvider
             ->getThreadRunner()
@@ -65,6 +65,8 @@ abstract class BasicMultiThreaded implements ApplicationInterface, MultiThreadin
         if (!$runningResult) {
             throw new \RuntimeException('Cannot run the threads.');
         }
+
+        $this->init();
 
         $this->end();
     }

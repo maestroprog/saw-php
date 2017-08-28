@@ -2,7 +2,7 @@
 
 namespace Maestroprog\Saw\Config;
 
-use Maestroprog\Saw\Application\ApplicationInterface;
+use Qwerty\Application\ApplicationInterface;
 use Maestroprog\Saw\Saw;
 
 final class ApplicationConfig

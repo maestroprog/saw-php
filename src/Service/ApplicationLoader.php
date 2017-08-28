@@ -2,10 +2,9 @@
 
 namespace Maestroprog\Saw\Service;
 
-use Maestroprog\Saw\Application\ApplicationInterface;
+use Qwerty\Application\ApplicationInterface;
 use Maestroprog\Saw\Config\ApplicationConfig;
 use Maestroprog\Saw\Saw;
-use Maestroprog\Saw\SawFactory;
 
 /**
  * Загрузчик приложений.

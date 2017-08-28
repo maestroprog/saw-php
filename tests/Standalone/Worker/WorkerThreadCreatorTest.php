@@ -5,7 +5,7 @@ namespace tests\Standalone\Worker;
 use Esockets\Client;
 use Maestroprog\Container\Container;
 use Maestroprog\Saw\Application\ApplicationContainer;
-use Maestroprog\Saw\Application\ApplicationInterface;
+use Qwerty\Application\ApplicationInterface;
 use Maestroprog\Saw\Command\ContainerOfCommands;
 use Maestroprog\Saw\Saw;
 use Maestroprog\Saw\Service\CommandDispatcher;
