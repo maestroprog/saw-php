@@ -37,8 +37,7 @@ abstract class BasicMultiThreaded implements ApplicationInterface, MultiThreadin
 
     public function context(): ContextInterface
     {
-        return $this
-            ->contextPool;
+        return $this->contextPool;
     }
 
     /**

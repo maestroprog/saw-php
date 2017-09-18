@@ -7,6 +7,7 @@ use Maestroprog\Container\AbstractCompiledContainer;
 use Maestroprog\Container\Container;
 use Maestroprog\Container\ContainerCompiler;
 use Maestroprog\Saw\Application\ApplicationContainer;
+use Qwerty\Application\ApplicationFactory;
 use Qwerty\Application\ApplicationInterface;
 use Maestroprog\Saw\Config\ApplicationConfig;
 use Maestroprog\Saw\Config\ControllerConfig;
@@ -121,7 +122,7 @@ CMD;
 
         $this->applicationLoader = new ApplicationLoader(
             new ApplicationConfig($config['application']),
-            $this
+            new ApplicationFactory($this->container)
         );
 
         if (!self::$debug) {
@@ -203,33 +204,5 @@ CMD;
             $this->container->get(ControllerConnectorInterface::class),
             $this->container->get(Commander::class)
         );
-    }
-
-    const VAR_POINTER = '@';
-
-    public function instanceArguments(array $arguments, array $variables = []): array
-    {
-        $arguments = array_map(function ($argument) use ($variables) {
-            if (is_array($argument)) {
-                $arguments = [];
-                if (isset($argument['arguments'])) {
-                    $arguments = $this->instanceArguments($argument['arguments'], $variables);
-                }
-                if (isset($argument['service'])) {
-                    $argument = $this->container->get($argument['service']);
-                } else {
-                    $argument = $arguments;
-                }
-            } else {
-                $char = substr($argument, 0, 1);
-                if (self::VAR_POINTER === $char) {
-                    $argument = $variables[substr($argument, 1)] ?? null;
-                } else {
-                    $argument = $this->container->get($argument);
-                }
-            }
-            return $argument;
-        }, $arguments);
-        return $arguments;
     }
 }
