@@ -55,18 +55,6 @@ final class ThreadResult extends AbstractCommand
         return $this->result;
     }
 
-    /**
-     * Команда сама знает, что ей нужно знать о задаче
-     * - поэтому дадим ей задачу, пускай возьмёт все, что ей нужно.
-     *
-     * @param AbstractThread $thread
-     * @return array
-     * @deprecated
-     */
-    public static function serializeTask(AbstractThread $thread): array
-    {
-    }
-
     public function toArray(): array
     {
         return [

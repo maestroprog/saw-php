@@ -53,7 +53,8 @@ abstract class BasicMultiThreaded implements ApplicationInterface, MultiThreadin
     {
         $this->main($this->prepare());
 
-        $runningResult = $this->multiThreadingProvider
+        $runningResult = $this
+            ->multiThreadingProvider
             ->getThreadRunner()
             ->runThreads(
                 $this->multiThreadingProvider

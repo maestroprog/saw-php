@@ -24,4 +24,9 @@ class ThreadRunner implements ThreadRunnerInterface
     {
         // TODO: Implement getThreadPool() method.
     }
+
+    public function broadcastThreads(AbstractThread ...$threads): bool
+    {
+        // TODO: Implement broadcastThreads() method.
+    }
 }

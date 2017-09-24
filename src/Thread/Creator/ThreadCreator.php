@@ -27,6 +27,7 @@ class ThreadCreator implements ThreadCreatorInterface
         static $threadId = 0;
         $thread = new ThreadWithCode(++$threadId, Saw::getCurrentApp()->getId(), $uniqueId, $code);
         $this->pools->getCurrentPool()->add($thread);
+
         return $thread;
     }
 

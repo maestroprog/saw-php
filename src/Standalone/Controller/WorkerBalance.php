@@ -19,14 +19,13 @@ use Maestroprog\Saw\ValueObject\ProcessStatus;
  */
 class WorkerBalance implements CycleInterface
 {
-    const WORKER_MIN = 8;
+    const WORKER_MIN = 3;
 
     private $workerStarter;
     private $commandDispatcher;
     private $commander;
     private $workerPool;
     private $workerMaxCount;
-
     private $workerMultiplier;
 
     /**
@@ -45,7 +44,8 @@ class WorkerBalance implements CycleInterface
         CommandDispatcher $commandDispatcher,
         Commander $commander,
         WorkerPool $workerPool,
-        int $workerMaxCount
+        int $workerMaxCount,
+        int $workerMultiplier
     )
     {
         $this->workerStarter = $workerStarter;
@@ -53,6 +53,7 @@ class WorkerBalance implements CycleInterface
         $this->commander = $commander;
         $this->workerPool = $workerPool;
         $this->workerMaxCount = $workerMaxCount;
+        $this->workerMultiplier = $workerMultiplier;
 
         $commandDispatcher->addHandlers([
             new CommandHandler(WorkerAdd::class, function (WorkerAdd $context) {
@@ -61,6 +62,8 @@ class WorkerBalance implements CycleInterface
                 }
                 if ($context->getPid() !== $this->workerRun->getPid() + 1) {
                     // если pid запущенного процесса не соответсвует pid-у который сообщил воркер
+                    // может быть ситуация, когда в системе закончились pid-ы и нумерация сбросилась
+                    // или между созданием процессов вклинился ещё один процесс
                     throw new \RuntimeException('Unknown worker');
                 }
                 $this->addWorker(new Worker($this->workerRun, $context->getClient()));
@@ -78,9 +81,11 @@ class WorkerBalance implements CycleInterface
     public function work()
     {
         $forceRunWorker = false;
+        $workerNeed = self::WORKER_MIN * $this->workerMultiplier;
+        $workerCount = count($this->workerPool);
 
         if (
-            (count($this->workerPool) < self::WORKER_MIN || $forceRunWorker)
+            ($workerCount < $workerNeed && $workerCount < $this->workerMaxCount || $forceRunWorker)
             && !$this->running
         ) {
             // run new worker
@@ -112,6 +117,7 @@ class WorkerBalance implements CycleInterface
         }
         $this->running = 0;
         $this->workerPool->add($worker);
+
         return true;
     }
 
@@ -144,10 +150,6 @@ class WorkerBalance implements CycleInterface
     {
         $selectedWorker = null;
         foreach ($this->workerPool as $worker) {
-            /*if (!is_null($filter) && !$filter($worker)) {
-                // отфильтровали
-                continue;
-            }*/
             /**
              * @var $worker Worker
              */
@@ -166,6 +168,7 @@ class WorkerBalance implements CycleInterface
         if (is_null($selectedWorker)) {
             throw new \RuntimeException('Cannot select worker.');
         }
+
         return $selectedWorker;
     }
 }
