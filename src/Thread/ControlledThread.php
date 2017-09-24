@@ -17,12 +17,14 @@ class ControlledThread extends AbstractThread
     public function __construct(int $id, string $applicationId, string $uniqueId, Client $threadFrom)
     {
         parent::__construct($id, $applicationId, $uniqueId);
+
         $this->threadFrom = $threadFrom;
     }
 
     public function run(): AbstractThread
     {
         $this->state = self::STATE_RUN;
+
         return $this;
     }
 

@@ -6,15 +6,16 @@ use Esockets\Client;
 use Maestroprog\Saw\Thread\AbstractThread;
 
 /**
- * Общая команда "Запуск потока".
+ * Общая команда "Широковещательный поток".
  * От воркера отправляется контроллеру для постановки в очередь на запуск.
  * От контроллера отправляется воркеру в виде приказа для запуска задачи.
+ * Отличается от @see ThreadRun только тем, что поток будет выполнен на всех воркерах.
  *
  * Результат выполнения команды - успешный/неуспешный запуск выполнения задачи.
  */
-final class ThreadRun extends AbstractCommand
+final class ThreadBroadcast extends AbstractCommand
 {
-    const NAME = 'trun';
+    const NAME = 'tbdt';
 
     private $runId;
     private $applicationId;

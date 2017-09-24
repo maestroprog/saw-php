@@ -120,6 +120,15 @@ CMD;
 CMD;
         }
 
+        $this->container = Container::instance();
+        $this->container->register($this->sawContainer = new SawContainer(
+            $this->config = $config,
+            $this->daemonConfig = new DaemonConfig($config['daemon'], $configPath),
+            $this->config = new Configurator($config['sockets']),
+            $this->controllerConfig = new ControllerConfig($config['controller']),
+            SawEnv::web()
+        ));
+
         $this->applicationLoader = new ApplicationLoader(
             new ApplicationConfig($config['application']),
             new ApplicationFactory($this->container)
@@ -137,14 +146,6 @@ CMD;
             });
         }
 
-        $this->container = Container::instance();
-        $this->container->register($this->sawContainer = new SawContainer(
-            $this->config = $config,
-            $this->daemonConfig = new DaemonConfig($config['daemon'], $configPath),
-            $this->config = new Configurator($config['sockets']),
-            $this->controllerConfig = new ControllerConfig($config['controller']),
-            SawEnv::web()
-        ));
         $compiler = new ContainerCompiler($this->container);
         $compiler->compile('build/container.php');
 
@@ -178,6 +179,7 @@ CMD;
     public function instanceController(): Controller
     {
         $this->sawContainer->setEnvironment(SawEnv::controller());
+
         return new Controller(
             $this->container->get('WorkCycle'),
             $this->container->get(ControllerCore::class),
@@ -190,6 +192,7 @@ CMD;
     public function instanceWorker(): Worker
     {
         $this->sawContainer->setEnvironment(SawEnv::worker());
+
         return new Worker(
             $this->container->get(WorkerCore::class),
             $this->container->get(ControllerConnectorInterface::class),
@@ -200,6 +203,7 @@ CMD;
     public function instanceDebugger(): Debugger
     {
         $this->sawContainer->setEnvironment(SawEnv::worker());
+
         return new Debugger(
             $this->container->get(ControllerConnectorInterface::class),
             $this->container->get(Commander::class)

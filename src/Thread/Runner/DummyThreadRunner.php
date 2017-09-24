@@ -30,6 +30,12 @@ class DummyThreadRunner implements ThreadRunnerInterface
             $this->threadPool->add($thread);
             $thread->run();
         }
+
         return true;
+    }
+
+    public function broadcastThreads(AbstractThread ...$threads): bool
+    {
+        return $this->runThreads($threads);
     }
 }
