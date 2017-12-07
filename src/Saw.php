@@ -5,10 +5,7 @@ namespace Maestroprog\Saw;
 use Esockets\base\Configurator;
 use Maestroprog\Container\AbstractCompiledContainer;
 use Maestroprog\Container\Container;
-use Maestroprog\Container\ContainerCompiler;
 use Maestroprog\Saw\Application\ApplicationContainer;
-use Qwerty\Application\ApplicationFactory;
-use Qwerty\Application\ApplicationInterface;
 use Maestroprog\Saw\Config\ApplicationConfig;
 use Maestroprog\Saw\Config\ControllerConfig;
 use Maestroprog\Saw\Config\DaemonConfig;
@@ -24,6 +21,8 @@ use Maestroprog\Saw\Standalone\Debugger;
 use Maestroprog\Saw\Standalone\Worker;
 use Maestroprog\Saw\Standalone\WorkerCore;
 use Maestroprog\Saw\ValueObject\SawEnv;
+use Qwerty\Application\ApplicationFactory;
+use Qwerty\Application\ApplicationInterface;
 
 /**
  * Класс-синглтон, реализующий загрузку Saw приложения Saw.
@@ -146,8 +145,8 @@ CMD;
             });
         }
 
-        $compiler = new ContainerCompiler($this->container);
-        $compiler->compile('build/container.php');
+        /*$compiler = new ContainerCompiler($this->container);
+        $compiler->compile('build/container.php');*/
 
         return $this;
     }
