@@ -36,7 +36,8 @@ interface MemoryInterface
     /**
      * Удаляет переменную из памяти.
      *
-     * @param string void
+     * @param string
+     * @return void
      * @throws \OutOfBoundsException Если переменная не существует
      */
     public function remove(string $varName);

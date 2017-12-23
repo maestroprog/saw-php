@@ -55,12 +55,12 @@ class Context implements ContextInterface
 
     public function list(string $prefix = null): array
     {
-        // TODO: Implement list() method.
+        return $this->sharedMemory->list($prefix);
     }
 
     public function free()
     {
-        // TODO: Implement free() method.
+        $this->sharedMemory->free();
     }
 
     public function __sleep()
@@ -75,6 +75,11 @@ class Context implements ContextInterface
 
     protected function getKey(string $varName): string
     {
-        return 'context.' . $this->id . '.' . $varName;
+        return $this->getPrefix() . $varName;
+    }
+
+    private function getPrefix(): string
+    {
+        return 'context.' . $this->id . '.';
     }
 }

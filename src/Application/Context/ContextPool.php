@@ -2,8 +2,16 @@
 
 namespace Maestroprog\Saw\Application\Context;
 
+use Maestroprog\Saw\Memory\MemoryInterface;
+
 final class ContextPool
 {
+    private $storage;
+
+    public function __construct(MemoryInterface $memory)
+    {
+    }
+
     /**
      * Добавляет новый контекст в пул.
      *
@@ -15,6 +23,11 @@ final class ContextPool
     }
 
     public function switchTo(string $contextId)
+    {
+
+    }
+
+    public function current(): ContextInterface
     {
 
     }

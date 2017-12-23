@@ -13,7 +13,6 @@ final class PersistentMemory implements MemoryInterface
         $this->memory = $storage;
         $this->longTermMemory = $longTermMemory;
         $this->shortTermMemory = $cache;
-        // todo copying/moving variables to longterm and shortterm memory
     }
 
     public function has(string $varName): bool
@@ -33,9 +32,15 @@ final class PersistentMemory implements MemoryInterface
             return $this->shortTermMemory->read($varName);
         }
         if ($this->longTermMemory->has($varName)) {
-            return $this->longTermMemory->read($varName);
+            $value = $this->longTermMemory->read($varName);
+            $this->shortTermMemory->write($varName, $value);
+
+            return $value;
         }
-        return $this->memory->read($varName);
+        $value = $this->memory->read($varName);
+        $this->longTermMemory->write($varName, $value);
+
+        return $value;
     }
 
     public function write(string $varName, $variable): bool
@@ -56,11 +61,13 @@ final class PersistentMemory implements MemoryInterface
 
     public function list(string $prefix = null): array
     {
-        // TODO: Implement list() method.
+        return $this->memory->list($prefix);
     }
 
     public function free()
     {
-        // TODO: Implement free() method.
+        $this->shortTermMemory->free();
+        $this->longTermMemory->free();
+        $this->memory->free();
     }
 }

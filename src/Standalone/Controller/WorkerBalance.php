@@ -57,16 +57,20 @@ class WorkerBalance implements CycleInterface
 
         $commandDispatcher->addHandlers([
             new CommandHandler(WorkerAdd::class, function (WorkerAdd $context) {
-                if (is_null($this->workerRun) || !$this->workerRun instanceof ProcessStatus) {
+                if (!$this->workerRun instanceof ProcessStatus) {
                     throw new \LogicException('Некорректное состояние запуска воркера.');
                 }
-                if ($context->getPid() !== $this->workerRun->getPid() + 1) {
+                /*if ($context->getPid() !== $this->workerRun->getPid() + 1) {
                     // если pid запущенного процесса не соответсвует pid-у который сообщил воркер
                     // может быть ситуация, когда в системе закончились pid-ы и нумерация сбросилась
                     // или между созданием процессов вклинился ещё один процесс
                     throw new \RuntimeException('Unknown worker');
+                }*/
+                $newWorker = $worker = new Worker($this->workerRun, $context->getClient());
+                if (!$this->addWorker($newWorker)) {
+                    $this->removeWorker($newWorker);
+                    Log::log('Не удалось добавить воркера!');
                 }
-                $this->addWorker(new Worker($this->workerRun, $context->getClient()));
             }),
             new CommandHandler(WorkerDelete::class, function (WorkerDelete $context) {
                 $this->workerPool->removeById($context->getClient()->getConnectionResource()->getId());
@@ -80,12 +84,11 @@ class WorkerBalance implements CycleInterface
      */
     public function work()
     {
-        $forceRunWorker = false;
         $workerNeed = self::WORKER_MIN * $this->workerMultiplier;
         $workerCount = count($this->workerPool);
 
         if (
-            ($workerCount < $workerNeed && $workerCount < $this->workerMaxCount || $forceRunWorker)
+            ($workerCount < $workerNeed && $workerCount < $this->workerMaxCount)
             && !$this->running
         ) {
             // run new worker
@@ -98,8 +101,6 @@ class WorkerBalance implements CycleInterface
                 // убиваем запущенный процесс, если он ещё работает
                 $this->workerRun->kill();
             }
-        } else {
-            // so good; всё ок
         }
     }
 

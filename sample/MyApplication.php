@@ -63,6 +63,10 @@ class MyApplication extends BasicMultiThreaded
             for ($i = 0; $i < 10000000; $i++) {
                 ;
             }
+//            $for3 = $this->context()->read('FOR3');
+//            $for3++;
+//            $this->context()->write('FOR3', $for3);
+//            return '3-' . $for3;
             return 3;
         });
         $footer = microtime(true) - $footer;

@@ -3,7 +3,9 @@
 namespace Maestroprog\Saw\Memory;
 
 use Esockets\Client;
+use Maestroprog\Saw\Command\MemoryFree;
 use Maestroprog\Saw\Command\VariableFree;
+use Maestroprog\Saw\Command\VariableList;
 use Maestroprog\Saw\Command\VariableLock;
 use Maestroprog\Saw\Command\VariableRequest;
 use Maestroprog\Saw\Command\VariableShare;
@@ -22,8 +24,7 @@ final class SharedMemoryOnSocket implements SharedMemoryInterface
 
     public function has(string $varName, bool $withLocking = false): bool
     {
-        // todo withLocking without value
-        $cmd = new VariableRequest($this->client, $varName);
+        $cmd = new VariableRequest($this->client, $varName, true, $withLocking);
 
         return $this
             ->commander
@@ -33,7 +34,6 @@ final class SharedMemoryOnSocket implements SharedMemoryInterface
 
     public function read(string $varName, bool $withLocking = true)
     {
-        // todo withLocking
         $cmd = new VariableRequest($this->client, $varName, false, $withLocking);
 
         return $this
@@ -67,15 +67,11 @@ final class SharedMemoryOnSocket implements SharedMemoryInterface
     public function lock(string $varName)
     {
         $message = null;
-        $cmd = $this
-            ->commander
-            ->runSync(
-                (new VariableLock($this->client, $varName, true))
-                    ->onError(function (VariableLock $context) use (&$message) {
-                        $message = $context->getAccomplishedResult();
-                    }),
-                self::LOCK_TIMEOUT
-            );
+        $lockCommand = (new VariableLock($this->client, $varName, true))
+            ->onError(function (VariableLock $context) use (&$message) {
+                $message = $context->getAccomplishedResult();
+            });
+        $cmd = $this->commander->runSync($lockCommand, self::LOCK_TIMEOUT);
         if (!$cmd->isAccomplished() || !$cmd->isSuccessful()) {
             throw new MemoryLockException($message ?? 'Unknown MemoryLock error.');
         }
@@ -85,15 +81,11 @@ final class SharedMemoryOnSocket implements SharedMemoryInterface
     {
         //todo async! thinking -- really?
         $message = null;
-        $cmd = $this
-            ->commander
-            ->runSync(
-                (new VariableLock($this->client, $varName, false))
-                    ->onError(function (VariableLock $context) use (&$message) {
-                        $message = $context->getAccomplishedResult();
-                    }),
-                self::LOCK_TIMEOUT
-            );
+        $unlockCommand = (new VariableLock($this->client, $varName, false))
+            ->onError(function (VariableLock $context) use (&$message) {
+                $message = $context->getAccomplishedResult();
+            });
+        $cmd = $this->commander->runSync($unlockCommand, self::LOCK_TIMEOUT);
         if (!$cmd->isAccomplished() || !$cmd->isSuccessful()) {
             throw new MemoryLockException($message ?? 'Unknown MemoryLock error.');
         }
@@ -101,11 +93,29 @@ final class SharedMemoryOnSocket implements SharedMemoryInterface
 
     public function list(string $prefix = null): array
     {
-        // TODO: Implement list() method.
+        $message = null;
+        $listCommand = (new VariableList($this->client, $prefix))
+            ->onError(function (VariableList $context) use (&$message) {
+                $message = $context->getAccomplishedResult();
+            });
+        $cmd = $this->commander->runSync($listCommand, self::READ_TIMEOUT * 10);
+        if (!$cmd->isAccomplished() || !$cmd->isSuccessful()) {
+            throw new MemoryLockException($message ?? 'Unknown MemoryLock error.');
+        }
+
+        return $cmd->getAccomplishedResult();
     }
 
     public function free()
     {
-        // TODO: Implement free() method.
+        $message = null;
+        $freeCommand = (new MemoryFree($this->client))
+            ->onError(function (VariableList $context) use (&$message) {
+                $message = $context->getAccomplishedResult();
+            });
+        $cmd = $this->commander->runSync($freeCommand, self::WRITE_TIMEOUT);
+        if (!$cmd->isAccomplished() || !$cmd->isSuccessful()) {
+            throw new MemoryLockException($message ?? 'Unknown MemoryLock error.');
+        }
     }
 }

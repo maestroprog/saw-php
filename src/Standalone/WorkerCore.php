@@ -86,32 +86,31 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
              */
             if ($thread->getCurrentState() === AbstractThread::STATE_NEW) {
                 $this->applicationContainer->switchTo($this->applicationContainer->get($thread->getApplicationId()));
-                $thread->run()->setResult(
-                    $this->applicationContainer
-                        ->getThreadPools()
-                        ->getCurrentPool()
-                        ->getThreadById($thread->getUniqueId())
-                        ->setArguments($thread->getArguments())
-                        ->run()
-                        ->getResult()
+                $result = $this->applicationContainer
+                    ->getThreadPools()
+                    ->getCurrentPool()
+                    ->getThreadById($thread->getUniqueId())
+                    ->setArguments($thread->getArguments())
+                    ->run()
+                    ->getResult();
+                $thread->run()->setResult($result);
+                $resultCommand = new ThreadResult(
+                    $this->client,
+                    $thread->getId(),
+                    $thread->getApplicationId(),
+                    $thread->getUniqueId(),
+                    $thread->getResult()
                 );
-                $this->commander->runAsync(
-                    (new ThreadResult(
-                        $this->client,
-                        $thread->getId(),
-                        $thread->getApplicationId(),
-                        $thread->getUniqueId(),
-                        $thread->getResult()
-                    ))
-                        ->onSuccess(function () use ($thread) {
-                            // $this->threadPool->getThreadById($thread->getId());
-                            $this->threadPool->remove($thread);
-                        })
-                        ->onError(function () {
-                            // todo
-                            throw new \RuntimeException('Cannot run tres command.');
-                        })
-                );
+                $resultCommand
+                    ->onSuccess(function () use ($thread) {
+                        // $this->threadPool->getThreadById($thread->getId());
+                        $this->threadPool->remove($thread);
+                    })
+                    ->onError(function () {
+                        // todo
+                        throw new \RuntimeException('Cannot run tres command.');
+                    });
+                $this->commander->runAsync($resultCommand);
             }
         }
     }

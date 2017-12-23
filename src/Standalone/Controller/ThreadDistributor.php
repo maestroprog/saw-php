@@ -263,21 +263,21 @@ final class ThreadDistributor implements CycleInterface
             return;
         }
 
-        $this->commander->runAsync(
-            (new ThreadResult(
-                $sourceThread->getThreadFrom(),
-                $sourceThread->getId(),
-                $sourceThread->getApplicationId(),
-                $sourceThread->getUniqueId(),
-                $sourceThread->getResult()
-            ))
-                ->onError(function () {
-
-                })
-                ->onSuccess(function () use ($sourceThread, $runThread) {
-
-                })
+        $resultCommand = new ThreadResult(
+            $sourceThread->getThreadFrom(),
+            $sourceThread->getId(),
+            $sourceThread->getApplicationId(),
+            $sourceThread->getUniqueId(),
+            $sourceThread->getResult()
         );
+        $resultCommand
+            ->onError(function () {
+
+            })
+            ->onSuccess(function () use ($sourceThread, $runThread) {
+
+            });
+        $this->commander->runAsync($resultCommand);
     }
 
     public function getWorkerPool(): WorkerPool

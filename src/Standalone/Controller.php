@@ -68,9 +68,9 @@ final class Controller
             throw new \Exception('Cannot start: not connected');
         }
         $this->server->onFound($this->onConnectPeer());
-        /*todo register_shutdown_function(function () {
+        register_shutdown_function(function () {
             $this->stop();
-        });*/
+        });
 //        $this->server->block();
         $this->work();
     }

@@ -9,22 +9,28 @@ use Maestroprog\Saw\Command\DebugData;
 use Maestroprog\Saw\Entity\Worker;
 use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\Commander;
+use Maestroprog\Saw\Service\ControllerRunner;
+use Maestroprog\Saw\Service\ControllerStarter;
+use Maestroprog\Saw\Service\Executor;
 
 class ControllerDebugger
 {
     private $commandDispatcher;
     private $commander;
     private $threadDistributor;
+    private $runner;
 
     public function __construct(
         CommandDispatcher $commandDispatcher,
         Commander $commander,
-        ThreadDistributor $threadDistributor
+        ThreadDistributor $threadDistributor,
+        ControllerRunner $runner
     )
     {
         $this->commandDispatcher = $commandDispatcher;
         $this->commander = $commander;
         $this->threadDistributor = $threadDistributor;
+        $this->runner = $runner;
 
         $commandDispatcher->addHandlers([
             new CommandHandler(DebugCommand::class, function (DebugCommand $context) {
@@ -58,11 +64,15 @@ class ControllerDebugger
                 $result['result'] = $this->fullStat($query);
                 break;
             case 'help':
-                $result['result'] = 'List of commands: killall, fullstat, help, restart';
+                $result['result'] = 'List of commands: killall, fullstat, help, restart, stop';
                 break;
             case 'restart':
+                register_shutdown_function(function () {
+                    $this->runner->start();
+                });
+            // no break
+            case 'stop':
                 $this->killAll();
-                // todo restart
                 exit;
             // no break
             default:
@@ -73,14 +83,14 @@ class ControllerDebugger
 
     protected function killAll(): int
     {
+        error_log('будет убито ' . $this->threadDistributor->getWorkerPool()->count());
         $count = 0;
+        $workerBalance = $this->threadDistributor->getWorkerBalance();
         foreach ($this->threadDistributor->getWorkerPool() as $worker) {
-            /**
-             * @var Worker $worker
-             */
-            $this->threadDistributor->getWorkerBalance()->removeWorker($worker);
+            $workerBalance->removeWorker($worker);
             $count++;
         }
+        error_log('убито ' . $count);
         return $count;
     }
 
@@ -90,7 +100,6 @@ class ControllerDebugger
     {
         $this->debuggerClient = $command->getClient();
         foreach ($this->threadDistributor->getWorkerPool() as $worker) {
-            /** @var Worker $worker */
             $this->commander->runAsync(new DebugCommand($worker->getClient(), 'fullstat'));
         }
         return [

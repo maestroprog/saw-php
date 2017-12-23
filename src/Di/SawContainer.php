@@ -21,6 +21,7 @@ use Maestroprog\Saw\Memory\SharedMemoryInterface;
 use Maestroprog\Saw\Memory\SharedMemoryOnSocket;
 use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\Commander;
+use Maestroprog\Saw\Service\ControllerRunner;
 use Maestroprog\Saw\Service\ControllerStarter;
 use Maestroprog\Saw\Service\Executor;
 use Maestroprog\Saw\Service\WorkerStarter;
@@ -79,15 +80,22 @@ class SawContainer extends AbstractBasicContainer
         $this->environment = $environment;
     }
 
+    public function getControllerRunner(): ControllerRunner
+    {
+        return new ControllerRunner(
+            $this->get(Executor::class),
+            $this->daemonConfig->hasControllerPath()
+                ? '-f ' . $this->daemonConfig->getControllerPath() . ' ' . $this->daemonConfig->getConfigPath()
+                : $this->config['controller_starter']
+        );
+    }
+
     public function getControllerStarter(): ControllerStarter
     {
         return new ControllerStarter(
-            $this->get(Executor::class),
+            $this->get(ControllerRunner::class),
             $this->get(Client::class),
             $this->daemonConfig->getControllerAddress(),
-            $this->daemonConfig->hasControllerPath()
-                ? '-f ' . $this->daemonConfig->getControllerPath() . ' ' . $this->daemonConfig->getConfigPath()
-                : $this->config['controller_starter'],
             $this->daemonConfig->getControllerPid()
         );
     }
@@ -109,28 +117,6 @@ class SawContainer extends AbstractBasicContainer
             $phpPath = $this->config['executor'];
         }
         return new Executor($phpPath);
-    }
-
-    public function getLocalMemory(): MemoryInterface
-    {
-        return new LocalMemory();
-    }
-
-    public function getSharedMemoryServer(): SharedMemoryServer
-    {
-        return new SharedMemoryServer(
-            $this->get(LocalMemory::class),
-            $this->get(CommandDispatcher::class),
-            $this->get(Commander::class)
-        );
-    }
-
-    public function getSharedMemoryClient(): SharedMemoryInterface
-    {
-        return new SharedMemoryOnSocket(
-            $this->get(Commander::class),
-            $this->get('ControllerClient') // todo connector
-        );
     }
 
     public function getControllerConnector(): ControllerConnectorInterface
@@ -180,7 +166,8 @@ class SawContainer extends AbstractBasicContainer
             $this->get(CommandDispatcher::class),
             $this->get(Commander::class),
             $this->get(WorkerStarter::class),
-            $this->controllerConfig
+            $this->controllerConfig,
+            $this->get(ControllerRunner::class)
         );
     }
 
@@ -198,11 +185,6 @@ class SawContainer extends AbstractBasicContainer
             $this->get(ApplicationContainer::class),
             Saw::instance()->getApplicationLoader()
         );
-    }
-
-    public function getContextPool(): ContextPool
-    {
-        return new ContextPool();
     }
 
     public function getContainerOfUniqueThreadPools(): ContainerOfThreadPools

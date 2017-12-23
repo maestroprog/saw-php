@@ -4,7 +4,9 @@ namespace Maestroprog\Saw\Standalone\Controller;
 
 use Esockets\Client;
 use Maestroprog\Saw\Command\CommandHandler;
+use Maestroprog\Saw\Command\MemoryFree;
 use Maestroprog\Saw\Command\VariableFree;
+use Maestroprog\Saw\Command\VariableList;
 use Maestroprog\Saw\Command\VariableLock;
 use Maestroprog\Saw\Command\VariableRequest;
 use Maestroprog\Saw\Command\VariableShare;
@@ -63,6 +65,16 @@ final class SharedMemoryServer implements SharedMemoryInterface
                     } else {
                         $this->unlock($context->getKey());
                     }
+                }),
+                new CommandHandler(VariableList::class, function (VariableList $context) {
+                    $this->dispatchClient($context->getClient());
+
+                    return $this->list($context->getPrefix());
+                }),
+                new CommandHandler(MemoryFree::class, function (MemoryFree $context) {
+                    $this->dispatchClient($context->getClient());
+
+                    $this->free();
                 }),
             ]);
     }

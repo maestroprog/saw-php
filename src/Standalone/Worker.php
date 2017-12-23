@@ -57,14 +57,14 @@ final class Worker
     {
         if (extension_loaded('pcntl')) {
             pcntl_signal(SIGINT, function ($sig) {
-                $this->commander->runAsync((new WorkerDelete($this->client))
+                $deleteCommand = (new WorkerDelete($this->client))
                     ->onSuccess(function () {
                         $this->stop();
                     })
                     ->onError(function () {
                         throw new \RuntimeException('Cannot delete this worker from controller.');
-                    })
-                );
+                    });
+                $this->commander->runAsync($deleteCommand);
             });
             $this->dispatchSignals = true;
         }
@@ -95,6 +95,7 @@ final class Worker
     public function work()
     {
 //        $this->client->block(); todo check
+        $liveTick = 0;
         while ($this->work) {
             if ($this->dispatchSignals) {
                 pcntl_signal_dispatch();
@@ -102,6 +103,11 @@ final class Worker
             $this->connector->work();
             $this->core->work();
             usleep(10000);
+            if (++$liveTick % 100 === 0) {
+                if (!$this->client->live()) {
+                    throw new \RuntimeException('Connection died!');
+                }
+            }
         }
     }
 
@@ -113,15 +119,14 @@ final class Worker
 
             switch ($data) {
                 case 'ACCEPT':
-                    $this->commander->runAsync(
-                        (new WorkerAdd($this->client, getmypid()))
-                            ->onError(function () {
-                                $this->stop();
-                            })
-                            ->onSuccess(function () {
-                                $this->core->run();
-                            })
-                    );
+                    $addCommand = (new WorkerAdd($this->client, getmypid()))
+                        ->onError(function () {
+                            $this->stop();
+                        })
+                        ->onSuccess(function () {
+                            $this->core->run();
+                        });
+                    $this->commander->runAsync($addCommand);
                     break;
                 case 'INVALID':
                     throw new \RuntimeException('Is an invalid worker.');

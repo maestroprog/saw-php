@@ -18,7 +18,7 @@ final class ShortTermMemory extends CacheMemory implements ShareableMemoryInterf
 
     protected function prefix(): string
     {
-        return parent::prefix(); // todo WTF?
+        // return parent::prefix(); // todo WTF? // Почему тут был вызов parent::prefix()? это не могло работать.
         return $this->prefix;
     }
 

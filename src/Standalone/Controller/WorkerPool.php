@@ -51,9 +51,12 @@ class WorkerPool implements \Countable, \IteratorAggregate
         unset($this->workers[$workerId]);
     }
 
+    /**
+     * @return \ArrayIterator|\Traversable|Worker[]
+     */
     public function getIterator()
     {
-        return $this->workers->getIterator();
+        return new \ArrayIterator($this->workers->getArrayCopy());
     }
 
     public function count()

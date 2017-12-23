@@ -10,6 +10,7 @@ use Maestroprog\Saw\Config\ApplicationConfig;
 use Maestroprog\Saw\Config\ControllerConfig;
 use Maestroprog\Saw\Config\DaemonConfig;
 use Maestroprog\Saw\Connector\ControllerConnectorInterface;
+use Maestroprog\Saw\Di\MemoryContainer;
 use Maestroprog\Saw\Di\SawContainer;
 use Maestroprog\Saw\Heading\Singleton;
 use Maestroprog\Saw\Service\ApplicationLoader;
@@ -127,6 +128,7 @@ CMD;
             $this->controllerConfig = new ControllerConfig($config['controller']),
             SawEnv::web()
         ));
+        $this->container->register(new MemoryContainer());
 
         $this->applicationLoader = new ApplicationLoader(
             new ApplicationConfig($config['application']),
