@@ -2,7 +2,6 @@
 
 namespace Maestroprog\Saw\Thread\Synchronizer;
 
-
 use Maestroprog\Saw\Connector\ControllerConnectorInterface;
 use Maestroprog\Saw\Thread\AbstractThread;
 use Maestroprog\Saw\Thread\Runner\ThreadRunnerInterface;
@@ -43,6 +42,8 @@ class WebThreadSynchronizer implements SynchronizerInterface
             }
             if ($synchronizeOk) {
                 $synchronized = true;
+            } else {
+                usleep(INTERVAL);
             }
         } while (!$synchronized);
     }

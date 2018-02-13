@@ -3,12 +3,10 @@
 namespace Maestroprog\Saw\Standalone\Controller;
 
 use Esockets\Server;
-use Maestroprog\Saw\Standalone\ControllerCore;
 
 class ControllerWorkCycle implements CycleInterface
 {
     private $server;
-    private $core;
 
     /**
      * @var bool включить вызов pcntl_dispatch_signals()

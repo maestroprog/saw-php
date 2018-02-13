@@ -3,6 +3,7 @@
 namespace Maestroprog\Saw\Standalone\Worker;
 
 use Esockets\Client;
+use Esockets\debug\Log;
 use Maestroprog\Saw\Application\ApplicationContainer;
 use Maestroprog\Saw\Command\CommandHandler;
 use Maestroprog\Saw\Command\ThreadBroadcast;
@@ -13,6 +14,7 @@ use Maestroprog\Saw\Service\Commander;
 use Maestroprog\Saw\Thread\AbstractThread;
 use Maestroprog\Saw\Thread\Pool\AbstractThreadPool;
 use Maestroprog\Saw\Thread\Pool\PoolOfUniqueThreads;
+use Maestroprog\Saw\Thread\Pool\RunnableThreadPool;
 use Maestroprog\Saw\Thread\Runner\ThreadRunnerDisablingSupportInterface;
 
 final class WorkerThreadRunner implements ThreadRunnerDisablingSupportInterface
@@ -39,7 +41,7 @@ final class WorkerThreadRunner implements ThreadRunnerDisablingSupportInterface
         $this->applicationContainer = $applicationContainer;
 
         $this->threadPool = new PoolOfUniqueThreads();
-        $this->runThreadPool = new PoolOfUniqueThreads();
+        $this->runThreadPool = new RunnableThreadPool(); // пул именно "работающих" потоков
 
         $this->commandDispatcher
             ->addHandlers([
@@ -73,10 +75,7 @@ final class WorkerThreadRunner implements ThreadRunnerDisablingSupportInterface
                     ));
                 } catch (\Throwable $e) {
                     $thread->run();
-                    var_dump($e->getTraceAsString());
-                    die($e->getMessage());
-                } finally {
-                    var_dump($thread->getResult(), $thread->hasResult());
+                    Log::log($e->getMessage());
                 }
             }
         } else {
@@ -108,7 +107,7 @@ final class WorkerThreadRunner implements ThreadRunnerDisablingSupportInterface
                     $thread->run();
                     $result = true;
                 } catch (\Throwable $e) {
-                    var_dump($e->getTraceAsString());
+                    Log::log($e->getMessage());
                 }
             }
         }

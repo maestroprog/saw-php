@@ -57,6 +57,12 @@ final class Worker
     {
         if (extension_loaded('pcntl')) {
             pcntl_signal(SIGINT, function ($sig) {
+                // пофиксил бесконечное ожидание завершение работы воркера
+                static $tryCount = 0;
+                $tryCount++;
+                if ($tryCount > 3) {
+                    $this->stop();
+                }
                 $deleteCommand = (new WorkerDelete($this->client))
                     ->onSuccess(function () {
                         $this->stop();
@@ -102,7 +108,6 @@ final class Worker
             }
             $this->connector->work();
             $this->core->work();
-            usleep(10000);
             if (++$liveTick % 100 === 0) {
                 if (!$this->client->live()) {
                     throw new \RuntimeException('Connection died!');
@@ -114,9 +119,6 @@ final class Worker
     protected function onRead(): callable
     {
         return function ($data) {
-            /*Log::log('I RECEIVED  :)');
-            Log::log(var_export($data, true));*/
-
             switch ($data) {
                 case 'ACCEPT':
                     $addCommand = (new WorkerAdd($this->client, getmypid()))

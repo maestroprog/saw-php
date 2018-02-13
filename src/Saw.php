@@ -10,6 +10,7 @@ use Maestroprog\Saw\Config\ApplicationConfig;
 use Maestroprog\Saw\Config\ControllerConfig;
 use Maestroprog\Saw\Config\DaemonConfig;
 use Maestroprog\Saw\Connector\ControllerConnectorInterface;
+use Maestroprog\Saw\Connector\WorkerConnectorWithCore;
 use Maestroprog\Saw\Di\MemoryContainer;
 use Maestroprog\Saw\Di\SawContainer;
 use Maestroprog\Saw\Heading\Singleton;
@@ -52,7 +53,7 @@ final class Saw extends Singleton
     private static $debug;
 
     /**
-     * @var Container|AbstractCompiledContainer|\CompiledContainer
+     * @var Container|AbstractCompiledContainer
      */
     private $container;
 

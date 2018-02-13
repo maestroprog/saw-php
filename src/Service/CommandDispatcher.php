@@ -3,7 +3,6 @@
 namespace Maestroprog\Saw\Service;
 
 use Esockets\Client;
-use Esockets\debug\Log;
 use Maestroprog\Saw\Command\AbstractCommand;
 use Maestroprog\Saw\Command\CommandHandler;
 use Maestroprog\Saw\Command\ContainerOfCommands;

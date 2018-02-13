@@ -3,7 +3,6 @@
 namespace Maestroprog\Saw\Command;
 
 use Esockets\Client;
-use Maestroprog\Saw\Thread\AbstractThread;
 
 /**
  * Общая команда "Результат выполнения потока".
@@ -21,7 +20,13 @@ final class ThreadResult extends AbstractCommand
     private $uniqueId;
     private $result;
 
-    public function __construct(Client $client, int $runId, string $appId, string $uniqueId, $result)
+    public function __construct(
+        Client $client,
+        int $runId,
+        string $appId,
+        string $uniqueId,
+        $result
+    )
     {
         parent::__construct($client);
         $this->runId = $runId;
@@ -67,6 +72,12 @@ final class ThreadResult extends AbstractCommand
 
     public static function fromArray(array $data, Client $client)
     {
-        return new self($client, $data['run_id'], $data['application_id'], $data['unique_id'], $data['result']);
+        return new self(
+            $client,
+            $data['run_id'],
+            $data['application_id'],
+            $data['unique_id'],
+            $data['result']
+        );
     }
 }

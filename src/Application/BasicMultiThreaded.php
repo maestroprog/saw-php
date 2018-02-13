@@ -8,9 +8,14 @@ use Maestroprog\Saw\Memory\SharedMemoryInterface;
 use Maestroprog\Saw\Thread\AbstractThread;
 use Maestroprog\Saw\Thread\MultiThreadingInterface;
 use Maestroprog\Saw\Thread\MultiThreadingProvider;
+use Maestroprog\Saw\Thread\Pool\AbstractThreadPool;
+use Maestroprog\Saw\Thread\Runner\ThreadRunnerInterface;
 use Qwerty\Application\ApplicationInterface;
 
-abstract class BasicMultiThreaded implements ApplicationInterface, MultiThreadingInterface
+abstract class BasicMultiThreaded implements
+    ApplicationInterface,
+    ThreadRunnerInterface,
+    MultiThreadingInterface
 {
     private $id;
     private $multiThreadingProvider;
@@ -66,8 +71,6 @@ abstract class BasicMultiThreaded implements ApplicationInterface, MultiThreadin
             throw new \RuntimeException('Cannot run the threads.');
         }
 
-        $this->init();
-
         $this->end();
     }
 
@@ -79,6 +82,21 @@ abstract class BasicMultiThreaded implements ApplicationInterface, MultiThreadin
     final public function threadArguments(string $uniqueId, callable $code, array $arguments): AbstractThread
     {
         return $this->multiThreadingProvider->getThreadCreator()->threadArguments($uniqueId, $code, $arguments);
+    }
+
+    public function runThreads(array $threads): bool
+    {
+        return $this->multiThreadingProvider->getThreadRunner()->runThreads($threads);
+    }
+
+    public function broadcastThreads(AbstractThread ...$threads): bool
+    {
+        return $this->multiThreadingProvider->getThreadRunner()->broadcastThreads(...$threads);
+    }
+
+    public function getThreadPool(): AbstractThreadPool
+    {
+        return $this->multiThreadingProvider->getThreadRunner()->getThreadPool();
     }
 
     final public function synchronizeOne(AbstractThread $thread)

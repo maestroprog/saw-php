@@ -148,6 +148,8 @@ final class ThreadDistributor implements CycleInterface
                 }
             } catch (\RuntimeException $e) {
                 $this->threadRunQueue->push($thread); // откладываем до лучших времён.
+
+                return; // выходим отсюда до лучших времен
             } catch (\Throwable $e) {
                 throw new \Exception('Cannot balance thread ' . $thread->getUniqueId(), 0, $e);
             }

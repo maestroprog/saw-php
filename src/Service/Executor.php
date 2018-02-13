@@ -34,10 +34,10 @@ final class Executor
         }
         if (PHP_SAPI !== 'cli') {
 //            define('STDIN', fopen('php://stdin', 'r'));
-//            define('STDOUT', fopen('php://stdout', 'w'));
+            define('STDOUT', fopen('php://stdout', 'w'));
             define('STDERR', fopen('php://stderr', 'w'));
         }
-        $pipes = [['pipe', 'r'], ['pipe', 'w'], STDERR];
+        $pipes = [['pipe', 'r'], STDOUT, STDERR];
         $pipesOpened = [];
         Log::log($cmd);
         $resource = proc_open($cmd, $pipes, $pipesOpened, null, null, ['bypass_shell' => true]);

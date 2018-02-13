@@ -1,11 +1,7 @@
 <?php
 
-
-ini_set('display_errors', true);
-error_reporting(E_ALL);
-ini_set('log_errors', true);
-ini_set('error_log', __DIR__ . '/messages-debug.log');
-file_put_contents(ini_get('error_log'), '');
+define('ENV', 'DEBUG');
+// TODO add config for logging
 
 if (PHP_SAPI !== 'cli') {
     header('HTTP/1.1 503 Service Unavailable');

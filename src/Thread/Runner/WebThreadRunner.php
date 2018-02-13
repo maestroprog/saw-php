@@ -44,6 +44,7 @@ class WebThreadRunner implements ThreadRunnerInterface
      */
     public function runThreads(array $threads): bool
     {
+//        $commands = [];
         foreach ($threads as $thread) {
             $this->runThreads->add($thread);
             try {
@@ -60,10 +61,16 @@ class WebThreadRunner implements ThreadRunnerInterface
                 $thread->run();
                 var_dump($e->getTraceAsString());
                 die($e->getMessage());
-            } finally {
-//                var_dump($thread->getResult(), $thread->hasResult());
             }
         }
+//        try {
+//            $this
+//                ->commander
+//                ->runPacket(...$commands);
+//        } catch (\Throwable $e) {
+////            $thread->run(); todo run really if not run into saw?
+//            die($e->getMessage());
+//        }
 
         return true;
     }
