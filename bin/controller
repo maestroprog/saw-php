@@ -1,0 +1,16 @@
+#!/usr/bin/php
+<?php
+
+define('ENV', 'CONTROLLER');
+
+$configFile = require 'cli.php';
+
+try {
+    \Maestroprog\Saw\Saw::instance()
+        ->init($configFile)
+        ->instanceController()
+        ->start();
+} catch (Exception $e) {
+    echo "\e[1;31m{$e->getMessage()}\033[0m" . PHP_EOL;
+    exit(127);
+}

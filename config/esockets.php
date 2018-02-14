@@ -9,5 +9,5 @@ return [
         SocketFactory::SOCKET_DOMAIN => AF_INET,
         SocketFactory::SOCKET_PROTOCOL => SOL_UDP,
     ],
-    Configurator::PROTOCOL_CLASS => \Esockets\protocol\EasyDatagram::class,
+    Configurator::PROTOCOL_CLASS => \Esockets\protocol\EasyDataGram::class,
 ];

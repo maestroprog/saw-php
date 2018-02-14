@@ -129,7 +129,7 @@ class WorkerBalance implements CycleInterface
      */
     public function removeWorker(Worker $worker)
     {
-        $this->commander->runAsync(new WorkerDelete($worker->getClient()));
+        $this->commander->runSync(new WorkerDelete($worker->getClient()), 5);
         $this->workerPool->remove($worker);
         // TODO
         // нужно запилить механизм перехвата невыполненных задач

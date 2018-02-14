@@ -7,7 +7,6 @@ use Maestroprog\Saw\Config\ControllerConfig;
 use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\Commander;
 use Maestroprog\Saw\Service\ControllerRunner;
-use Maestroprog\Saw\Service\Executor;
 use Maestroprog\Saw\Service\WorkerStarter;
 use Maestroprog\Saw\Standalone\Controller\ControllerDebugger;
 use Maestroprog\Saw\Standalone\Controller\CycleInterface;
@@ -71,5 +70,13 @@ final class ControllerCore implements CycleInterface
     {
         $this->workerBalance->work();
         $this->threadDistributor->work();
+    }
+
+    public function stop(): void
+    {
+        $workerBalance = $this->threadDistributor->getWorkerBalance();
+        foreach ($this->threadDistributor->getWorkerPool() as $worker) {
+            $workerBalance->removeWorker($worker);
+        }
     }
 }

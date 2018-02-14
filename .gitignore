@@ -1,8 +1,4 @@
-/*.sock
-*.log
-*.pid
-phpunit.phar
 composer.lock
-/vendor
-/.vagrant/
+*.pid
+/vendor/
 /build/

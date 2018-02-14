@@ -87,8 +87,8 @@ final class Saw extends Singleton
         defined('INTERVAL') or define('INTERVAL', 10000);
         defined('SAW_DIR') or define('SAW_DIR', __DIR__);
         $config = array_merge(
-            require_once SAW_DIR . '/../config/saw.php',
-            require_once $configPath
+            require __DIR__ . '/../config/saw.php',
+            require $configPath
         );
         // todo include config
         foreach (['saw', 'factory', 'daemon', 'sockets', 'application', 'controller'] as $check) {
@@ -100,11 +100,10 @@ final class Saw extends Singleton
             self::$debug = (bool)$config['saw']['debug'];
         }
 
-        $workDir = __DIR__;
+        $initScript = __DIR__ . '/../bin/cli.php';
         if (!isset($config['controller_starter'])) {
-            // todo config path
             $config['controller_starter'] = <<<CMD
--r "require_once '{$workDir}/bootstrap.php';
+-r "require_once '{$initScript}';
 \Maestroprog\Saw\Saw::instance()
     ->init('{$configPath}')
     ->instanceController()
@@ -113,7 +112,7 @@ CMD;
         }
         if (!isset($config['worker_starter'])) {
             $config['worker_starter'] = <<<CMD
--r "require_once '{$workDir}/bootstrap.php';
+-r "require_once '{$initScript}';
 \Maestroprog\Saw\Saw::instance()
     ->init('{$configPath}')
     ->instanceWorker()
