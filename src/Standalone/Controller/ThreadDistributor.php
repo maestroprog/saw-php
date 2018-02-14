@@ -204,9 +204,9 @@ final class ThreadDistributor implements CycleInterface
             $runThread->getUniqueId(),
             $runThread->getArguments()
         ))
-            ->onError(function () use ($sourceThread) {
+            ->onError(function (ThreadRun $threadResult) use ($sourceThread) {
                 Log::log('Error run task ' . $sourceThread->getUniqueId());
-                throw new \RuntimeException('Error run thread.');
+                throw new \RuntimeException('Error run thread.' . $threadResult->getAccomplishedResult());
             })
             ->onSuccess(function () use ($worker, $sourceThread, $runThread) {
 

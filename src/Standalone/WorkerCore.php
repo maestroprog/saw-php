@@ -107,7 +107,7 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
                     ->setArguments($thread->getArguments());
                 $result = $realThread->run()->getResult();
 
-                $thread->run()->setExecTime($realThread->getExecutionTime())->setResult($result);
+                $thread->run()->setResult($result);
                 $resultCommand = new ThreadResult(
                     $this->client,
                     $thread->getId(),

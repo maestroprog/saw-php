@@ -1,7 +1,8 @@
 <?php
 
+namespace Maestroprog\Saw\Sample;
+
 use Maestroprog\Saw\Application\BasicMultiThreaded;
-use Maestroprog\Saw\Saw;
 use Maestroprog\Saw\Thread\AbstractThread;
 
 class MyApplication extends BasicMultiThreaded
@@ -46,21 +47,21 @@ class MyApplication extends BasicMultiThreaded
     {
         $header = microtime(true);
         $this->header = $this->thread('FOR1', function () {
-            for ($i = 0; $i < 10000000; $i++) {
+            for ($i = 0; $i < 1000; $i++) {
                 ;
             }
             return 1;
         });
         $header = ($article = microtime(true)) - $header;
         $this->article = $this->thread('FOR2', function () {
-            for ($i = 0; $i < 10000000; $i++) {
+            for ($i = 0; $i < 1000; $i++) {
                 ;
             }
             return 2;
         });
         $article = ($footer = microtime(true)) - $article;
         $this->footer = $this->thread('FOR3', function () {
-            for ($i = 0; $i < 10000000; $i++) {
+            for ($i = 0; $i < 1000; $i++) {
                 ;
             }
 //            $for3 = $this->context()->read('FOR3');
@@ -90,21 +91,5 @@ class MyApplication extends BasicMultiThreaded
         $this->article->getResult(),
         $this->footer->getResult(),
         $this->times->getResult();
-    }
-}
-
-class DemoView
-{
-    private $template;
-
-    public function __construct(string $template)
-    {
-        $this->template = $template;
-    }
-
-    public function build(array $variables): string
-    {
-        return Saw::getCurrentApp()->getId() . ' : '
-            . str_replace(array_keys($variables), $variables, $this->template);
     }
 }

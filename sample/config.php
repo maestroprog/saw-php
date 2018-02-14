@@ -2,9 +2,8 @@
 
 use Maestroprog\Saw\Application\Context\ContextPool;
 use Maestroprog\Saw\Memory\SharedMemoryInterface;
+use Maestroprog\Saw\Sample\MyApplication;
 use Maestroprog\Saw\Thread\MultiThreadingProvider;
-
-require_once __DIR__ . '/MyApplication.php';
 
 return array_merge_recursive(
     require __DIR__ . '/../config/saw.php',

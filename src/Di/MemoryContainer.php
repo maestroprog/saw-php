@@ -67,6 +67,6 @@ class MemoryContainer extends AbstractBasicContainer
 
     public function getContextPool(): ContextPool
     {
-        return new ContextPool();
+        return new ContextPool($this->get(MemoryInterface::class));
     }
 }
