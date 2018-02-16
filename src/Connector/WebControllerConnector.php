@@ -52,7 +52,7 @@ final class WebControllerConnector implements ControllerConnectorInterface
         } catch (ConnectionException $e) {
             $this->controllerStarter->start();
         }
-        $this->client->block();
+//        $this->client->block();
     }
 
     /**
