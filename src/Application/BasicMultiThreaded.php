@@ -6,10 +6,13 @@ use Maestroprog\Saw\Application\Context\ContextInterface;
 use Maestroprog\Saw\Application\Context\ContextPool;
 use Maestroprog\Saw\Memory\SharedMemoryInterface;
 use Maestroprog\Saw\Thread\AbstractThread;
+use Maestroprog\Saw\Thread\BroadcastThread;
 use Maestroprog\Saw\Thread\MultiThreadingInterface;
 use Maestroprog\Saw\Thread\MultiThreadingProvider;
 use Maestroprog\Saw\Thread\Pool\AbstractThreadPool;
 use Maestroprog\Saw\Thread\Runner\ThreadRunnerInterface;
+use Maestroprog\Saw\Thread\Synchronizer\SynchronizationThreadInterface;
+use Maestroprog\Saw\Thread\ThreadWithCode;
 use Qwerty\Application\ApplicationInterface;
 
 abstract class BasicMultiThreaded implements
@@ -45,27 +48,20 @@ abstract class BasicMultiThreaded implements
         return $this->contextPool;
     }
 
-    /**
-     * Описывает основной поток выполнения приложения.
-     * Этот метод должен содержать запуск остальных потоков приложения.
-     *
-     * @param mixed $prepared Результаты выполнения метода prepare()
-     * @return void
-     */
-    abstract protected function main($prepared);
-
     final public function run()
     {
+        $this->init();
+
         $this->main($this->prepare());
 
         $runningResult = $this
             ->multiThreadingProvider
             ->getThreadRunner()
             ->runThreads(
-                $this->multiThreadingProvider
-                    ->getThreadPools()
-                    ->getCurrentPool()
-                    ->getThreads()
+                ...$this->multiThreadingProvider
+                ->getThreadPools()
+                ->getCurrentPool()
+                ->getThreads()
             );
         if (!$runningResult) {
             throw new \RuntimeException('Cannot run the threads.');
@@ -74,22 +70,32 @@ abstract class BasicMultiThreaded implements
         $this->end();
     }
 
-    final public function thread(string $uniqueId, callable $code): AbstractThread
+    /**
+     * Описывает основной поток выполнения приложения.
+     * Этот метод должен содержать запуск остальных потоков приложения.
+     *
+     * @param mixed $prepared Результаты выполнения метода prepare()
+     *
+     * @return void
+     */
+    abstract protected function main($prepared);
+
+    final public function thread(string $uniqueId, callable $code): ThreadWithCode
     {
         return $this->multiThreadingProvider->getThreadCreator()->thread($uniqueId, $code);
     }
 
-    final public function threadArguments(string $uniqueId, callable $code, array $arguments): AbstractThread
+    final public function threadArguments(string $uniqueId, callable $code, array $arguments): ThreadWithCode
     {
         return $this->multiThreadingProvider->getThreadCreator()->threadArguments($uniqueId, $code, $arguments);
     }
 
-    public function runThreads(array $threads): bool
+    public function runThreads(AbstractThread ...$threads): bool
     {
-        return $this->multiThreadingProvider->getThreadRunner()->runThreads($threads);
+        return $this->multiThreadingProvider->getThreadRunner()->runThreads(...$threads);
     }
 
-    public function broadcastThreads(AbstractThread ...$threads): bool
+    public function broadcastThreads(BroadcastThread ...$threads): bool
     {
         return $this->multiThreadingProvider->getThreadRunner()->broadcastThreads(...$threads);
     }
@@ -99,18 +105,27 @@ abstract class BasicMultiThreaded implements
         return $this->multiThreadingProvider->getThreadRunner()->getThreadPool();
     }
 
-    final public function synchronizeOne(AbstractThread $thread)
+    /**
+     * @inheritdoc
+     */
+    final public function synchronizeOne(SynchronizationThreadInterface $thread): \Generator
     {
-        $this->multiThreadingProvider->getSynchronizer()->synchronizeOne($thread);
+        yield $this->multiThreadingProvider->getSynchronizer()->synchronizeOne($thread);
     }
 
-    final public function synchronizeThreads(array $threads)
+    /**
+     * @inheritdoc
+     */
+    final public function synchronizeThreads(SynchronizationThreadInterface ...$threads): \Generator
     {
-        $this->multiThreadingProvider->getSynchronizer()->synchronizeThreads($threads);
+        yield $this->multiThreadingProvider->getSynchronizer()->synchronizeThreads(...$threads);
     }
 
-    final public function synchronizeAll()
+    /**
+     * @inheritdoc
+     */
+    final public function synchronizeAll(): \Generator
     {
-        $this->multiThreadingProvider->getSynchronizer()->synchronizeAll();
+        yield $this->multiThreadingProvider->getSynchronizer()->synchronizeAll();
     }
 }

@@ -8,24 +8,24 @@ use Maestroprog\Saw\Service\CommandDispatcher;
 abstract class AbstractCommand
 {
     const NAME = 'void';
-
+    protected $accomplishedResult;
     private $client;
     private $onSuccess;
     private $onError;
-
     private $accomplished = false;
     private $successful;
-    protected $accomplishedResult;
+
+    protected function __construct(Client $client)
+    {
+        $this->client = $client;
+    }
 
     final public static function isValidClass(string $class): bool
     {
         return is_subclass_of($class, AbstractCommand::class);
     }
 
-    protected function __construct(Client $client)
-    {
-        $this->client = $client;
-    }
+    abstract public static function fromArray(array $data, Client $client);
 
     /**
      * С помощью позщнего статического связывания возвращает имя команды,
@@ -78,12 +78,15 @@ abstract class AbstractCommand
         return $this->toArray();
     }
 
+    abstract public function toArray(): array;
+
     /**
      * Метод вызывается диспетчером команд, и он реализует механизм вызова колбэков,
      * назначаемых в @see CommandCode::onSuccess() и @see CommandCode::onError().
      *
      * @param mixed $result
      * @param int $code
+     *
      * @return void
      * @throws \RuntimeException Исключение бросается в случае получения неизвестного статуса выполнения команды
      */
@@ -114,6 +117,7 @@ abstract class AbstractCommand
      * и должна обработать результат выполнения команды.
      *
      * @param callable $callback
+     *
      * @return $this
      */
     final public function onSuccess(callable $callback): self
@@ -129,6 +133,7 @@ abstract class AbstractCommand
      * и должна обработать результат выполнения команды.
      *
      * @param callable $callback
+     *
      * @return $this
      */
 
@@ -138,8 +143,4 @@ abstract class AbstractCommand
 
         return $this;
     }
-
-    abstract public function toArray(): array;
-
-    abstract public static function fromArray(array $data, Client $client);
 }

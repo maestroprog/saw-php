@@ -2,8 +2,8 @@
 
 namespace Maestroprog\Saw\Connector;
 
-use Esockets\base\AbstractAddress;
-use Esockets\base\exception\ConnectionException;
+use Esockets\Base\AbstractAddress;
+use Esockets\Base\Exception\ConnectionException;
 use Esockets\Client;
 use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\ControllerStarter;
@@ -36,13 +36,37 @@ final class WebControllerConnector implements ControllerConnectorInterface
         $this->connect();
     }
 
+    protected function onRead(): callable
+    {
+        return function ($data) {
+
+            switch ($data) {
+                case 'ACCEPT':
+                    // todo
+                    break;
+                case 'INVALID':
+                    // todo
+                    break;
+                case 'BYE':
+
+                    break;
+                default:
+                    if (is_array($data) && $this->commandDispatcher->valid($data)) {
+                        $this->commandDispatcher->dispatch($data, $this->client);
+                    } else {
+                        $this->client->send('INVALID');
+                    }
+            }
+        };
+    }
+
     /**
      * Выполняет подключение к контроллеру.
      * Если контроллер не работает, выполняется запуск контроллера.
      *
      * @throws \RuntimeException Если не удалось запустить контроллер
      */
-    public function connect()
+    public function connect(): void
     {
         try {
             if (!$this->controllerStarter->isExistsPidFile()) {
@@ -74,29 +98,5 @@ final class WebControllerConnector implements ControllerConnectorInterface
     public function send($data): bool
     {
         return $this->client->send($data);
-    }
-
-    protected function onRead(): callable
-    {
-        return function ($data) {
-
-            switch ($data) {
-                case 'ACCEPT':
-                    // todo
-                    break;
-                case 'INVALID':
-                    // todo
-                    break;
-                case 'BYE':
-
-                    break;
-                default:
-                    if (is_array($data) && $this->commandDispatcher->valid($data)) {
-                        $this->commandDispatcher->dispatch($data, $this->client);
-                    } else {
-                        $this->client->send('INVALID');
-                    }
-            }
-        };
     }
 }

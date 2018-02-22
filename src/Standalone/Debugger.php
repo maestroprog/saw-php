@@ -2,8 +2,8 @@
 
 namespace Maestroprog\Saw\Standalone;
 
-use Esockets\base\exception\ConnectionException;
-use Esockets\debug\Log;
+use Esockets\Base\Exception\ConnectionException;
+use Esockets\Debug\Log;
 use Maestroprog\Saw\Command\CommandHandler;
 use Maestroprog\Saw\Command\DebugCommand;
 use Maestroprog\Saw\Command\DebugData;
@@ -27,6 +27,14 @@ class Debugger
                 $this->output($context);
             }),
         ]);
+    }
+
+    protected function output(DebugData $debug)
+    {
+        switch ($debug->getType()) {
+            default:
+                fwrite(STDOUT, (string)$debug->getResult() . PHP_EOL);
+        }
     }
 
     public function start()
@@ -66,11 +74,14 @@ class Debugger
         }
         echo 'Please, type command', PHP_EOL;
         stream_set_blocking(STDIN, 0);
+        $workGenerator = $this->connector->work();
+        $workGenerator->rewind();
         while (true) {
             if ($pcntl) {
                 pcntl_signal_dispatch();
             }
-            $this->connector->work();
+            $workGenerator->current();
+            $workGenerator->next();
             if ($cmd = fgets(STDIN)) {
                 $this->commander->runAsync(
                     (new DebugCommand($this->connector->getClient(), trim($cmd)))
@@ -80,14 +91,6 @@ class Debugger
                 );
             }
             usleep(100000);
-        }
-    }
-
-    protected function output(DebugData $debug)
-    {
-        switch ($debug->getType()) {
-            default:
-                fwrite(STDOUT, (string)$debug->getResult() . PHP_EOL);
         }
     }
 }

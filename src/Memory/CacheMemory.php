@@ -24,6 +24,16 @@ abstract class CacheMemory implements MemoryInterface
         return $thereIs;
     }
 
+    private function pfx(string $varName): string
+    {
+        return $this->prefix() . '.' . $varName;
+    }
+
+    protected function access(string $varName)
+    {
+        $this->memory->write('lifetime.' . $this->pfx($varName), time());
+    }
+
     public function read(string $varName)
     {
         $value = $this->memory->read($this->pfx($varName));
@@ -49,15 +59,5 @@ abstract class CacheMemory implements MemoryInterface
     public function free()
     {
         $this->memory->free();
-    }
-
-    protected function access(string $varName)
-    {
-        $this->memory->write('lifetime.' . $this->pfx($varName), time());
-    }
-
-    private function pfx(string $varName): string
-    {
-        return $this->prefix() . '.' . $varName;
     }
 }

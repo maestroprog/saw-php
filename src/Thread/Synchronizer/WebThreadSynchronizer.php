@@ -3,7 +3,6 @@
 namespace Maestroprog\Saw\Thread\Synchronizer;
 
 use Maestroprog\Saw\Connector\ControllerConnectorInterface;
-use Maestroprog\Saw\Thread\AbstractThread;
 use Maestroprog\Saw\Thread\Runner\ThreadRunnerInterface;
 
 class WebThreadSynchronizer implements SynchronizerInterface
@@ -17,52 +16,34 @@ class WebThreadSynchronizer implements SynchronizerInterface
         $this->connector = $connector;
     }
 
-    public function synchronizeOne(AbstractThread $thread)
+    public function synchronizeOne(SynchronizationThreadInterface $thread): \Generator
     {
-        while (!$thread->hasResult()) {
-            $this->connector->work();
+        while (!$thread->isSynchronized()) {
+            yield from $this->connector->work();
         }
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function synchronizeThreads(array $threads)
+    public function synchronizeAll(): \Generator
+    {
+        yield $this->synchronizeThreads($this->threadRunner->getThreadPool()->getThreads());
+    }
+
+    public function synchronizeThreads(SynchronizationThreadInterface ...$threads): \Generator
     {
         $synchronized = false;
+        $generator = $this->connector->work();
         do {
-            $this->connector->work();
             $synchronizeOk = true;
-            /**
-             * @var $thread AbstractThread
-             */
             foreach ($threads as $thread) {
-                $synchronizeOk = $synchronizeOk && $thread->hasResult();
-                if (!$synchronizeOk) break;
+                $synchronizeOk = $synchronizeOk && $thread->isSynchronized();
+                if (!$synchronizeOk) {
+                    break;
+                }
             }
             if ($synchronizeOk) {
                 $synchronized = true;
             } else {
-                usleep(INTERVAL);
-            }
-        } while (!$synchronized);
-    }
-
-    public function synchronizeAll()
-    {
-        $synchronized = false;
-        do {
-            $this->connector->work();
-            $synchronizeOk = true;
-            foreach ($this->threadRunner->getThreadPool() as $thread) {
-                /**
-                 * @var $thread AbstractThread
-                 */
-                $synchronizeOk = $synchronizeOk && $thread->hasResult();
-                if (!$synchronizeOk) break;
-            }
-            if ($synchronizeOk) {
-                $synchronized = true;
+                yield from $generator;
             }
         } while (!$synchronized);
     }

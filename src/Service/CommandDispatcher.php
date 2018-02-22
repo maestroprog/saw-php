@@ -38,10 +38,11 @@ final class CommandDispatcher
      * Добавляет новую команду в список известных команд.
      *
      * @param CommandHandler[] $handlers
+     *
      * @return void
      * @throws \RuntimeException
      */
-    public function addHandlers(array $handlers)
+    public function addHandlers(array $handlers): void
     {
         foreach ($handlers as $handler) {
             if (isset($this->know[$handler->getName()])) {
@@ -65,11 +66,12 @@ final class CommandDispatcher
      *
      * @param $data
      * @param Client $peer
+     *
      * @throws \Exception
      * @throws \RuntimeException
      * @throws \Throwable
      */
-    public function dispatch($data, Client $peer)
+    public function dispatch($data, Client $peer): void
     {
         if ($data['state'] === self::STATE_RES) {
             $this->runCommands->get($data['id'])->dispatchResult($data['data'], $data['code']);
@@ -108,7 +110,7 @@ final class CommandDispatcher
         }
     }
 
-    public function valid(array &$data)
+    public function valid(array &$data): bool
     {
         return isset($data['command'])
             && isset($data['state'])

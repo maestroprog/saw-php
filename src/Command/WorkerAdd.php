@@ -23,6 +23,11 @@ final class WorkerAdd extends AbstractCommand
         $this->pid = $pid;
     }
 
+    public static function fromArray(array $data, Client $client)
+    {
+        return new self($client, $data['pid']);
+    }
+
     /**
      * Вернёт pid, о котором сообщил воркер.
      *
@@ -36,10 +41,5 @@ final class WorkerAdd extends AbstractCommand
     public function toArray(): array
     {
         return ['pid' => $this->pid];
-    }
-
-    public static function fromArray(array $data, Client $client)
-    {
-        return new self($client, $data['pid']);
     }
 }

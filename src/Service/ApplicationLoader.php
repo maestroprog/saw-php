@@ -2,9 +2,9 @@
 
 namespace Maestroprog\Saw\Service;
 
+use Maestroprog\Saw\Config\ApplicationConfig;
 use Qwerty\Application\ApplicationFactory;
 use Qwerty\Application\ApplicationInterface;
-use Maestroprog\Saw\Config\ApplicationConfig;
 
 /**
  * Загрузчик приложений.
@@ -26,7 +26,9 @@ final class ApplicationLoader
      * Используется скриптом index.php.
      *
      * @param string $applicationClass
+     *
      * @return ApplicationInterface
+     * @throws \ReflectionException
      */
     public function instanceApp(string $applicationClass): ApplicationInterface
     {
@@ -50,22 +52,22 @@ final class ApplicationLoader
         );
     }
 
-    public function instanceAppById(string $applicationId): ApplicationInterface
+    /**
+     * @param string $class
+     * @param array $arguments
+     * @param array $variables
+     *
+     * @return ApplicationInterface
+     * @throws \ReflectionException
+     */
+    private function instanceAppWith(string $class, array $arguments, array $variables = []): ApplicationInterface
     {
-        if (!$this->applicationConfig->isApplicationExists($applicationId)) {
-            throw new \RuntimeException('Invalid application id: ' . $applicationId);
-        }
-        try {
-            $arguments = $this->applicationConfig->getApplicationArguments($applicationId);
-        } catch (\RuntimeException $e) {
-            $arguments = [];
-        }
+        $class = new \ReflectionClass($class);
 
-        return $this->instanceAppWith(
-            $this->applicationConfig->getApplicationClassById($applicationId),
-            $arguments,
-            ['appId' => $applicationId]
-        );
+        $arguments = $this->factory->instanceArguments($arguments, $variables);
+        /** @var ApplicationInterface $app */
+        $app = $class->newInstanceArgs($arguments);
+        return $app;
     }
 
     /**
@@ -82,13 +84,27 @@ final class ApplicationLoader
         }, $allAppIds);
     }
 
-    private function instanceAppWith(string $class, array $arguments, array $variables = []): ApplicationInterface
+    /**
+     * @param string $applicationId
+     *
+     * @return ApplicationInterface
+     * @throws \ReflectionException
+     */
+    public function instanceAppById(string $applicationId): ApplicationInterface
     {
-        $class = new \ReflectionClass($class);
+        if (!$this->applicationConfig->isApplicationExists($applicationId)) {
+            throw new \RuntimeException('Invalid application id: ' . $applicationId);
+        }
+        try {
+            $arguments = $this->applicationConfig->getApplicationArguments($applicationId);
+        } catch (\RuntimeException $e) {
+            $arguments = [];
+        }
 
-        $arguments = $this->factory->instanceArguments($arguments, $variables);
-        /** @var ApplicationInterface $app */
-        $app = $class->newInstanceArgs($arguments);
-        return $app;
+        return $this->instanceAppWith(
+            $this->applicationConfig->getApplicationClassById($applicationId),
+            $arguments,
+            ['appId' => $applicationId]
+        );
     }
 }

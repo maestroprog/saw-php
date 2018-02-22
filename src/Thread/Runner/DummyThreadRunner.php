@@ -3,6 +3,7 @@
 namespace Maestroprog\Saw\Thread\Runner;
 
 use Maestroprog\Saw\Thread\AbstractThread;
+use Maestroprog\Saw\Thread\BroadcastThread;
 use Maestroprog\Saw\Thread\Pool\AbstractThreadPool;
 use Maestroprog\Saw\Thread\Pool\RunnableThreadPool;
 
@@ -20,11 +21,17 @@ class DummyThreadRunner implements ThreadRunnerInterface
         return $this->threadPool;
     }
 
+    public function broadcastThreads(BroadcastThread ...$threads): bool
+    {
+        return $this->runThreads(...$threads);
+    }
+
     /**
      * @param AbstractThread[] $threads
+     *
      * @return bool
      */
-    public function runThreads(array $threads): bool
+    public function runThreads(AbstractThread ...$threads): bool
     {
         foreach ($threads as $thread) {
             $this->threadPool->add($thread);
@@ -32,10 +39,5 @@ class DummyThreadRunner implements ThreadRunnerInterface
         }
 
         return true;
-    }
-
-    public function broadcastThreads(AbstractThread ...$threads): bool
-    {
-        return $this->runThreads($threads);
     }
 }

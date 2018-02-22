@@ -30,6 +30,34 @@ final class ThreadRun extends AbstractCommand
         $this->arguments = $arguments;
     }
 
+    /**
+     * Команда сама знает, что ей нужно знать о задаче
+     * - поэтому дадим ей задачу, пускай возьмёт все, что ей нужно.
+     *
+     * @param AbstractThread $thread
+     *
+     * @return array
+     * @deprecated
+     */
+    public static function serializeThread(AbstractThread $thread): array
+    {
+    }
+
+    public static function fromArray(array $data, Client $client)
+    {
+        return new self($client, $data['run_id'], $data['application_id'], $data['unique_id'], $data['arguments']);
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'run_id' => $this->getRunId(),
+            'application_id' => $this->getApplicationId(),
+            'unique_id' => $this->getUniqueId(),
+            'arguments' => $this->getArguments(),
+        ];
+    }
+
     public function getRunId(): int
     {
         return $this->runId;
@@ -48,33 +76,5 @@ final class ThreadRun extends AbstractCommand
     public function getArguments(): array
     {
         return $this->arguments ?? [];
-    }
-
-    /**
-     * Команда сама знает, что ей нужно знать о задаче
-     * - поэтому дадим ей задачу, пускай возьмёт все, что ей нужно.
-     *
-     * @param AbstractThread $thread
-     * @return array
-     * @deprecated
-     */
-    public static function serializeThread(AbstractThread $thread): array
-    {
-    }
-
-
-    public function toArray(): array
-    {
-        return [
-            'run_id' => $this->getRunId(),
-            'application_id' => $this->getApplicationId(),
-            'unique_id' => $this->getUniqueId(),
-            'arguments' => $this->getArguments(),
-        ];
-    }
-
-    public static function fromArray(array $data, Client $client)
-    {
-        return new self($client, $data['run_id'], $data['application_id'], $data['unique_id'], $data['arguments']);
     }
 }

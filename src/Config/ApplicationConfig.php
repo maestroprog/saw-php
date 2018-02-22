@@ -2,8 +2,8 @@
 
 namespace Maestroprog\Saw\Config;
 
-use Qwerty\Application\ApplicationInterface;
 use Maestroprog\Saw\Saw;
+use Qwerty\Application\ApplicationInterface;
 
 final class ApplicationConfig
 {
@@ -30,6 +30,7 @@ final class ApplicationConfig
      * Проверяет, является ли указанный класс валидным классом приожения.
      *
      * @param string $class
+     *
      * @return bool
      */
     public function isApplicationClassValid(string $class): bool
@@ -41,6 +42,7 @@ final class ApplicationConfig
      * Проверяет, является ли указанный id соответствующим приложени в конфиге.
      *
      * @param string $applicationId
+     *
      * @return bool
      */
     public function isApplicationExists(string $applicationId): bool
@@ -54,6 +56,7 @@ final class ApplicationConfig
      * то лучше этот метод не использовать.
      *
      * @param string $class
+     *
      * @return string
      */
     public function getApplicationIdByClass(string $class): string
@@ -70,6 +73,7 @@ final class ApplicationConfig
      * Вернёт класс приложения по его id.
      *
      * @param string $id
+     *
      * @return string
      */
     public function getApplicationClassById(string $id): string
@@ -81,6 +85,7 @@ final class ApplicationConfig
      * Вернёт в виде массива список аргументов, необходимых для создания инстанса объекта приложения.
      *
      * @param string $applicationId
+     *
      * @return array
      */
     public function getApplicationArguments(string $applicationId): array

@@ -6,6 +6,10 @@ abstract class Singleton
 {
     protected static $instance = [];
 
+    private function __construct()
+    {
+    }
+
     /**
      * @return static|self
      */
@@ -15,10 +19,6 @@ abstract class Singleton
             static::$instance[static::class] = new static();
         }
         return static::$instance[static::class];
-    }
-
-    private function __construct()
-    {
     }
 
     private function __clone()

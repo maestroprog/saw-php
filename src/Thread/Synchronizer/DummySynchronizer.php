@@ -2,22 +2,20 @@
 
 namespace Maestroprog\Saw\Thread\Synchronizer;
 
-use Maestroprog\Saw\Thread\AbstractThread;
-
 class DummySynchronizer implements SynchronizerInterface
 {
-    public function synchronizeOne(AbstractThread $thread)
+    public function synchronizeOne(SynchronizationThreadInterface $thread): \Generator
     {
-        ;
+        yield;
     }
 
-    public function synchronizeThreads(array $threads)
+    public function synchronizeThreads(SynchronizationThreadInterface ...$threads): \Generator
     {
-        ;
+        yield;
     }
 
-    public function synchronizeAll()
+    public function synchronizeAll(): \Generator
     {
-        ;
+        yield;
     }
 }

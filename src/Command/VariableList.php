@@ -16,6 +16,11 @@ final class VariableList extends AbstractCommand
         $this->prefix = $prefix;
     }
 
+    public static function fromArray(array $data, Client $client)
+    {
+        return new self($client, $data['prefix'] ?? null);
+    }
+
     public function getPrefix()
     {
         return $this->prefix;
@@ -24,10 +29,5 @@ final class VariableList extends AbstractCommand
     public function toArray(): array
     {
         return ['prefix' => $this->prefix];
-    }
-
-    public static function fromArray(array $data, Client $client)
-    {
-        return new self($client, $data['prefix'] ?? null);
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Maestroprog\Saw\Standalone\Controller;
 
-use Esockets\debug\Log;
+use Esockets\Debug\Log;
 use Maestroprog\Saw\Command\CommandHandler;
 use Maestroprog\Saw\Command\WorkerAdd;
 use Maestroprog\Saw\Command\WorkerDelete;
@@ -60,12 +60,6 @@ class WorkerBalance implements CycleInterface
                 if (!$this->workerRun instanceof ProcessStatus) {
                     throw new \LogicException('Некорректное состояние запуска воркера.');
                 }
-                /*if ($context->getPid() !== $this->workerRun->getPid() + 1) {
-                    // если pid запущенного процесса не соответсвует pid-у который сообщил воркер
-                    // может быть ситуация, когда в системе закончились pid-ы и нумерация сбросилась
-                    // или между созданием процессов вклинился ещё один процесс
-                    throw new \RuntimeException('Unknown worker');
-                }*/
                 $newWorker = $worker = new Worker($this->workerRun, $context->getClient());
                 if (!$this->addWorker($newWorker)) {
                     $this->removeWorker($newWorker);
@@ -79,36 +73,11 @@ class WorkerBalance implements CycleInterface
     }
 
     /**
-     * Предполагается, что этот метод будет запускать новые воркеры, когда это нужно.
-     * Воркеры запускаются по одному, после запуска контроллер ждёт новый воркер до 10 секунд.
-     */
-    public function work()
-    {
-        $workerNeed = self::WORKER_MIN * $this->workerMultiplier;
-        $workerCount = count($this->workerPool);
-
-        if (
-            ($workerCount < $workerNeed && $workerCount < $this->workerMaxCount)
-            && !$this->running
-        ) {
-            // run new worker
-            $this->workerRun = $this->workerStarter->start();
-            $this->running = time();
-        } elseif ($this->running && $this->running < time() - 10) {
-            // timeout 10 sec - не удалось запустить воркер
-            $this->running = 0;
-            if ($this->workerRun->isRunning()) {
-                // убиваем запущенный процесс, если он ещё работает
-                $this->workerRun->kill();
-            }
-        }
-    }
-
-    /**
      * Добавляет воркер в балансировщик,
      * когда тот успешно стартует.
      *
      * @param Worker $worker
+     *
      * @return bool
      */
     public function addWorker(Worker $worker): bool
@@ -141,9 +110,40 @@ class WorkerBalance implements CycleInterface
     }
 
     /**
+     * Предполагается, что этот метод будет запускать новые воркеры, когда это нужно.
+     * Воркеры запускаются по одному, после запуска контроллер ждёт новый воркер до 10 секунд.
+     */
+    public function work(): \Generator
+    {
+        while (true) {
+            $workerNeed = self::WORKER_MIN * $this->workerMultiplier;
+            $workerCount = count($this->workerPool);
+
+            if (
+                ($workerCount < $workerNeed && $workerCount < $this->workerMaxCount)
+                && !$this->running
+            ) {
+                // run new worker
+                $this->workerRun = $this->workerStarter->start();
+                $this->running = time();
+            } elseif ($this->running && $this->running < time() - 10) {
+                // timeout 10 sec - не удалось запустить воркер
+                $this->running = 0;
+                if ($this->workerRun->isRunning()) {
+                    // убиваем запущенный процесс, если он ещё работает
+                    $this->workerRun->kill();
+                }
+            }
+
+            yield;
+        }
+    }
+
+    /**
      * Получить одного из слабо нагруженных воркеров.
      *
      * @param AbstractThread $thread Поток для выполнения которого необходимо найти воркера.
+     *
      * @return Worker
      * @throws \RuntimeException
      */

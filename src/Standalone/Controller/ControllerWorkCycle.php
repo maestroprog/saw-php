@@ -21,16 +21,19 @@ class ControllerWorkCycle implements CycleInterface
         }
     }
 
-    public function work()
+    public function work(): \Generator
     {
-        if ($this->dispatchSignals) {
-            pcntl_signal_dispatch();
-        }
-        try {
-            $this->server->find();
-        } catch (\RuntimeException $e) {
-            ; // todo
-            throw $e;
+        while (true) {
+            if ($this->dispatchSignals) {
+                pcntl_signal_dispatch();
+            }
+            try {
+                $this->server->find();
+            } catch (\RuntimeException $e) {
+                throw $e;
+            }
+
+            yield;
         }
     }
 }

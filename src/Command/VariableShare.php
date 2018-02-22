@@ -20,6 +20,11 @@ final class VariableShare extends AbstractCommand
         $this->unlock = $unlock;
     }
 
+    public static function fromArray(array $data, Client $client)
+    {
+        return new self($client, $data['key'], $data['variable'], $data['unlock']);
+    }
+
     public function getKey(): string
     {
         return $this->key;
@@ -38,10 +43,5 @@ final class VariableShare extends AbstractCommand
     public function toArray(): array
     {
         return ['key' => $this->key, 'variable' => $this->variable, 'unlock' => $this->unlock];
-    }
-
-    public static function fromArray(array $data, Client $client)
-    {
-        return new self($client, $data['key'], $data['variable'], $data['unlock']);
     }
 }

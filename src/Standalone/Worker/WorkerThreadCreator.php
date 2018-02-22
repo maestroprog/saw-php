@@ -3,12 +3,8 @@
 namespace Maestroprog\Saw\Standalone\Worker;
 
 use Esockets\Client;
-use Maestroprog\Saw\Command\CommandHandler;
 use Maestroprog\Saw\Command\ThreadKnow;
-use Maestroprog\Saw\Saw;
-use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\Commander;
-use Maestroprog\Saw\Thread\AbstractThread;
 use Maestroprog\Saw\Thread\Creator\ThreadCreator;
 use Maestroprog\Saw\Thread\Pool\ContainerOfThreadPools;
 use Maestroprog\Saw\Thread\ThreadWithCode;
@@ -29,21 +25,23 @@ final class WorkerThreadCreator extends ThreadCreator
         $this->client = $client;
     }
 
-    public function thread(string $uniqueId, callable $code): AbstractThread
+    public function thread(string $uniqueId, callable $code): ThreadWithCode
     {
-        static $threadId = 0;
         $threadPool = $this->pools->getCurrentPool();
         if (!$threadPool->exists($uniqueId)) {
-            $thread = new ThreadWithCode(++$threadId, Saw::getCurrentApp()->getId(), $uniqueId, $code);
-            $threadPool->add($thread);
-            $this
-                ->commander
-                ->runAsync((new ThreadKnow($this->client, $thread->getApplicationId(), $thread->getUniqueId()))
-                    ->onError(function () {
-                        throw new \RuntimeException('Cannot notify controller.');
-                    }));
+            $thread = parent::thread($uniqueId, $code);
+            $knowCommand = new ThreadKnow($this->client, $thread->getApplicationId(), $thread->getUniqueId());
+            $knowCommand
+                ->onError(function () {
+                    throw new \RuntimeException('Cannot notify controller.');
+                });
+            $this->commander->runAsync($knowCommand);
         } else {
             $thread = $threadPool->getThreadById($uniqueId);
+
+            if (!$thread instanceof ThreadWithCode) {
+                throw new \InvalidArgumentException('Unknown thread type, ThreadWithCode expected, "%s" given.');
+            }
         }
 
         return $thread;

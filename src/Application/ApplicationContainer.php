@@ -2,9 +2,9 @@
 
 namespace Maestroprog\Saw\Application;
 
-use Qwerty\Application\ApplicationInterface as App;
 use Maestroprog\Saw\Thread\Pool\ContainerOfThreadPools;
 use Maestroprog\Saw\Thread\Pool\PoolOfUniqueThreads;
+use Qwerty\Application\ApplicationInterface as App;
 
 /**
  * Контейнер приложений.
@@ -35,6 +35,12 @@ final class ApplicationContainer implements \Countable
         return $this->apps[$application->getId()] = $this->switchTo($application);
     }
 
+    public function switchTo(App $application): App
+    {
+        $this->threadPools->switchTo($this->threadPools->get($application->getId()));
+        return $this->currentApp = $application;
+    }
+
     public function get(string $id): App
     {
         if (!isset($this->apps[$id])) {
@@ -46,12 +52,6 @@ final class ApplicationContainer implements \Countable
     public function getCurrentApp(): App
     {
         return $this->currentApp;
-    }
-
-    public function switchTo(App $application): App
-    {
-        $this->threadPools->switchTo($this->threadPools->get($application->getId()));
-        return $this->currentApp = $application;
     }
 
     /**

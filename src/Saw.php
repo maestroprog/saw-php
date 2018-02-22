@@ -2,7 +2,7 @@
 
 namespace Maestroprog\Saw;
 
-use Esockets\base\Configurator;
+use Esockets\Base\Configurator;
 use Maestroprog\Container\AbstractCompiledContainer;
 use Maestroprog\Container\Container;
 use Maestroprog\Saw\Application\ApplicationContainer;
@@ -10,7 +10,6 @@ use Maestroprog\Saw\Config\ApplicationConfig;
 use Maestroprog\Saw\Config\ControllerConfig;
 use Maestroprog\Saw\Config\DaemonConfig;
 use Maestroprog\Saw\Connector\ControllerConnectorInterface;
-use Maestroprog\Saw\Connector\WorkerConnectorWithCore;
 use Maestroprog\Saw\Di\MemoryContainer;
 use Maestroprog\Saw\Di\SawContainer;
 use Maestroprog\Saw\Heading\Singleton;
@@ -34,24 +33,19 @@ final class Saw extends Singleton
     const ERROR_APPLICATION_CLASS_NOT_EXISTS = 1;
     const ERROR_WRONG_APPLICATION_CLASS = 2;
     const ERROR_WRONG_CONFIG = 3;
-
+    private static $debug;
     /**
      * @var array
      */
     private $config;
-
     /**
      * @var DaemonConfig
      */
     private $daemonConfig;
-
     /**
      * @var ControllerConfig
      */
     private $controllerConfig;
-
-    private static $debug;
-
     /**
      * @var Container|AbstractCompiledContainer
      */
@@ -69,7 +63,6 @@ final class Saw extends Singleton
 
     /**
      * @return ApplicationInterface
-     * @todo use
      */
     public static function getCurrentApp(): ApplicationInterface
     {
@@ -80,7 +73,9 @@ final class Saw extends Singleton
      * Инициализация фреймворка с заданным конфигом.
      *
      * @param string $configPath
+     *
      * @return Saw
+     * @throws \Esockets\Base\Exception\ConfiguratorException
      */
     public function init(string $configPath): self
     {
@@ -90,7 +85,6 @@ final class Saw extends Singleton
             require __DIR__ . '/../config/saw.php',
             require $configPath
         );
-        // todo include config
         foreach (['saw', 'factory', 'daemon', 'sockets', 'application', 'controller'] as $check) {
             if (!isset($config[$check]) || !is_array($config[$check])) {
                 $config[$check] = [];
@@ -141,7 +135,7 @@ CMD;
                     switch ($exception->getCode()) {
                         case self::ERROR_WRONG_CONFIG:
                             echo $exception->getMessage();
-                            exit($exception->getCode());
+                            exit(127);
                     }
                 }
             });
@@ -162,13 +156,15 @@ CMD;
      * Инстанцирование приложения.
      *
      * @param string $appClass
+     *
      * @return ApplicationInterface
+     * @throws \ReflectionException
      */
     public function instanceApp(string $appClass): ApplicationInterface
     {
         return $this
             ->container
-            ->getApplicationContainer()
+            ->get(ApplicationContainer::class)
             ->add($this->applicationLoader->instanceApp($appClass));
     }
 
@@ -186,7 +182,7 @@ CMD;
             $this->container->get(ControllerCore::class),
             $this->container->get('ControllerServer'),
             $this->container->get(CommandDispatcher::class),
-            $this->daemonConfig->getControllerPid() // todo
+            $this->daemonConfig->getControllerPid()
         );
     }
 

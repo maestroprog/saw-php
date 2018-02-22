@@ -14,8 +14,8 @@ use Maestroprog\Saw\Service\ApplicationLoader;
 use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\Commander;
 use Maestroprog\Saw\Standalone\Controller\CycleInterface;
-use Maestroprog\Saw\Thread\AbstractThread;
 use Maestroprog\Saw\Thread\Pool\RunnableThreadPool;
+use Maestroprog\Saw\Thread\StatefulThread;
 use Maestroprog\Saw\Thread\StubThread;
 use Maestroprog\Saw\Thread\ThreadWithCode;
 
@@ -60,17 +60,6 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
                     $context->getUniqueId()
                 ))->setArguments($context->getArguments());
                 $this->threadPool->add($thread);
-                /*
-                 * При получении новой задачи, находясь во вложенном блоке синхронизации потоков,
-                 * здесь нужно начать запуск нового потока, т.к. новый поток
-                 * может быть зависимым для текущго синхронизируемого потока.
-                 * Т.е. допустим мы запустили поток 1, внутри него запустили поток 2,
-                 * и начали процесс синхронизации с ним. При этом выполнение потока 2
-                 * было назначено этому же воркеру (в котором в данный момент синхронизируется поток 1),
-                 * и это приводит к тому, что мы должны по сути внутри потока 1 выполнить поток 2.
-                 * Для этого просто запустим обработчик новых запущенных потоков.
-                 */
-                $this->work();
             }),
             new CommandHandler(DebugCommand::class, function (DebugCommand $context) {
                 $this->commander->runAsync(new DebugData(
@@ -82,53 +71,6 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
         ]);
     }
 
-    /**
-     * Метод служит для запуска всех приложений внутри воркера.
-     */
-    public function run()
-    {
-        $this->applicationContainer->run(); // todo
-    }
-
-    public function work()
-    {
-        foreach ($this->threadPool as $thread) {
-            /**
-             * @var $thread AbstractThread
-             */
-            if ($thread->getCurrentState() === AbstractThread::STATE_NEW) {
-                $this->applicationContainer->switchTo($this->applicationContainer->get($thread->getApplicationId()));
-                /** @var ThreadWithCode $realThread */
-                $thread->run(); // Запомним, что этот поток находится в стадии запуска, чтобы его запуск не зациклился.
-                $realThread = $this->applicationContainer
-                    ->getThreadPools()
-                    ->getCurrentPool()
-                    ->getThreadById($thread->getUniqueId())
-                    ->setArguments($thread->getArguments());
-                $result = $realThread->run()->getResult();
-
-                $thread->run()->setResult($result);
-                $resultCommand = new ThreadResult(
-                    $this->client,
-                    $thread->getId(),
-                    $thread->getApplicationId(),
-                    $thread->getUniqueId(),
-                    $thread->getResult()
-                );
-                $resultCommand
-                    ->onSuccess(function () use ($thread) {
-                        // $this->threadPool->getThreadById($thread->getId());
-                        $this->threadPool->remove($thread);
-                    })
-                    ->onError(function () {
-                        // todo
-                        throw new \RuntimeException('Cannot run tres command.');
-                    });
-                $this->commander->runAsync($resultCommand);
-            }
-        }
-    }
-
     public function getFullReport(): array
     {
         return [
@@ -137,5 +79,78 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
             'ThreadsCount' => $this->applicationContainer->getThreadPools()->threadsCount(),
             'WorkCount' => count($this->threadPool),
         ];
+    }
+
+    /**
+     * Метод служит для запуска всех приложений внутри воркера.
+     */
+    public function run()
+    {
+        $this->applicationContainer->run();
+    }
+
+    public function work(): \Generator
+    {
+        while (true) {
+            /** @var $thread StatefulThread */
+            foreach ($this->threadPool as $thread) {
+                if ($thread->hasResult()) {
+                    continue;
+                }
+                $this->applicationContainer->switchTo($this->applicationContainer->get($thread->getApplicationId()));
+
+                $thread->run(); // Запомним, что этот поток находится в стадии запуска, чтобы его запуск не зациклился.
+
+                /** @var ThreadWithCode $realThread */
+                $realThread = $this->applicationContainer
+                    ->getThreadPools()
+                    ->getCurrentPool()
+                    ->getThreadById($thread->getUniqueId());
+
+                if ($thread->getCurrentState() === StatefulThread::STATE_NEW) {
+                    $realThread->setArguments($thread->getArguments());
+                }
+
+                /** @var ThreadWithCode $realThread */
+                $realThread = $this->applicationContainer
+                    ->getThreadPools()
+                    ->getCurrentPool()
+                    ->getThreadById($thread->getUniqueId())
+                    ->setArguments($thread->getArguments());
+
+                $generator = $realThread->run();
+
+                $generator->rewind();
+                if ($generator->valid()) {
+
+                    yield $generator->current();
+
+                } else {
+                    $result = $generator->getReturn();
+
+                    $thread->setResult($result);
+
+                    $resultCommand = new ThreadResult(
+                        $this->client,
+                        $thread->getId(),
+                        $thread->getApplicationId(),
+                        $thread->getUniqueId(),
+                        $thread->getResult()
+                    );
+
+                    $resultCommand
+                        ->onSuccess(function () use ($thread) {
+                            // $this->threadPool->getThreadById($thread->getId());
+                            $this->threadPool->remove($thread);
+                        })
+                        ->onError(function () {
+                            throw new \RuntimeException('Cannot run tres command.');
+                        });
+                    $this->commander->runAsync($resultCommand);
+                }
+            }
+
+            yield;
+        }
     }
 }

@@ -66,10 +66,14 @@ final class ControllerCore implements CycleInterface
         );
     }
 
-    public function work()
+    /**
+     * @return \Generator
+     * @throws \Exception
+     */
+    public function work(): \Generator
     {
-        $this->workerBalance->work();
-        $this->threadDistributor->work();
+        yield from $this->workerBalance->work();
+        yield from $this->threadDistributor->work();
     }
 
     public function stop(): void

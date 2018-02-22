@@ -26,6 +26,7 @@ final class Commander
      *
      * @param AbstractCommand $command
      * @param int $timeout Время ожидания выполнения команды
+     *
      * @return AbstractCommand
      * @throws \RuntimeException
      */
@@ -40,39 +41,13 @@ final class Commander
     }
 
     /**
-     * Выполняет асинхронный запуск команды,
-     * т.е. возвращает управление сразу же после отправки команды.
-     *
-     * @param AbstractCommand $command
-     * @return void
-     * @throws \RuntimeException
-     */
-    public function runAsync(AbstractCommand $command)
-    {
-        $this->send($command);
-    }
-
-    public function runPacket(AbstractCommand ...$commands)
-    {
-        if (empty($commands)) {
-            return;
-        }
-        $packet = [];
-        foreach ($commands as $command) {
-            $cmdId = $this->generateId();
-            $this->commands->add($cmdId, $command);
-            $packet[] = $this->serializeCommand($command, $cmdId);
-        }
-        $this->send(new PacketCommand($command->getClient(), $packet));
-    }
-
-    /**
      * Отправляет клиенту команду на выполнение.
      *
      * @param AbstractCommand $command
+     *
      * @throws \RuntimeException
      */
-    private function send(AbstractCommand $command)
+    private function send(AbstractCommand $command): void
     {
         $cmdId = $this->generateId();
         $this->commands->add($cmdId, $command);
@@ -84,12 +59,14 @@ final class Commander
     private function generateId(): int
     {
         static $id = 0;
+
         return ++$id;
     }
 
     /**
      * @param AbstractCommand $command
      * @param $cmdId
+     *
      * @return array
      */
     private function serializeCommand(AbstractCommand $command, $cmdId): array
@@ -101,5 +78,33 @@ final class Commander
             'code' => CommandDispatcher::CODE_VOID,
             'data' => $command->toArray()
         ];
+    }
+
+    /**
+     * Выполняет асинхронный запуск команды,
+     * т.е. возвращает управление сразу же после отправки команды.
+     *
+     * @param AbstractCommand $command
+     *
+     * @return void
+     * @throws \RuntimeException
+     */
+    public function runAsync(AbstractCommand $command): void
+    {
+        $this->send($command);
+    }
+
+    public function runPacket(AbstractCommand ...$commands): void
+    {
+        if (empty($commands)) {
+            return;
+        }
+        $packet = [];
+        foreach ($commands as $command) {
+            $cmdId = $this->generateId();
+            $this->commands->add($cmdId, $command);
+            $packet[] = $this->serializeCommand($command, $cmdId);
+        }
+        $this->send(new PacketCommand($command->getClient(), $packet));
     }
 }

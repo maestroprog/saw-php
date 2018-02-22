@@ -5,19 +5,18 @@ namespace tests\Standalone\Controller;
 use Esockets\Client;
 use Esockets\dummy\DummyConnectionResource;
 use Maestroprog\Saw\Command\ContainerOfCommands;
-use Maestroprog\Saw\Service\Commander;
-use Maestroprog\Saw\Standalone\Controller\CycleInterface;
-use PHPUnit\Framework\TestCase;
-use Maestroprog\Saw\Command\AbstractCommand;
 use Maestroprog\Saw\Command\ThreadResult;
 use Maestroprog\Saw\Command\ThreadRun;
 use Maestroprog\Saw\Entity\Worker;
 use Maestroprog\Saw\Service\CommandDispatcher;
+use Maestroprog\Saw\Service\Commander;
+use Maestroprog\Saw\Standalone\Controller\CycleInterface;
 use Maestroprog\Saw\Standalone\Controller\ThreadDistributor;
 use Maestroprog\Saw\Standalone\Controller\WorkerBalance;
 use Maestroprog\Saw\Standalone\Controller\WorkerPool;
 use Maestroprog\Saw\Thread\Pool\AbstractThreadPool;
 use Maestroprog\Saw\Thread\StubThread;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \Maestroprog\Saw\Command\AbstractCommand
@@ -58,9 +57,9 @@ class ThreadDistributorTest extends TestCase
         $commandDispatcher = new CommandDispatcher($cmds = new ContainerOfCommands());
         $commander = new Commander(new class implements CycleInterface
         {
-            public function work()
+            public function work(): \Generator
             {
-                // TODO: Implement work() method.
+                yield;
             }
         }, $cmds);
 

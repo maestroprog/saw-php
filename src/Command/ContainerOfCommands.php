@@ -25,12 +25,9 @@ class ContainerOfCommands implements \Countable
         return $this->commands[$cmdId] = $command;
     }
 
-    public function get(int $cmdId): AbstractCommand
+    public function count(): int
     {
-        if (!isset($this->commands)) {
-            throw new \OutOfBoundsException('Out of bounds id "' . $cmdId . '".');
-        }
-        return $this->commands[$cmdId];
+        return $this->commands->count();
     }
 
     /**
@@ -46,8 +43,11 @@ class ContainerOfCommands implements \Countable
         }
     }
 
-    public function count()
+    public function get(int $cmdId): AbstractCommand
     {
-        return $this->commands->count();
+        if (!isset($this->commands)) {
+            throw new \OutOfBoundsException('Out of bounds id "' . $cmdId . '".');
+        }
+        return $this->commands[$cmdId];
     }
 }

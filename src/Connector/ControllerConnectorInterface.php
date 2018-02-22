@@ -2,9 +2,8 @@
 
 namespace Maestroprog\Saw\Connector;
 
-use Esockets\base\SenderInterface;
+use Esockets\Base\SenderInterface;
 use Esockets\Client;
-use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\CommandDispatcherProviderInterface;
 use Maestroprog\Saw\Standalone\Controller\CycleInterface;
 
@@ -17,7 +16,7 @@ interface ControllerConnectorInterface extends SenderInterface, CycleInterface, 
      *
      * @throws \RuntimeException Если не удалось запустить контроллер
      */
-    public function connect();
+    public function connect(): void;
 
 
     /**

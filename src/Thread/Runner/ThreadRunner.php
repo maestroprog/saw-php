@@ -3,30 +3,38 @@
 namespace Maestroprog\Saw\Thread\Runner;
 
 use Maestroprog\Saw\Thread\AbstractThread;
+use Maestroprog\Saw\Thread\BroadcastThread;
 use Maestroprog\Saw\Thread\Pool\AbstractThreadPool;
 
 class ThreadRunner implements ThreadRunnerInterface
 {
+    public function getThreadPool(): AbstractThreadPool
+    {
+        return new class extends AbstractThreadPool
+        {
+            /**
+             * @param AbstractThread $thread
+             *
+             * @return string|int
+             */
+            public function getThreadId(AbstractThread $thread)
+            {
+                return 0;
+            }
+        };
+    }
 
-    /**
-     * @inheritdoc
-     * @param AbstractThread[] $threads
-     * @return bool
-     */
-    public function runThreads(array $threads): bool
+    public function broadcastThreads(BroadcastThread ...$threads): bool
+    {
+        return $this->runThreads(...$threads);
+    }
+
+    public function runThreads(AbstractThread ...$threads): bool
     {
         foreach ($threads as $thread) {
             $thread->run();
         }
-    }
 
-    public function getThreadPool(): AbstractThreadPool
-    {
-        // TODO: Implement getThreadPool() method.
-    }
-
-    public function broadcastThreads(AbstractThread ...$threads): bool
-    {
-        // TODO: Implement broadcastThreads() method.
+        return true;
     }
 }

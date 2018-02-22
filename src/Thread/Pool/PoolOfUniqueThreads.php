@@ -6,7 +6,7 @@ use Maestroprog\Saw\Thread\AbstractThread;
 
 class PoolOfUniqueThreads extends AbstractThreadPool
 {
-    public function getThreadId(AbstractThread $thread)
+    public function getThreadId(AbstractThread $thread): string
     {
         return $thread->getUniqueId();
     }

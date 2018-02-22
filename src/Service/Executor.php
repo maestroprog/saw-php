@@ -2,7 +2,7 @@
 
 namespace Maestroprog\Saw\Service;
 
-use Esockets\debug\Log;
+use Esockets\Debug\Log;
 use Maestroprog\Saw\ValueObject\ProcessStatus;
 
 final class Executor
@@ -23,6 +23,7 @@ final class Executor
      * Выполняет команду, и возвращает ID запущенного процесса.
      *
      * @param $cmd
+     *
      * @return ProcessStatus
      */
     public function exec($cmd): ProcessStatus
@@ -49,9 +50,10 @@ final class Executor
 
     /**
      * Прихлопывает запущенный процесс.
+     *
      * @param ProcessStatus $processStatus
      */
-    public function kill(ProcessStatus $processStatus)
+    public function kill(ProcessStatus $processStatus): void
     {
         proc_close($processStatus->getResource());
     }

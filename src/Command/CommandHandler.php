@@ -14,6 +14,7 @@ final class CommandHandler
      *
      * @param string $class
      * @param callable|null $callbackHandler
+     *
      * @internal param string $name
      */
     public function __construct(string $class, callable $callbackHandler)
@@ -33,10 +34,11 @@ final class CommandHandler
      * Вызывает callback handler для выполнения команды.
      *
      * @param AbstractCommand $context
+     *
      * @return bool todo not bool
      * @throws \RuntimeException
      */
-    public function exec(AbstractCommand $context)
+    public function exec(AbstractCommand $context): ?bool
     {
         return call_user_func($this->callbackHandler, $context);
     }

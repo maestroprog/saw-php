@@ -1,9 +1,9 @@
 <?php
 
-use Esockets\base\Configurator;
-use Esockets\socket\SocketFactory;
-
-require_once 'LoggingProtocol.php';
+use Esockets\Base\Configurator;
+use Esockets\Debug\LoggingProtocol;
+use Esockets\Protocol\EasyDataGram;
+use Esockets\Socket\SocketFactory;
 
 return [
     Configurator::CONNECTION_TYPE => Configurator::CONNECTION_TYPE_SOCKET,
@@ -11,6 +11,5 @@ return [
         SocketFactory::SOCKET_DOMAIN => AF_INET,
         SocketFactory::SOCKET_PROTOCOL => SOL_UDP,
     ],
-    Configurator::PROTOCOL_CLASS => \Esockets\protocol\EasyDataGram::class,
-//    Configurator::PROTOCOL_CLASS => LoggingProtocol::withRealProtocolClass(\Esockets\protocol\EasyDataGram::class),
+    Configurator::PROTOCOL_CLASS => LoggingProtocol::withRealProtocolClass(EasyDataGram::class),
 ];

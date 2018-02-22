@@ -1,7 +1,8 @@
 <?php
 
-use Esockets\base\Configurator;
-use Esockets\socket\SocketFactory;
+use Esockets\Base\Configurator;
+use Esockets\Protocol\EasyDataGram;
+use Esockets\Socket\SocketFactory;
 
 return [
     Configurator::CONNECTION_TYPE => Configurator::CONNECTION_TYPE_SOCKET,
@@ -9,5 +10,5 @@ return [
         SocketFactory::SOCKET_DOMAIN => AF_INET,
         SocketFactory::SOCKET_PROTOCOL => SOL_UDP,
     ],
-    Configurator::PROTOCOL_CLASS => \Esockets\protocol\EasyDataGram::class,
+    Configurator::PROTOCOL_CLASS => EasyDataGram::class,
 ];

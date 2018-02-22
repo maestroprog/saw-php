@@ -2,8 +2,8 @@
 
 namespace Maestroprog\Saw\Connector;
 
-use Esockets\base\AbstractAddress;
-use Esockets\base\exception\ConnectionException;
+use Esockets\Base\AbstractAddress;
+use Esockets\Base\Exception\ConnectionException;
 use Esockets\Client;
 use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\ControllerStarter;
@@ -36,7 +36,7 @@ final class WorkerControllerConnector implements ControllerConnectorInterface
      *
      * @throws \RuntimeException Если не удалось запустить контроллер
      */
-    public function connect()
+    public function connect(): void
     {
         try {
             if (!$this->controllerStarter->isExistsPidFile()) {

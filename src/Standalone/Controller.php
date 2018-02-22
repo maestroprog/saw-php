@@ -3,7 +3,7 @@
 namespace Maestroprog\Saw\Standalone;
 
 use Esockets\Client;
-use Esockets\debug\Log;
+use Esockets\Debug\Log;
 use Esockets\Server;
 use Maestroprog\Saw\Command\CommandHandler;
 use Maestroprog\Saw\Command\PacketCommand;
@@ -85,17 +85,6 @@ final class Controller
         $this->work();
     }
 
-    /**
-     * Заставляем работать контроллер :)
-     */
-    public function work()
-    {
-        while ($this->work) {
-            $this->workCycle->work();
-            $this->core->work();
-        }
-    }
-
     public function stop()
     {
         $this->core->stop();
@@ -122,5 +111,23 @@ final class Controller
                 $peer->disconnect(); // не нужен нам такой клиент
             }
         };
+    }
+
+    /**
+     * Заставляем работать контроллер :)
+     *
+     * @throws \Exception
+     */
+    public function work()
+    {
+        $generators = new \MultipleIterator();
+        $generators->attachIterator($this->workCycle->work());
+        $generators->attachIterator($this->core->work());
+        $generators->rewind();
+
+        while ($this->work && $generators->valid()) {
+            $generators->current();
+            $generators->next();
+        }
     }
 }

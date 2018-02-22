@@ -23,6 +23,16 @@ class Context implements ContextInterface
         return $this->sharedMemory->has($this->getKey($varName));
     }
 
+    protected function getKey(string $varName): string
+    {
+        return $this->getPrefix() . $varName;
+    }
+
+    private function getPrefix(): string
+    {
+        return 'context.' . $this->id . '.';
+    }
+
     public function read(string $varName)
     {
         return $this->sharedMemory->read($this->getKey($varName));
@@ -71,15 +81,5 @@ class Context implements ContextInterface
     public function __wakeup($dump)
     {
         // TODO: Implement __wakeup() method.
-    }
-
-    protected function getKey(string $varName): string
-    {
-        return $this->getPrefix() . $varName;
-    }
-
-    private function getPrefix(): string
-    {
-        return 'context.' . $this->id . '.';
     }
 }

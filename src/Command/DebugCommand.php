@@ -18,6 +18,11 @@ class DebugCommand extends AbstractCommand
         $this->arguments = $arguments;
     }
 
+    public static function fromArray(array $data, Client $client)
+    {
+        return new self($client, $data['query'], $data['arguments']);
+    }
+
     public function getQuery(): string
     {
         return $this->query;
@@ -31,10 +36,5 @@ class DebugCommand extends AbstractCommand
     public function toArray(): array
     {
         return ['query' => $this->query, 'arguments' => $this->arguments];
-    }
-
-    public static function fromArray(array $data, Client $client)
-    {
-        return new self($client, $data['query'], $data['arguments']);
     }
 }

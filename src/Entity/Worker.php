@@ -92,6 +92,7 @@ class Worker
      * Проверяет, знает ли воркер указанный поток.
      *
      * @param AbstractThread $thread
+     *
      * @return bool
      */
     public function isThreadKnow(AbstractThread $thread): bool

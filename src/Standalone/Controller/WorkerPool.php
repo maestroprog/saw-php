@@ -10,21 +10,16 @@ class WorkerPool implements \Countable, \IteratorAggregate
 
     public function __construct()
     {
-        $this->workers = new \ArrayObject();
+        $this->workers = [];
     }
 
-    public function add(Worker $worker)
+    public function add(Worker $worker): void
     {
         $workerId = $worker->getId();
         if (isset($this->workers[$workerId])) {
             throw new \LogicException('Can not add an already added id.');
         }
         $this->workers[$workerId] = $worker;
-    }
-
-    public function isExistsById(int $workerId): bool
-    {
-        return isset($this->workers[$workerId]);
     }
 
     public function getById(int $workerId): Worker
@@ -35,7 +30,12 @@ class WorkerPool implements \Countable, \IteratorAggregate
         return $this->workers[$workerId];
     }
 
-    public function remove(Worker $worker)
+    public function isExistsById(int $workerId): bool
+    {
+        return isset($this->workers[$workerId]);
+    }
+
+    public function remove(Worker $worker): void
     {
         if (!$this->isExistsById($worker->getId())) {
             throw new \LogicException('Can not remove an already removed.');
@@ -43,7 +43,7 @@ class WorkerPool implements \Countable, \IteratorAggregate
         unset($this->workers[$worker->getId()]);
     }
 
-    public function removeById(int $workerId)
+    public function removeById(int $workerId): void
     {
         if (!$this->isExistsById($workerId)) {
             throw new \LogicException('Can not remove an already removed.');
@@ -52,21 +52,30 @@ class WorkerPool implements \Countable, \IteratorAggregate
     }
 
     /**
-     * @return \ArrayIterator|\Traversable|Worker[]
+     * @return \Generator|Worker[]
      */
-    public function getIterator()
+    public function getIterator(): \Generator
     {
-        $workers = $this->workers->getArrayCopy();
-        // Это нужно чтобы потоки разлетались по разным воркерам,
-        // но это выглядит как грязный подход. TODO Придумать что-то получше,
-        // либо использовать планировщик выполнения потоков
-        // (как изначально и предполагалось).
-        shuffle($workers);
-        return new \ArrayIterator($workers);
+        static $start = 0;
+
+        $other = [];
+
+        $i = 0;
+        foreach ($this->workers as $worker) {
+            if ($i >= $start) {
+                yield $worker;
+            } else {
+                $other[] = $worker;
+            }
+        }
+
+        $start++;
+
+        yield from $other;
     }
 
-    public function count()
+    public function count(): int
     {
-        return $this->workers->count();
+        return count($this->workers);
     }
 }

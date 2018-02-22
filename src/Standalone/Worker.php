@@ -2,8 +2,8 @@
 
 namespace Maestroprog\Saw\Standalone;
 
-use Esockets\base\exception\ConnectionException;
-use Esockets\debug\Log;
+use Esockets\Base\Exception\ConnectionException;
+use Esockets\Debug\Log;
 use Maestroprog\Saw\Command\AbstractCommand;
 use Maestroprog\Saw\Command\CommandHandler;
 use Maestroprog\Saw\Command\WorkerAdd;
@@ -50,6 +50,12 @@ final class Worker
         ]);
     }
 
+    public function stop()
+    {
+        $this->work = false;
+        $this->client->disconnect();
+    }
+
     /**
      * @throws \Exception
      */
@@ -92,30 +98,6 @@ final class Worker
         $this->work();
     }
 
-    public function stop()
-    {
-        $this->work = false;
-        $this->client->disconnect();
-    }
-
-    public function work()
-    {
-//        $this->client->block(); todo check
-        $liveTick = 0;
-        while ($this->work) {
-            if ($this->dispatchSignals) {
-                pcntl_signal_dispatch();
-            }
-            $this->connector->work();
-            $this->core->work();
-            if (++$liveTick % 100 === 0) {
-                if (!$this->client->live()) {
-                    throw new \RuntimeException('Connection died!');
-                }
-            }
-        }
-    }
-
     protected function onRead(): callable
     {
         return function ($data) {
@@ -144,5 +126,27 @@ final class Worker
                     }
             }
         };
+    }
+
+    public function work()
+    {
+        $generators = new \MultipleIterator();
+        $generators->attachIterator($this->connector->work());
+        $generators->attachIterator($this->core->work());
+
+        $liveTick = 0;
+        while ($this->work && $generators->valid()) {
+            if ($this->dispatchSignals) {
+                pcntl_signal_dispatch();
+            }
+            $generators->current();
+            $generators->next();
+
+            if (++$liveTick % 100 === 0) {
+                if (!$this->client->live()) {
+                    throw new \RuntimeException('Connection died!');
+                }
+            }
+        }
     }
 }

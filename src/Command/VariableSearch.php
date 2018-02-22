@@ -18,6 +18,11 @@ final class VariableSearch extends AbstractCommand
         $this->noResult = $noResult;
     }
 
+    public static function fromArray(array $data, Client $client)
+    {
+        return new self($client, $data['key'], $data['no_result']);
+    }
+
     public function getKey(): string
     {
         return $this->key;
@@ -31,10 +36,5 @@ final class VariableSearch extends AbstractCommand
     public function toArray(): array
     {
         return ['key' => $this->key, 'no_result' => $this->noResult];
-    }
-
-    public static function fromArray(array $data, Client $client)
-    {
-        return new self($client, $data['key'], $data['no_result']);
     }
 }

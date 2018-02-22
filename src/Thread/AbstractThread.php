@@ -2,28 +2,22 @@
 
 namespace Maestroprog\Saw\Thread;
 
+/**
+ * Базовый класс потока используемый в Saw.
+ */
 abstract class AbstractThread
 {
-    const STATE_NEW = 0; // поток создан
-    const STATE_RUN = 1; // поток выполняется
-    const STATE_END = 2; // выполнение потока завершено
-    const STATE_ERR = 3; // ошибка при выполнении потока
-
-    private $id;
-    private $applicationId;
-
-    /**
-     * @var string Уникальный идентификатор кода.
-     */
-    private $uniqueId;
-
     /**
      * @var array Аргументы, передаваемые коду (функции).
      */
     protected $arguments = [];
-
-    protected $state = self::STATE_NEW;
     protected $result;
+    private $id;
+    private $applicationId;
+    /**
+     * @var string Уникальный идентификатор кода.
+     */
+    private $uniqueId;
 
     public function __construct(int $id, string $applicationId, string $uniqueId)
     {
@@ -63,23 +57,25 @@ abstract class AbstractThread
     }
 
     /**
-     * Назначает аргументы для функции, в которой выполняется код потока.
-     *
-     * @param array $arguments
-     * @return self
-     */
-    public function setArguments(array $arguments): self
-    {
-        $this->arguments = $arguments;
-        return $this;
-    }
-
-    /**
      * @return array
      */
     public function getArguments(): array
     {
         return $this->arguments;
+    }
+
+    /**
+     * Назначает аргументы для функции, в которой выполняется код потока.
+     *
+     * @param array $arguments
+     *
+     * @return static
+     */
+    public function setArguments(array $arguments): self
+    {
+        $this->arguments = $arguments;
+
+        return $this;
     }
 
     /**
@@ -111,22 +107,17 @@ abstract class AbstractThread
 
     /**
      * Выполняет код потока.
-     * @todo тут должны быть какие-нибудь исключения.
-     * @todo кстати, это абстрактный метод!
      *
      * @param void
-     * @return AbstractThread
+     *
+     * @throws ThreadRunningException
      */
-    abstract public function run(): AbstractThread;
+    abstract public function run();
 
-    public function getCurrentState(): int
-    {
-        return $this->state;
-    }
 
     public function hasResult(): bool
     {
-        return $this->state > self::STATE_RUN;
+        return $this->result !== null;
     }
 
     public function getResult()
@@ -134,9 +125,13 @@ abstract class AbstractThread
         return $this->result;
     }
 
-    public function setResult($data)
+    public function setResult($data): void
     {
-        $this->state = self::STATE_END;
         $this->result = $data;
+    }
+
+    public function reset(): void
+    {
+        $this->result = null;
     }
 }

@@ -22,7 +22,7 @@ class ControllerThreadPoolIndex implements \Countable
      * @param Worker $worker
      * @param AbstractThread $thread
      */
-    public function add(Worker $worker, AbstractThread $thread)
+    public function add(Worker $worker, AbstractThread $thread): void
     {
         $this->threads[$thread->getId()] = $worker->getId();
         $this->workers[$worker->getId()][$thread->getId()] = $thread;
@@ -47,7 +47,7 @@ class ControllerThreadPoolIndex implements \Countable
         return $worker;
     }
 
-    public function removeThread(AbstractThread $thread)
+    public function removeThread(AbstractThread $thread): void
     {
         if (isset($this->threads[$thread->getId()])) {
             $workerId = $this->threads[$thread->getId()];
@@ -61,7 +61,7 @@ class ControllerThreadPoolIndex implements \Countable
         }
     }
 
-    public function count()
+    public function count(): int
     {
         return count($this->threads);
     }

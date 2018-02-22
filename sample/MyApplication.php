@@ -47,10 +47,26 @@ class MyApplication extends BasicMultiThreaded
     {
         $header = microtime(true);
         $this->header = $this->thread('FOR1', function () {
-            for ($i = 0; $i < 1000; $i++) {
-                ;
-            }
-            return 1;
+            $t1 = $this->thread('SUB_THREAD_1', function () {
+                for ($i = 0; $i < 500; $i++) {
+                    ;
+                }
+
+                return 1;
+            });
+            $t2 = $this->thread('SUB_THREAD_2', function () {
+                for ($i = 0; $i < 1000; $i++) {
+                    ;
+                }
+
+                return 2;
+            });
+
+            $this->runThreads($t1, $t2);
+
+            yield from $this->synchronizeThreads($t1, $t2);
+
+            return $t1->getResult() + $t2->getResult();
         });
         $header = ($article = microtime(true)) - $header;
         $this->article = $this->thread('FOR2', function () {
@@ -84,7 +100,12 @@ class MyApplication extends BasicMultiThreaded
     public function end()
     {
         $time = microtime(true);
-        $this->synchronizeAll();
+        $synchronizer = $this->synchronizeAll();
+        $synchronizer->rewind();
+        while ($synchronizer->valid()) {
+            $synchronizer->current();
+            $synchronizer->next();
+        }
         var_dump('ended', microtime(true) - $time);
         var_dump(microtime(true) - $this->t);
         echo $this->header->getResult(),

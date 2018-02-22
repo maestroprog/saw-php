@@ -2,7 +2,7 @@
 
 namespace Maestroprog\Saw\Config;
 
-use Esockets\base\AbstractAddress;
+use Esockets\Base\AbstractAddress;
 use Maestroprog\Saw\Saw;
 
 class DaemonConfig

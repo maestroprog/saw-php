@@ -16,6 +16,11 @@ final class VariableLink extends AbstractCommand
         $this->key = $key;
     }
 
+    public static function fromArray(array $data, Client $client)
+    {
+        return new self($client, $data['key']);
+    }
+
     public function getKey(): string
     {
         return $this->key;
@@ -24,10 +29,5 @@ final class VariableLink extends AbstractCommand
     public function toArray(): array
     {
         return ['key' => $this->key];
-    }
-
-    public static function fromArray(array $data, Client $client)
-    {
-        return new self($client, $data['key']);
     }
 }

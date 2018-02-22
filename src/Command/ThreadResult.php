@@ -35,6 +35,27 @@ final class ThreadResult extends AbstractCommand
         $this->result = $result;
     }
 
+    public static function fromArray(array $data, Client $client)
+    {
+        return new self(
+            $client,
+            $data['run_id'],
+            $data['application_id'],
+            $data['unique_id'],
+            $data['result']
+        );
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'run_id' => $this->getRunId(),
+            'application_id' => $this->getApplicationId(),
+            'unique_id' => $this->getUniqueId(),
+            'result' => $this->getResult(),
+        ];
+    }
+
     public function getRunId(): int
     {
         return $this->runId;
@@ -58,26 +79,5 @@ final class ThreadResult extends AbstractCommand
     public function getResult()
     {
         return $this->result;
-    }
-
-    public function toArray(): array
-    {
-        return [
-            'run_id' => $this->getRunId(),
-            'application_id' => $this->getApplicationId(),
-            'unique_id' => $this->getUniqueId(),
-            'result' => $this->getResult(),
-        ];
-    }
-
-    public static function fromArray(array $data, Client $client)
-    {
-        return new self(
-            $client,
-            $data['run_id'],
-            $data['application_id'],
-            $data['unique_id'],
-            $data['result']
-        );
     }
 }

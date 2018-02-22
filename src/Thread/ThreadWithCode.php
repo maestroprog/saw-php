@@ -2,32 +2,51 @@
 
 namespace Maestroprog\Saw\Thread;
 
+/**
+ * @method self setArguments(array $arguments);
+ */
 class ThreadWithCode extends AbstractThread
 {
     /**
      * @var callable Содержит код потока.
      */
     private $code;
+    /**
+     * @var \Generator|null
+     */
+    private $generator;
 
     public function __construct(int $id, string $applicationId, string $uniqueId, callable $code)
     {
         parent::__construct($id, $applicationId, $uniqueId);
+
         $this->code = $code;
     }
 
-    public function run(): AbstractThread
+    public function run(): \Generator
     {
         try {
-            $this->state = self::STATE_RUN;
-            $result = call_user_func_array($this->code, $this->arguments);
+            if (null === $this->generator) {
+                $this->generator = call_user_func_array($this->code, $this->arguments);
+            }
+            if ($this->generator instanceof \Generator) {
+                $this->generator->rewind();
+                while ($this->generator->valid()) {
+                    yield $this->generator->current();
+                    $this->generator->next();
+                }
+                $result = $this->generator->getReturn();
+            } else {
+                $result = $this->generator;
+            }
         } catch (\Throwable $throwable) {
-            // todo
             $result = null;
+
             throw new ThreadRunningException($throwable->getMessage(), $throwable->getCode(), $throwable);
         } finally {
-            $this->setResult($result);
-            $this->state = self::STATE_END;
+            $this->generator = null;
+
+            return $result;
         }
-        return $this;
     }
 }

@@ -16,7 +16,7 @@ abstract class AbstractThreadPool implements \IteratorAggregate, \Countable
         $this->threads = [];
     }
 
-    public function add(AbstractThread $thread)
+    public function add(AbstractThread $thread): void
     {
         $id = $this->getThreadId($thread);
         if (!$this->exists($id)) {
@@ -24,24 +24,25 @@ abstract class AbstractThreadPool implements \IteratorAggregate, \Countable
         }
     }
 
-    public function remove(AbstractThread $thread)
-    {
-        $id = $this->getThreadId($thread);
-        if ($this->exists($id)) {
-            unset($this->threads[$id]);
-        }
-    }
+    /**
+     * @param AbstractThread $thread
+     *
+     * @return string|int
+     */
+    abstract public function getThreadId(AbstractThread $thread);
 
     public function exists($id): bool
     {
         return isset($this->threads[$id]);
     }
 
-    /**
-     * @param AbstractThread $thread
-     * @return string|int
-     */
-    abstract public function getThreadId(AbstractThread $thread);
+    public function remove(AbstractThread $thread): void
+    {
+        $id = $this->getThreadId($thread);
+        if ($this->exists($id)) {
+            unset($this->threads[$id]);
+        }
+    }
 
     public function getThreadById($id): AbstractThread
     {
@@ -53,7 +54,7 @@ abstract class AbstractThreadPool implements \IteratorAggregate, \Countable
      */
     public function getThreads(): array
     {
-        return $this->threads;
+        return array_values($this->threads);
     }
 
     public function getIterator(): \Iterator
@@ -61,7 +62,7 @@ abstract class AbstractThreadPool implements \IteratorAggregate, \Countable
         return new \ArrayIterator($this->threads);
     }
 
-    public function count()
+    public function count(): int
     {
         return count($this->threads);
     }

@@ -17,6 +17,7 @@ interface SharedMemoryInterface extends MemoryInterface
     /**
      * @param string $varName
      * @param bool $withLocking Позволяет залочить переменную перед её созданием
+     *
      * @return bool
      */
     public function has(string $varName, bool $withLocking = false): bool;
@@ -24,6 +25,7 @@ interface SharedMemoryInterface extends MemoryInterface
     /**
      * @param string $varName
      * @param bool $withLocking Позволяет залочить переменную при её чтении
+     *
      * @return mixed
      * @throws \OutOfBoundsException Если переменная не существует
      * @throws MemoryLockException Если переменная кем-то залочена
@@ -34,6 +36,7 @@ interface SharedMemoryInterface extends MemoryInterface
      * @param string $varName
      * @param $variable
      * @param bool $unlock Снимает блокировку с переменной после её перезаписи
+     *
      * @return bool
      * @throws MemoryLockException Если переменная кем-то залочена
      */
@@ -41,6 +44,7 @@ interface SharedMemoryInterface extends MemoryInterface
 
     /**
      * @param string $varName
+     *
      * @return void
      * @throws \OutOfBoundsException Если переменная не существует
      * @throws MemoryLockException Если переменная кем-то залочена
@@ -49,6 +53,7 @@ interface SharedMemoryInterface extends MemoryInterface
 
     /**
      * @param string $varName
+     *
      * @return void
      * @throws \OutOfBoundsException Если переменная не существует
      */

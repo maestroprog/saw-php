@@ -7,5 +7,5 @@ namespace Maestroprog\Saw\Standalone\Controller;
  */
 interface CycleInterface
 {
-    public function work();
+    public function work(): \Generator;
 }

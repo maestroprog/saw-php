@@ -18,6 +18,11 @@ final class LocalizedShareableMemory implements MemoryInterface, ShareableMemory
         $this->sharedMemory->write($varName, $this->read($varName));
     }
 
+    public function read(string $varName)
+    {
+        return $this->memory->read($varName);
+    }
+
     public function request(string $varName)
     {
         $variable = $this->sharedMemory->read($varName, false);
@@ -25,19 +30,14 @@ final class LocalizedShareableMemory implements MemoryInterface, ShareableMemory
         return $variable;
     }
 
-    public function has(string $varName): bool
-    {
-        return $this->memory->has($varName);
-    }
-
-    public function read(string $varName)
-    {
-        return $this->memory->read($varName);
-    }
-
     public function write(string $varName, $variable): bool
     {
         return $this->memory->write($varName, $variable);
+    }
+
+    public function has(string $varName): bool
+    {
+        return $this->memory->has($varName);
     }
 
     public function remove(string $varName)

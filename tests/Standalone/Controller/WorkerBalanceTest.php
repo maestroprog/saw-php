@@ -4,19 +4,18 @@ namespace tests\Standalone\Controller {
 
     use Esockets\Client;
     use Maestroprog\Saw\Command\ContainerOfCommands;
-    use Maestroprog\Saw\Connector\ControllerConnectorInterface;
-    use Maestroprog\Saw\Entity\Worker;
-    use Maestroprog\Saw\Service\Commander;
-    use Maestroprog\Saw\Thread\StubThread;
-    use PHPUnit\Framework\TestCase;
-    use Maestroprog\Saw\Command\AbstractCommand;
     use Maestroprog\Saw\Command\WorkerAdd;
     use Maestroprog\Saw\Command\WorkerDelete;
+    use Maestroprog\Saw\Connector\ControllerConnectorInterface;
+    use Maestroprog\Saw\Entity\Worker;
     use Maestroprog\Saw\Service\CommandDispatcher;
+    use Maestroprog\Saw\Service\Commander;
     use Maestroprog\Saw\Service\WorkerStarter;
     use Maestroprog\Saw\Standalone\Controller\WorkerBalance;
     use Maestroprog\Saw\Standalone\Controller\WorkerPool;
+    use Maestroprog\Saw\Thread\StubThread;
     use Maestroprog\Saw\ValueObject\ProcessStatus;
+    use PHPUnit\Framework\TestCase;
 
     /**
      * @covers \Maestroprog\Saw\Standalone\Controller\WorkerBalance
@@ -31,27 +30,23 @@ namespace tests\Standalone\Controller {
             {
                 public function getCommandDispatcher(): CommandDispatcher
                 {
-                    // TODO: Implement getCommandDispatcher() method.
                 }
 
-                public function connect()
+                public function connect(): void
                 {
-                    // TODO: Implement connect() method.
                 }
 
                 public function getClient(): Client
                 {
-                    // TODO: Implement getClient() method.
                 }
 
-                public function work()
+                public function work(): \Generator
                 {
-                    // TODO: Implement work() method.
+                    yield;
                 }
 
                 public function send($data): bool
                 {
-                    // TODO: Implement send() method.
                 }
             };
         }
@@ -215,7 +210,7 @@ namespace tests\Standalone\Controller {
             $commandDispatcher = new CommandDispatcher($cmds = new ContainerOfCommands());
             $commander = new Commander(self::$connector, $cmds);
             $workerPool = new WorkerPool();
-            $balancer = new WorkerBalance($workerStarter, $commandDispatcher, $commander, $workerPool, 1,1);
+            $balancer = new WorkerBalance($workerStarter, $commandDispatcher, $commander, $workerPool, 1, 1);
 
             $balancer->work();
             $runningProperty = (new \ReflectionObject($balancer))->getProperty('running');

@@ -20,6 +20,11 @@ final class VariableRequest extends AbstractCommand
         $this->lock = $lock;
     }
 
+    public static function fromArray(array $data, Client $client)
+    {
+        return new self($client, $data['key'], $data['no_result'], $data['lock']);
+    }
+
     public function getKey(): string
     {
         return $this->key;
@@ -38,10 +43,5 @@ final class VariableRequest extends AbstractCommand
     public function toArray(): array
     {
         return ['key' => $this->key, 'no_result' => $this->noResult, 'lock' => $this->lock];
-    }
-
-    public static function fromArray(array $data, Client $client)
-    {
-        return new self($client, $data['key'], $data['no_result'], $data['lock']);
     }
 }

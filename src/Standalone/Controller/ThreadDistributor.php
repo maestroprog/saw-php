@@ -2,7 +2,7 @@
 
 namespace Maestroprog\Saw\Standalone\Controller;
 
-use Esockets\debug\Log;
+use Esockets\Debug\Log;
 use Maestroprog\Saw\Command\CommandHandler;
 use Maestroprog\Saw\Command\ThreadBroadcast;
 use Maestroprog\Saw\Command\ThreadKnow;
@@ -13,7 +13,6 @@ use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\Commander;
 use Maestroprog\Saw\Thread\AbstractThread;
 use Maestroprog\Saw\Thread\BroadcastThread;
-use Maestroprog\Saw\Thread\ControlledBroadcastThread;
 use Maestroprog\Saw\Thread\ControlledThread;
 use Maestroprog\Saw\Thread\Pool\ControllerThreadPoolIndex;
 use Maestroprog\Saw\Thread\Pool\PoolOfUniqueThreads;
@@ -39,7 +38,7 @@ final class ThreadDistributor implements CycleInterface
     /**
      * Очередь потоков на выполнение.
      *
-     * @var \SplStack
+     * @var \SplQueue
      */
     private $threadRunQueue;
 
@@ -77,12 +76,16 @@ final class ThreadDistributor implements CycleInterface
 
         // иднекс известных потоков
         $this->threadKnownIndex = new PoolOfUniqueThreads(); // todo why not used?
+
         // очередь потоков на выполнение
-        $this->threadRunQueue = new \SplStack();
+        $this->threadRunQueue = new \SplQueue();
+
         // индекс потоков, поставленных на выполнение из очереди
         $this->threadRunSources = new ControllerThreadPoolIndex();
+
         // индекс работающих потоков
         $this->threadRunWork = new ControllerThreadPoolIndex();
+
         // связывальщик потоков
         $this->threadLinks = new ThreadLinker();
 
@@ -105,7 +108,7 @@ final class ThreadDistributor implements CycleInterface
                 ))->setArguments($context->getArguments());
 
                 // добавление потока в очередь выполнения
-                $this->threadRunQueue->push($thread);
+                $this->threadRunQueue->enqueue($thread);
             }),
             new CommandHandler(ThreadBroadcast::class, function (ThreadBroadcast $context) {
                 $thread = (new BroadcastThread(
@@ -116,7 +119,7 @@ final class ThreadDistributor implements CycleInterface
                 ))->setArguments($context->getArguments());
 
                 // добавление потока в очередь выполнения
-                $this->threadRunQueue->push($thread);
+                $this->threadRunQueue->enqueue($thread);
             }),
             new CommandHandler(ThreadResult::class, function (ThreadResult $context) {
                 // получение и обработка результата выполнения потока
@@ -130,38 +133,12 @@ final class ThreadDistributor implements CycleInterface
     }
 
     /**
-     * Перераспределяет потоки по воркерам.
-     * @return void
-     * @throws \Exception
-     */
-    public function work()
-    {
-        while (!$this->threadRunQueue->isEmpty()) {
-            /** @var $thread ControlledThread */
-            $thread = $this->threadRunQueue->shift();
-            try {
-                if ($thread instanceof BroadcastThread) {
-                    $this->threadBroadcast($thread);
-                } else {
-                    $worker = $this->workerBalance->getLowLoadedWorker($thread);
-                    $this->threadRun($worker, $thread);
-                }
-            } catch (\RuntimeException $e) {
-                $this->threadRunQueue->push($thread); // откладываем до лучших времён.
-
-                return; // выходим отсюда до лучших времен
-            } catch (\Throwable $e) {
-                throw new \Exception('Cannot balance thread ' . $thread->getUniqueId(), 0, $e);
-            }
-        }
-    }
-
-    /**
      * Метод, который будет вызван,
      * когда воркер сообщит о новом потоке, который он только что узнал.
      *
      * @param Worker $worker
      * @param AbstractThread $thread
+     *
      * @return void
      */
     public function threadKnow(Worker $worker, AbstractThread $thread)
@@ -171,10 +148,112 @@ final class ThreadDistributor implements CycleInterface
     }
 
     /**
+     * Выполняет обработку результата выполнения потока,
+     * и перенаправляет его к исходному постановщику задачи.
+     *
+     * @param Worker $worker От кого пришёл результат
+     * @param int $runId По какому потоку пришёл результат
+     * @param mixed $result Результат выполнения потока
+     *
+     * @return void
+     */
+    public function threadResult(Worker $worker, int $runId, $result)
+    {
+        $runThread = $this->threadRunWork->getThreadById($runId);
+        $sourceThread = $this->threadLinks->getLinkedThread($runThread);
+        // отвязываем поток для выполнения от исходного потока
+        $this->threadLinks->unlinkThreads($runThread);
+
+        $sourceThread->setResult($result); // todo
+        // удаляем из сущности воркера информацию о завершённом потоке
+        $worker->removeRunThread($runThread);
+
+        $this->threadRunSources->removeThread($sourceThread);
+        $this->threadRunWork->removeThread($runThread);
+
+        if (!$sourceThread instanceof ControlledThread) {
+            throw new \LogicException('Unknown thread object!');
+        }
+
+        if ($sourceThread instanceof BroadcastThread) {
+            /**
+             * Широковещательные потоки на данный момент
+             * не поддерживают сбор и отправку результатов.
+             */
+            return;
+        }
+
+        $resultCommand = new ThreadResult(
+            $sourceThread->getThreadFrom(),
+            $sourceThread->getId(),
+            $sourceThread->getApplicationId(),
+            $sourceThread->getUniqueId(),
+            $sourceThread->getResult()
+        );
+        $resultCommand
+            ->onError(function () {
+
+            })
+            ->onSuccess(function () use ($sourceThread, $runThread) {
+
+            });
+        $this->commander->runAsync($resultCommand);
+    }
+
+    /**
+     * Перераспределяет потоки по воркерам.
+     *
+     * @return \Generator
+     * @throws \Exception
+     */
+    public function work(): \Generator
+    {
+        while (true) {
+            if (!$this->threadRunQueue->isEmpty()) {
+                /** @var $thread ControlledThread */
+                $thread = $this->threadRunQueue->dequeue();
+                try {
+                    if ($thread instanceof BroadcastThread) {
+                        $this->threadBroadcast($thread);
+                    } else {
+                        $worker = $this->workerBalance->getLowLoadedWorker($thread);
+                        $this->threadRun($worker, $thread);
+                    }
+                } catch (\RuntimeException $e) {
+                    $this->threadRunQueue->enqueue($thread); // откладываем до лучших времён.
+
+                    break; // выходим отсюда до лучших времен
+                } catch (\Throwable $e) {
+                    throw new \Exception('Cannot balance thread ' . $thread->getUniqueId(), 0, $e);
+                }
+            }
+
+            yield;
+        }
+    }
+
+    /**
+     * Выполняет постановку задачи на выполнение потока указанному воркеру.
+     *
+     * @param BroadcastThread $sourceThread Исходный поток, который будет передан на выполнение
+     *
+     * @return void
+     */
+    public function threadBroadcast(BroadcastThread $sourceThread)
+    {
+        /** @var Worker $worker */
+        foreach ($this->workerPool as $worker) {
+            $this->threadRun($worker, $sourceThread);
+            // todo сделать оповещение об успешном выполнении потока
+        }
+    }
+
+    /**
      * Выполняет постановку задачи на выполнение потока указанному воркеру.
      *
      * @param Worker $worker Воркер, которому предстоит передать поток на выполнение
      * @param AbstractThread $sourceThread Исходный поток, который будет передан на выполнение
+     *
      * @return void
      */
     public function threadRun(Worker $worker, AbstractThread $sourceThread)
@@ -215,73 +294,6 @@ final class ThreadDistributor implements CycleInterface
         $this->commander->runAsync($thread);
     }
 
-    /**
-     * Выполняет постановку задачи на выполнение потока указанному воркеру.
-     *
-     * @param BroadcastThread $sourceThread Исходный поток, который будет передан на выполнение
-     * @return void
-     */
-    public function threadBroadcast(BroadcastThread $sourceThread)
-    {
-        /** @var Worker $worker */
-        foreach ($this->workerPool as $worker) {
-            $this->threadRun($worker, $sourceThread);
-            // todo сделать оповещение об успешном выполнении потока
-        }
-    }
-
-    /**
-     * Выполняет обработку результата выполнения потока,
-     * и перенаправляет его к исходному постановщику задачи.
-     *
-     * @param Worker $worker От кого пришёл результат
-     * @param int $runId По какому потоку пришёл результат
-     * @param mixed $result Результат выполнения потока
-     * @return void
-     */
-    public function threadResult(Worker $worker, int $runId, $result)
-    {
-        $runThread = $this->threadRunWork->getThreadById($runId);
-        $sourceThread = $this->threadLinks->getLinkedThread($runThread);
-        // отвязываем поток для выполнения от исходного потока
-        $this->threadLinks->unlinkThreads($runThread);
-
-        $sourceThread->setResult($result);
-        // удаляем из сущности воркера информацию о завершённом потоке
-        $worker->removeRunThread($runThread);
-
-        $this->threadRunSources->removeThread($sourceThread);
-        $this->threadRunWork->removeThread($runThread);
-
-        if (!$sourceThread instanceof ControlledThread) {
-            throw new \LogicException('Unknown thread object!');
-        }
-
-        if ($sourceThread instanceof BroadcastThread) {
-            /**
-             * Широковещательные потоки на данный момент
-             * не поддерживают сбор и отправку результатов.
-             */
-            return;
-        }
-
-        $resultCommand = new ThreadResult(
-            $sourceThread->getThreadFrom(),
-            $sourceThread->getId(),
-            $sourceThread->getApplicationId(),
-            $sourceThread->getUniqueId(),
-            $sourceThread->getResult()
-        );
-        $resultCommand
-            ->onError(function () {
-
-            })
-            ->onSuccess(function () use ($sourceThread, $runThread) {
-
-            });
-        $this->commander->runAsync($resultCommand);
-    }
-
     public function getWorkerPool(): WorkerPool
     {
         return $this->workerPool;
@@ -297,7 +309,7 @@ final class ThreadDistributor implements CycleInterface
         return $this->threadKnownIndex;
     }
 
-    public function getThreadRunQueue(): \SplStack
+    public function getThreadRunQueue(): \SplQueue
     {
         return $this->threadRunQueue;
     }

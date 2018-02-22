@@ -14,8 +14,10 @@ class WorkerStarter
 
     /**
      * ControllerStarter constructor.
+     *
      * @param Executor $executor
      * @param string $cmd
+     *
      * @internal param Client $client
      */
     public function __construct(Executor $executor, string $cmd)

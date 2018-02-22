@@ -20,6 +20,11 @@ final class ContainerOfThreadPools implements \Countable
         return $this->pools[$containerId] = $this->switchTo($threadPool);
     }
 
+    public function switchTo(AbstractThreadPool $threadPool): AbstractThreadPool
+    {
+        return $this->currentPool = $threadPool;
+    }
+
     public function get(string $containerId): AbstractThreadPool
     {
         return $this->pools[$containerId];
@@ -30,12 +35,7 @@ final class ContainerOfThreadPools implements \Countable
         return $this->currentPool;
     }
 
-    public function switchTo(AbstractThreadPool $threadPool): AbstractThreadPool
-    {
-        return $this->currentPool = $threadPool;
-    }
-
-    public function count()
+    public function count(): int
     {
         return $this->pools->count();
     }

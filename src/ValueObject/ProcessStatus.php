@@ -22,6 +22,14 @@ class ProcessStatus
     }
 
     /**
+     * Обновляет информацию о состоянии процесса.
+     */
+    private function update()
+    {
+        $this->status = proc_get_status($this->resource);
+    }
+
+    /**
      * @return resource
      */
     public function getResource()
@@ -68,19 +76,13 @@ class ProcessStatus
     /**
      * Убивает процесс с использованием сигнала KILL.
      * Вернёт статус уничтожения процесса.
+     *
      * @param int $signal
+     *
      * @return bool
      */
     public function kill(int $signal = 9): bool
     {
         return proc_terminate($this->resource, $signal);
-    }
-
-    /**
-     * Обновляет информацию о состоянии процесса.
-     */
-    private function update()
-    {
-        $this->status = proc_get_status($this->resource);
     }
 }

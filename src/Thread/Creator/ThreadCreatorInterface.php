@@ -2,7 +2,7 @@
 
 namespace Maestroprog\Saw\Thread\Creator;
 
-use Maestroprog\Saw\Thread\AbstractThread;
+use Maestroprog\Saw\Thread\ThreadWithCode;
 
 interface ThreadCreatorInterface
 {
@@ -12,9 +12,10 @@ interface ThreadCreatorInterface
      *
      * @param string $uniqueId
      * @param callable $code
-     * @return AbstractThread
+     *
+     * @return ThreadWithCode
      */
-    public function thread(string $uniqueId, callable $code): AbstractThread;
+    public function thread(string $uniqueId, callable $code): ThreadWithCode;
 
     /**
      * Так же создает новый поток, дополнительно принимая
@@ -23,7 +24,8 @@ interface ThreadCreatorInterface
      * @param string $uniqueId
      * @param callable $code
      * @param array $arguments
-     * @return AbstractThread
+     *
+     * @return ThreadWithCode
      */
-    public function threadArguments(string $uniqueId, callable $code, array $arguments): AbstractThread;
+    public function threadArguments(string $uniqueId, callable $code, array $arguments): ThreadWithCode;
 }

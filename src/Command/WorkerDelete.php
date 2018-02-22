@@ -21,13 +21,13 @@ final class WorkerDelete extends AbstractCommand
         parent::__construct($client);
     }
 
-    public function toArray(): array
-    {
-        return [];
-    }
-
     public static function fromArray(array $data, Client $client)
     {
         return new self($client);
+    }
+
+    public function toArray(): array
+    {
+        return [];
     }
 }

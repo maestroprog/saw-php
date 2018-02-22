@@ -12,6 +12,7 @@ interface MultiplexingInterface
      * Назначает операционный размер шага для мультиплексируемого потока.
      *
      * @param int $stepSize
+     *
      * @return mixed
      */
     public function setOperationStepSize(int $stepSize);
@@ -20,6 +21,7 @@ interface MultiplexingInterface
      * Назначает общий операционный размер потока.
      *
      * @param int $size
+     *
      * @return mixed
      */
     public function setOperationSize(int $size);
@@ -47,6 +49,7 @@ interface MultiplexingInterface
      * например - когда требуется освободить память.
      *
      * @param callable $callback
+     *
      * @return mixed
      */
     public function onSwitchOff(callable $callback);
@@ -64,6 +67,7 @@ interface MultiplexingInterface
      * Аналогично методу @see onSwitchOff.
      *
      * @param callable $callback
+     *
      * @return mixed
      */
     public function onSwitch(callable $callback);

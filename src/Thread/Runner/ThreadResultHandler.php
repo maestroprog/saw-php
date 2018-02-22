@@ -4,7 +4,7 @@ namespace Maestroprog\Saw\Thread\Runner;
 
 use Maestroprog\Saw\Service\CommandDispatcher;
 
-// todo remove
+/** @deprecated */
 class ThreadResultHandler
 {
     private $threadRunner;

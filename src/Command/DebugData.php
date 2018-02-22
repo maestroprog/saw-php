@@ -22,6 +22,11 @@ final class DebugData extends AbstractCommand
         $this->result = $result;
     }
 
+    public static function fromArray(array $data, Client $client)
+    {
+        return new self($client, $data['type'], $data['result']);
+    }
+
     public function getType(): string
     {
         return $this->type;
@@ -46,10 +51,5 @@ final class DebugData extends AbstractCommand
     public function toArray(): array
     {
         return ['type' => $this->type, 'result' => $this->result];
-    }
-
-    public static function fromArray(array $data, Client $client)
-    {
-        return new self($client, $data['type'], $data['result']);
     }
 }

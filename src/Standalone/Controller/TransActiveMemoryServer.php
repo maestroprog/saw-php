@@ -25,6 +25,7 @@ final class TransActiveMemoryServer implements MemoryInterface
 
     private $clients;
     private $index;
+    private $ccIndex;
 
     public function __construct(CommandDispatcher $dispatcher, Commander $commander)
     {
@@ -61,8 +62,6 @@ final class TransActiveMemoryServer implements MemoryInterface
                 }),
             ]);
     }
-
-    private $ccIndex;
 
     private function dispatchClient(Client $client)
     {

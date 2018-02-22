@@ -16,13 +16,13 @@ final class VariableFree extends AbstractCommand
         $this->key = $key;
     }
 
-    public function toArray(): array
-    {
-        return ['key' => $this->key];
-    }
-
     public static function fromArray(array $data, Client $client)
     {
         return new self($client, $data['key']);
+    }
+
+    public function toArray(): array
+    {
+        return ['key' => $this->key];
     }
 }

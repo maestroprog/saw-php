@@ -14,9 +14,9 @@
 
 # Описание
 
-* **[AbstractThreadPool](Pool.php)** - абстрактный класс,
+* **[AbstractThreadPool](Pool/AbstractThreadPool.php)** - абстрактный класс,
     описывающий возможности пула потоков и управления им.
-* **[AbstractThread](Thread.php)** - абстрактный класс,
+* **[AbstractThread](AbstractThread.php)** - абстрактный класс,
     описывающий возможности управления потоком для окружающего мира.
 * **[MultiThreadingInterface](MultiThreadingInterface.php)** - интерфейс,
     описывающий структуру класса приложения, которую необходимо реализовать для работы с потоками.
@@ -24,7 +24,7 @@
 * **[MultiplexingInterface](MultiplexingInterface.php)** - интерфейс,
     описывающий структуру класса потока, который необходимо реализовать
     для работы потока в режиме мультиплексирования.
-* **[SynchronizeException](Syncronizer/SynchronizeException.php)** - исключение типа
+* **[SynchronizeException](Synchronizer/SynchronizeException.php)** - исключение типа
     "Исключение во время синхронизации" в контексте многопоточности,
     т.е. какая-либо ошибка/исключение при синхронизации работы потоков.
 

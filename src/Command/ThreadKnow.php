@@ -25,6 +25,11 @@ final class ThreadKnow extends AbstractCommand
         $this->uniqueId = $uniqueId;
     }
 
+    public static function fromArray(array $data, Client $client)
+    {
+        return new self($client, $data['application_id'], $data['unique_id']);
+    }
+
     /**
      * Вернёт уникальный идентификатор приложения,
      * к которому относится поток.
@@ -49,10 +54,5 @@ final class ThreadKnow extends AbstractCommand
     public function toArray(): array
     {
         return ['application_id' => $this->applicationId, 'unique_id' => $this->uniqueId];
-    }
-
-    public static function fromArray(array $data, Client $client)
-    {
-        return new self($client, $data['application_id'], $data['unique_id']);
     }
 }

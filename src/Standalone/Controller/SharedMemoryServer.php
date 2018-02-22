@@ -25,6 +25,7 @@ final class SharedMemoryServer implements SharedMemoryInterface
 
     private $memory;
     private $locked;
+    private $ccIndex;
 
     public function __construct(MemoryInterface $memory, CommandDispatcher $dispatcher, Commander $commander)
     {
@@ -79,8 +80,6 @@ final class SharedMemoryServer implements SharedMemoryInterface
             ]);
     }
 
-    private $ccIndex;
-
     private function dispatchClient(Client $client)
     {
         $this->ccIndex = $client->getConnectionResource()->getId();
@@ -95,12 +94,30 @@ final class SharedMemoryServer implements SharedMemoryInterface
         return $thereIs;
     }
 
+    public function lock(string $varName)
+    {
+        if ($this->locked->offsetExists($varName)) {
+            throw new MemoryLockException('Cannot lock currently locked "' . $varName . '".');
+        }
+        $this->locked->offsetSet($varName, $this->ccIndex);
+    }
+
     public function read(string $varName, bool $withLocking = true)
     {
         if ($this->locked($varName) && !$this->lockedByThisUser($varName)) {
             throw new MemoryLockException('Cannot read currently locked "' . $varName . '".');
         }
         return $this->memory->read($varName);
+    }
+
+    private function locked(string $varName): bool
+    {
+        return $this->locked->offsetExists($varName);
+    }
+
+    private function lockedByThisUser(string $varName): bool
+    {
+        return $this->ccIndex === $this->locked[$varName] ?? 0;
     }
 
     public function write(string $varName, $variable, bool $unlock = true): bool
@@ -115,22 +132,6 @@ final class SharedMemoryServer implements SharedMemoryInterface
         return $result;
     }
 
-    public function remove(string $varName)
-    {
-        if ($this->locked($varName) && !$this->lockedByThisUser($varName)) {
-            throw new MemoryLockException('Cannot remove currently locked "' . $varName . '".');
-        }
-        $this->memory->remove($varName);
-    }
-
-    public function lock(string $varName)
-    {
-        if ($this->locked->offsetExists($varName)) {
-            throw new MemoryLockException('Cannot lock currently locked "' . $varName . '".');
-        }
-        $this->locked->offsetSet($varName, $this->ccIndex);
-    }
-
     public function unlock(string $varName)
     {
         if (!$this->locked($varName)) {
@@ -142,6 +143,14 @@ final class SharedMemoryServer implements SharedMemoryInterface
         $this->locked->offsetUnset($varName);
     }
 
+    public function remove(string $varName)
+    {
+        if ($this->locked($varName) && !$this->lockedByThisUser($varName)) {
+            throw new MemoryLockException('Cannot remove currently locked "' . $varName . '".');
+        }
+        $this->memory->remove($varName);
+    }
+
     public function list(string $prefix = null): array
     {
         return $this->memory->list($prefix);
@@ -150,15 +159,5 @@ final class SharedMemoryServer implements SharedMemoryInterface
     public function free()
     {
         $this->memory = new \ArrayObject();
-    }
-
-    private function locked(string $varName): bool
-    {
-        return $this->locked->offsetExists($varName);
-    }
-
-    private function lockedByThisUser(string $varName): bool
-    {
-        return $this->ccIndex === $this->locked[$varName] ?? 0;
     }
 }

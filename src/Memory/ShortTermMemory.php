@@ -16,12 +16,6 @@ final class ShortTermMemory extends CacheMemory implements ShareableMemoryInterf
         $this->prefix = $uniquePrefix;
     }
 
-    protected function prefix(): string
-    {
-        // return parent::prefix(); // todo WTF? // Почему тут был вызов parent::prefix()? это не могло работать.
-        return $this->prefix;
-    }
-
     public function share(string $varName)
     {
         $this->memory->share($varName);
@@ -30,5 +24,11 @@ final class ShortTermMemory extends CacheMemory implements ShareableMemoryInterf
     public function request(string $varName)
     {
         return $this->memory->request($varName);
+    }
+
+    protected function prefix(): string
+    {
+        // return parent::prefix(); // todo WTF? // Почему тут был вызов parent::prefix()? это не могло работать.
+        return $this->prefix;
     }
 }

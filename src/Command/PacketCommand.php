@@ -16,6 +16,11 @@ class PacketCommand extends AbstractCommand
         $this->commands = $commands;
     }
 
+    public static function fromArray(array $data, Client $client)
+    {
+        return new self($client, $data['commands']);
+    }
+
     public function toArray(): array
     {
         return ['commands' => $this->commands];
@@ -27,10 +32,5 @@ class PacketCommand extends AbstractCommand
     public function getCommands(): array
     {
         return $this->commands;
-    }
-
-    public static function fromArray(array $data, Client $client)
-    {
-        return new self($client, $data['commands']);
     }
 }

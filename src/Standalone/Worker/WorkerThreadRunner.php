@@ -3,7 +3,7 @@
 namespace Maestroprog\Saw\Standalone\Worker;
 
 use Esockets\Client;
-use Esockets\debug\Log;
+use Esockets\Debug\Log;
 use Maestroprog\Saw\Application\ApplicationContainer;
 use Maestroprog\Saw\Command\CommandHandler;
 use Maestroprog\Saw\Command\ThreadBroadcast;
@@ -12,6 +12,7 @@ use Maestroprog\Saw\Command\ThreadRun;
 use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\Commander;
 use Maestroprog\Saw\Thread\AbstractThread;
+use Maestroprog\Saw\Thread\BroadcastThread;
 use Maestroprog\Saw\Thread\Pool\AbstractThreadPool;
 use Maestroprog\Saw\Thread\Pool\PoolOfUniqueThreads;
 use Maestroprog\Saw\Thread\Pool\RunnableThreadPool;
@@ -58,9 +59,10 @@ final class WorkerThreadRunner implements ThreadRunnerDisablingSupportInterface
      * Метод нужен для совместимости работы приложений из скрипта и на воркерах.
      *
      * @param AbstractThread[] $threads
+     *
      * @return bool
      */
-    public function runThreads(array $threads): bool
+    public function runThreads(AbstractThread ...$threads): bool
     {
         if (!$this->disabled) {
             foreach ($threads as $thread) {
@@ -85,7 +87,12 @@ final class WorkerThreadRunner implements ThreadRunnerDisablingSupportInterface
         return true;
     }
 
-    public function broadcastThreads(AbstractThread ...$threads): bool
+    public function enable(): void
+    {
+        $this->disabled = false;
+    }
+
+    public function broadcastThreads(BroadcastThread ...$threads): bool
     {
         $result = false;
 
@@ -120,18 +127,8 @@ final class WorkerThreadRunner implements ThreadRunnerDisablingSupportInterface
         return $this->runThreadPool;
     }
 
-    public function setResultByRunId(int $id, $data)
-    {
-        $this->runThreadPool->getThreadById($id)->setResult($data);
-    }
-
-    public function disable()
+    public function disable(): void
     {
         $this->disabled = true;
-    }
-
-    public function enable()
-    {
-        $this->disabled = false;
     }
 }

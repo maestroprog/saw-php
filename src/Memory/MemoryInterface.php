@@ -11,6 +11,7 @@ interface MemoryInterface
      * Проверяет существование переменной в памяти.
      *
      * @param string $varName
+     *
      * @return bool
      */
     public function has(string $varName): bool;
@@ -19,6 +20,7 @@ interface MemoryInterface
      * Читает переменную из памяти.
      *
      * @param string $varName
+     *
      * @return mixed
      * @throws \OutOfBoundsException Если переменная не существует
      */
@@ -29,6 +31,7 @@ interface MemoryInterface
      *
      * @param string $varName
      * @param $variable
+     *
      * @return bool
      */
     public function write(string $varName, $variable): bool;
@@ -37,6 +40,7 @@ interface MemoryInterface
      * Удаляет переменную из памяти.
      *
      * @param string
+     *
      * @return void
      * @throws \OutOfBoundsException Если переменная не существует
      */
@@ -48,6 +52,7 @@ interface MemoryInterface
      * Ресурсоёмкая операция.
      *
      * @param string $prefix
+     *
      * @return array
      */
     public function list(string $prefix = null): array;

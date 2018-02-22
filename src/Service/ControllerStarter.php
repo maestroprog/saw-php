@@ -2,10 +2,10 @@
 
 namespace Maestroprog\Saw\Service;
 
-use Esockets\base\AbstractAddress;
-use Esockets\base\exception\ConnectionException;
+use Esockets\Base\AbstractAddress;
+use Esockets\Base\Exception\ConnectionException;
 use Esockets\Client;
-use Esockets\debug\Log;
+use Esockets\Debug\Log;
 
 /**
  * Сервис, организующий запуск контроллера.
@@ -33,7 +33,7 @@ final class ControllerStarter
     /**
      * @throws \RuntimeException
      */
-    public function start()
+    public function start(): void
     {
         $beforeRun = microtime(true);
         $pid = $this->runner->start();

@@ -2,8 +2,6 @@
 
 namespace Maestroprog\Saw\Thread\Synchronizer;
 
-use Maestroprog\Saw\Thread\AbstractThread;
-
 interface SynchronizerInterface
 {
     /**
@@ -13,28 +11,30 @@ interface SynchronizerInterface
      * указав этот же поток, то произойдет таймаут ожидания.
      * В общем случае так делать не рекомендуется.
      *
-     * @param AbstractThread $thread
-     * @return void
+     * @param SynchronizationThreadInterface $thread
+     *
+     * @return \Generator
      */
-    public function synchronizeOne(AbstractThread $thread);
+    public function synchronizeOne(SynchronizationThreadInterface $thread): \Generator;
 
     /**
      * Выполняет синхронизацию указанных потоков.
      *
-     * @param AbstractThread[] $threads
-     * @return void
+     * @param SynchronizationThreadInterface[] $threads
+     *
+     * @return \Generator
      * @throws SynchronizeException
      * @throws \InvalidArgumentException Если указан несуществующий поток,
      *          или элемент массива - вовсе не @see Thread
      */
-    public function synchronizeThreads(array $threads);
+    public function synchronizeThreads(SynchronizationThreadInterface ...$threads): \Generator;
 
     /**
      * Выполняет синхронизацию всех работающих в данный
      * момент времени потоков.
      *
-     * @return void
+     * @return \Generator
      * @throws SynchronizeException
      */
-    public function synchronizeAll();
+    public function synchronizeAll(): \Generator;
 }

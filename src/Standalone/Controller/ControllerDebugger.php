@@ -6,12 +6,9 @@ use Esockets\Client;
 use Maestroprog\Saw\Command\CommandHandler;
 use Maestroprog\Saw\Command\DebugCommand;
 use Maestroprog\Saw\Command\DebugData;
-use Maestroprog\Saw\Entity\Worker;
 use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\Commander;
 use Maestroprog\Saw\Service\ControllerRunner;
-use Maestroprog\Saw\Service\ControllerStarter;
-use Maestroprog\Saw\Service\Executor;
 
 class ControllerDebugger
 {
@@ -19,6 +16,7 @@ class ControllerDebugger
     private $commander;
     private $threadDistributor;
     private $runner;
+    private $debuggerClient;
 
     public function __construct(
         CommandDispatcher $commandDispatcher,
@@ -66,6 +64,7 @@ class ControllerDebugger
             case 'help':
                 $result['result'] = 'List of commands: killall, fullstat, help, restart, stop';
                 break;
+            /** @noinspection PhpMissingBreakStatementInspection */
             case 'restart':
                 register_shutdown_function(function () {
                     $this->runner->start();
@@ -93,8 +92,6 @@ class ControllerDebugger
         error_log('убито ' . $count);
         return $count;
     }
-
-    private $debuggerClient;
 
     protected function fullStat(DebugCommand $command): array
     {

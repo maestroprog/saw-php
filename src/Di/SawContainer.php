@@ -2,7 +2,7 @@
 
 namespace Maestroprog\Saw\Di;
 
-use Esockets\base\Configurator;
+use Esockets\Base\Configurator;
 use Esockets\Client;
 use Esockets\Server;
 use Maestroprog\Container\AbstractBasicContainer;
@@ -123,6 +123,34 @@ class SawContainer extends AbstractBasicContainer
         throw new \LogicException('Unknown using ControllerConnector');
     }
 
+    /**
+     * @internal
+     * @return WebControllerConnector
+     */
+    private function getWebControllerConnector(): WebControllerConnector
+    {
+        return new WebControllerConnector(
+            $this->get('ControllerClient'),
+            $this->daemonConfig->getControllerAddress(),
+            $this->get(CommandDispatcher::class),
+            $this->get(ControllerStarter::class)
+        );
+    }
+
+    /**
+     * @internal
+     * @return WorkerControllerConnector
+     */
+    private function getWorkerControllerConnector(): WorkerControllerConnector
+    {
+        return new WorkerControllerConnector(
+            $this->get('ControllerClient'),
+            $this->daemonConfig->getControllerAddress(),
+            $this->get(CommandDispatcher::class),
+            $this->get(ControllerStarter::class)
+        );
+    }
+
     public function getControllerClient(): Client
     {
         return $this->socketConfigurator->makeClient();
@@ -151,6 +179,29 @@ class SawContainer extends AbstractBasicContainer
                     ? new DummyThreadRunner()
                     : $this->getWebThreadRunner() // use internal
             );
+    }
+
+    /**
+     * @internal
+     * @return WorkerThreadRunner
+     */
+    private function getWorkerThreadRunner(): WorkerThreadRunner
+    {
+        return new WorkerThreadRunner(
+            $this->get('ControllerClient'),
+            $this->get(CommandDispatcher::class),
+            $this->get(Commander::class),
+            $this->get(ApplicationContainer::class)
+        );
+    }
+
+    /**
+     * @internal
+     * @return WebThreadRunner
+     */
+    private function getWebThreadRunner(): WebThreadRunner
+    {
+        return new WebThreadRunner($this->get(ControllerConnectorInterface::class), $this->get(Commander::class));
     }
 
     public function getControllerCore(): ControllerCore
@@ -195,6 +246,28 @@ class SawContainer extends AbstractBasicContainer
                     ? new DummyThreadCreator()
                     : $this->getWebThreadCreator() // use internal
             );
+    }
+
+    /**
+     * @internal
+     * @return WorkerThreadCreator
+     */
+    private function getWorkerThreadCreator(): WorkerThreadCreator
+    {
+        return new WorkerThreadCreator(
+            $this->get(ContainerOfThreadPools::class),
+            $this->get(Commander::class),
+            $this->get('ControllerClient')
+        );
+    }
+
+    /**
+     * @internal
+     * @return ThreadCreator
+     */
+    private function getWebThreadCreator(): ThreadCreator
+    {
+        return new ThreadCreator($this->get(ContainerOfThreadPools::class));
     }
 
     public function getThreadSynchronizer(): SynchronizerInterface
@@ -244,9 +317,9 @@ class SawContainer extends AbstractBasicContainer
      * @return CycleInterface
      * @internal
      */
-    private function getControllerWorkCycle(): CycleInterface
+    private function getWebWorkCycle(): CycleInterface
     {
-        return new ControllerWorkCycle($this->get('ControllerServer'));
+        return $this->get(ControllerConnectorInterface::class);
     }
 
     /**
@@ -262,81 +335,8 @@ class SawContainer extends AbstractBasicContainer
      * @return CycleInterface
      * @internal
      */
-    private function getWebWorkCycle(): CycleInterface
+    private function getControllerWorkCycle(): CycleInterface
     {
-        return $this->get(ControllerConnectorInterface::class);
-    }
-
-    /**
-     * @internal
-     * @return WebControllerConnector
-     */
-    private function getWebControllerConnector(): WebControllerConnector
-    {
-        return new WebControllerConnector(
-            $this->get('ControllerClient'),
-            $this->daemonConfig->getControllerAddress(),
-            $this->get(CommandDispatcher::class),
-            $this->get(ControllerStarter::class)
-        );
-    }
-
-    /**
-     * @internal
-     * @return WorkerControllerConnector
-     */
-    private function getWorkerControllerConnector(): WorkerControllerConnector
-    {
-        return new WorkerControllerConnector(
-            $this->get('ControllerClient'),
-            $this->daemonConfig->getControllerAddress(),
-            $this->get(CommandDispatcher::class),
-            $this->get(ControllerStarter::class)
-        );
-    }
-
-    /**
-     * @internal
-     * @return WorkerThreadRunner
-     */
-    private function getWorkerThreadRunner(): WorkerThreadRunner
-    {
-        return new WorkerThreadRunner(
-            $this->get('ControllerClient'),
-            $this->get(CommandDispatcher::class),
-            $this->get(Commander::class),
-            $this->get(ApplicationContainer::class)
-        );
-    }
-
-    /**
-     * @internal
-     * @return WebThreadRunner
-     */
-    private function getWebThreadRunner(): WebThreadRunner
-    {
-        return new WebThreadRunner($this->get(ControllerConnectorInterface::class), $this->get(Commander::class));
-    }
-
-    /**
-     * @internal
-     * @return WorkerThreadCreator
-     */
-    private function getWorkerThreadCreator(): WorkerThreadCreator
-    {
-        return new WorkerThreadCreator(
-            $this->get(ContainerOfThreadPools::class),
-            $this->get(Commander::class),
-            $this->get('ControllerClient')
-        );
-    }
-
-    /**
-     * @internal
-     * @return ThreadCreator
-     */
-    private function getWebThreadCreator(): ThreadCreator
-    {
-        return new ThreadCreator($this->get(ContainerOfThreadPools::class));
+        return new ControllerWorkCycle($this->get('ControllerServer'));
     }
 }
