@@ -2,9 +2,6 @@
 
 namespace Maestroprog\Saw\Application;
 
-use Maestroprog\Saw\Application\Context\ContextInterface;
-use Maestroprog\Saw\Application\Context\ContextPool;
-use Maestroprog\Saw\Memory\SharedMemoryInterface;
 use Maestroprog\Saw\Thread\AbstractThread;
 use Maestroprog\Saw\Thread\BroadcastThread;
 use Maestroprog\Saw\Thread\MultiThreadingInterface;
@@ -22,30 +19,16 @@ abstract class BasicMultiThreaded implements
 {
     private $id;
     private $multiThreadingProvider;
-    private $applicationMemory;
-    private $contextPool;
 
-    public function __construct(
-        string $id,
-        MultiThreadingProvider $multiThreadingProvider,
-        SharedMemoryInterface $applicationMemory,
-        ContextPool $contextPool
-    )
+    public function __construct(string $id, MultiThreadingProvider $multiThreadingProvider)
     {
         $this->id = $id;
         $this->multiThreadingProvider = $multiThreadingProvider;
-        $this->applicationMemory = $applicationMemory;
-        $this->contextPool = $contextPool;
     }
 
     final public function getId(): string
     {
         return $this->id;
-    }
-
-    public function context(): ContextInterface
-    {
-        return $this->contextPool;
     }
 
     final public function run()
@@ -103,14 +86,6 @@ abstract class BasicMultiThreaded implements
     public function getThreadPool(): AbstractThreadPool
     {
         return $this->multiThreadingProvider->getThreadRunner()->getThreadPool();
-    }
-
-    /**
-     * @inheritdoc
-     */
-    final public function synchronizeOne(SynchronizationThreadInterface $thread): \Generator
-    {
-        yield $this->multiThreadingProvider->getSynchronizer()->synchronizeOne($thread);
     }
 
     /**

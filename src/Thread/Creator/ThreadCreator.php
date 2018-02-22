@@ -21,18 +21,22 @@ class ThreadCreator implements ThreadCreatorInterface
         return $this->pools->getCurrentPool();
     }
 
-    public function threadArguments(string $uniqueId, callable $code, array $arguments): ThreadWithCode
-    {
-        return $this->thread($uniqueId, $code)->setArguments($arguments);
-    }
-
     public function thread(string $uniqueId, callable $code): ThreadWithCode
     {
         static $threadId = 0;
 
+        $pool = $this->getThreadPool();
+        if ($pool->exists($uniqueId)) {
+            throw new \RuntimeException('It is not possible to create multiple threads with the same identifier.');
+        }
         $thread = new ThreadWithCode(++$threadId, Saw::getCurrentApp()->getId(), $uniqueId, $code);
-        $this->pools->getCurrentPool()->add($thread);
+        $pool->add($thread);
 
         return $thread;
+    }
+
+    public function threadArguments(string $uniqueId, callable $code, array $arguments): ThreadWithCode
+    {
+        return $this->thread($uniqueId, $code)->setArguments($arguments);
     }
 }

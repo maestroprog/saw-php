@@ -26,11 +26,6 @@ class DummyThreadRunner implements ThreadRunnerInterface
         return $this->runThreads(...$threads);
     }
 
-    /**
-     * @param AbstractThread[] $threads
-     *
-     * @return bool
-     */
     public function runThreads(AbstractThread ...$threads): bool
     {
         foreach ($threads as $thread) {

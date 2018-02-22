@@ -2,11 +2,16 @@
 
 namespace Maestroprog\Saw\Thread;
 
+use Maestroprog\Saw\Thread\Synchronizer\SynchronizationThreadInterface;
+use Maestroprog\Saw\Thread\Synchronizer\SynchronizationTrait;
+
 /**
  * @method self setArguments(array $arguments);
  */
-class ThreadWithCode extends AbstractThread
+class ThreadWithCode extends AbstractThread implements SynchronizationThreadInterface
 {
+    use SynchronizationTrait;
+
     /**
      * @var callable Содержит код потока.
      */
@@ -45,6 +50,7 @@ class ThreadWithCode extends AbstractThread
             throw new ThreadRunningException($throwable->getMessage(), $throwable->getCode(), $throwable);
         } finally {
             $this->generator = null;
+            $this->synchronized();
 
             return $result;
         }

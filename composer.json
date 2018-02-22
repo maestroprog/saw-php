@@ -39,7 +39,8 @@
     "psr-4": {
       "Maestroprog\\Saw\\": "src/",
       "Maestroprog\\Saw\\Sample\\": "sample/"
-    }
+    },
+    "files": ["src/functions.php"]
   },
   "bin": [
     "bin/controller",

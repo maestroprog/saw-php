@@ -26,7 +26,6 @@ use Maestroprog\Saw\Standalone\ControllerCore;
 use Maestroprog\Saw\Standalone\Worker\WorkerThreadCreator;
 use Maestroprog\Saw\Standalone\Worker\WorkerThreadRunner;
 use Maestroprog\Saw\Standalone\WorkerCore;
-use Maestroprog\Saw\Thread\Creator\DummyThreadCreator;
 use Maestroprog\Saw\Thread\Creator\ThreadCreator;
 use Maestroprog\Saw\Thread\Creator\ThreadCreatorInterface;
 use Maestroprog\Saw\Thread\MultiThreadingProvider;
@@ -241,11 +240,7 @@ class SawContainer extends AbstractBasicContainer
     {
         return $this->environment->isWorker()
             ? $this->getWorkerThreadCreator() // use internal
-            : (
-                $this->config['multiThreading']['disabled'] ?? false
-                    ? new DummyThreadCreator()
-                    : $this->getWebThreadCreator() // use internal
-            );
+            : $this->getWebThreadCreator(); // use internal
     }
 
     /**
@@ -273,7 +268,7 @@ class SawContainer extends AbstractBasicContainer
     public function getThreadSynchronizer(): SynchronizerInterface
     {
         return $this->config['multiThreading']['disabled'] ?? false
-                ? new DummySynchronizer()
+                ? new DummySynchronizer($this->get(ThreadRunnerInterface::class))
                 : new WebThreadSynchronizer(
                     $this->get(ThreadRunnerInterface::class),
                     $this->get(ControllerConnectorInterface::class)

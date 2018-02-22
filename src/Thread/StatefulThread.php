@@ -7,6 +7,9 @@ use Maestroprog\Saw\Thread\Synchronizer\SynchronizationTrait;
 
 /**
  * Тред с хранением состояния.
+ *
+ * @method void synchronized()
+ * @method bool isSynchronized()
  */
 abstract class StatefulThread extends AbstractThread implements SynchronizationThreadInterface
 {
@@ -34,6 +37,8 @@ abstract class StatefulThread extends AbstractThread implements SynchronizationT
         parent::setResult($data);
 
         $this->state = self::STATE_END;
+
+        $this->synchronized();
     }
 
     public function reset(): void

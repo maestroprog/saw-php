@@ -48,21 +48,27 @@ class MyApplication extends BasicMultiThreaded
         $header = microtime(true);
         $this->header = $this->thread('FOR1', function () {
             $t1 = $this->thread('SUB_THREAD_1', function () {
-                for ($i = 0; $i < 500; $i++) {
-                    ;
+                for ($i = 0; $i < 3; $i++) {
+                    echo 'WORK SUB_THREAD_1' . PHP_EOL;
+                    yield;
                 }
 
                 return 1;
             });
             $t2 = $this->thread('SUB_THREAD_2', function () {
-                for ($i = 0; $i < 1000; $i++) {
-                    ;
+                for ($i = 0; $i < 5; $i++) {
+                    echo 'WORK SUB_THREAD_2' . PHP_EOL;
+                    yield;
                 }
 
                 return 2;
             });
 
-            $this->runThreads($t1, $t2);
+            if (!$this->runThreads($t1, $t2)) {
+                throw new \RuntimeException('Cannot run threads.');
+            }
+
+            echo 'WORK FOR1' . PHP_EOL;
 
             yield from $this->synchronizeThreads($t1, $t2);
 
@@ -70,21 +76,23 @@ class MyApplication extends BasicMultiThreaded
         });
         $header = ($article = microtime(true)) - $header;
         $this->article = $this->thread('FOR2', function () {
-            for ($i = 0; $i < 1000; $i++) {
-                ;
+            for ($i = 0; $i < 2; $i++) {
+                echo 'WORK FOR2' . PHP_EOL;
+                yield;
             }
-            return 2;
+            return 4;
         });
         $article = ($footer = microtime(true)) - $article;
         $this->footer = $this->thread('FOR3', function () {
-            for ($i = 0; $i < 1000; $i++) {
-                ;
+            for ($i = 0; $i < 10; $i++) {
+                echo 'WORK FOR3' . PHP_EOL;
+                yield;
             }
 //            $for3 = $this->context()->read('FOR3');
 //            $for3++;
 //            $this->context()->write('FOR3', $for3);
 //            return '3-' . $for3;
-            return 3;
+            return 5;
         });
         $footer = microtime(true) - $footer;
         $this->view = new DemoView('<h1>header</h1><p>article</p><h6>footer</h6>');

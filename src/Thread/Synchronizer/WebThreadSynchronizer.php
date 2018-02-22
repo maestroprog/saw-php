@@ -16,35 +16,25 @@ class WebThreadSynchronizer implements SynchronizerInterface
         $this->connector = $connector;
     }
 
-    public function synchronizeOne(SynchronizationThreadInterface $thread): \Generator
+    public function synchronizeThreads(SynchronizationThreadInterface ...$threads): \Generator
     {
-        while (!$thread->isSynchronized()) {
-            yield from $this->connector->work();
-        }
+        $generator = $this->connector->work();
+        do {
+            $synchronized = true;
+            foreach ($threads as $thread) {
+                $synchronized = $synchronized && $thread->isSynchronized();
+                if (!$synchronized) {
+                    break;
+                }
+            }
+            if (!$synchronized) {
+                yield from $generator;
+            }
+        } while (!$synchronized);
     }
 
     public function synchronizeAll(): \Generator
     {
-        yield $this->synchronizeThreads($this->threadRunner->getThreadPool()->getThreads());
-    }
-
-    public function synchronizeThreads(SynchronizationThreadInterface ...$threads): \Generator
-    {
-        $synchronized = false;
-        $generator = $this->connector->work();
-        do {
-            $synchronizeOk = true;
-            foreach ($threads as $thread) {
-                $synchronizeOk = $synchronizeOk && $thread->isSynchronized();
-                if (!$synchronizeOk) {
-                    break;
-                }
-            }
-            if ($synchronizeOk) {
-                $synchronized = true;
-            } else {
-                yield from $generator;
-            }
-        } while (!$synchronized);
+        yield from $this->synchronizeThreads($this->threadRunner->getThreadPool()->getThreads());
     }
 }
