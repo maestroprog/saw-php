@@ -1,0 +1,11 @@
+#!/usr/bin/php
+<?php
+
+define('ENV', 'DEBUG');
+
+$configFile = require 'cli.php';
+
+\Maestroprog\Saw\Saw::instance()
+    ->init($configFile)
+    ->instanceDebugger()
+    ->start();

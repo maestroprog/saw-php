@@ -1,7 +1,6 @@
 {
   "name": "maestroprog/saw",
-  "description": "Async php framework",
-  "version": "0.2-dev",
+  "description": "Async multi-threading php framework",
   "type": "library",
   "keywords": [
     "framework",
@@ -21,18 +20,30 @@
     "email": "maestroprog@gmail.com"
   },
   "require": {
-    "maestroprog/esockets": "dev-2.1-dev",
+    "qwerty-php/app-interface": "1.0",
+    "maestroprog/esockets": "^2.1",
     "maestroprog/di-container": "^1.0"
   },
   "require-dev": {
-    "phpunit/phpunit": "^6.3",
+    "phpunit/phpunit": ">=7.0",
     "satooshi/php-coveralls": "^1.0"
   },
-  "minimum-stability": "dev",
-  "repositories": [],
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "git@github.com:qwerty-php/app-interface.git"
+    }
+  ],
+  "minimum-stability": "beta",
   "autoload": {
     "psr-4": {
-      "Maestroprog\\Saw\\": "src/"
+      "Maestroprog\\Saw\\": "src/",
+      "Maestroprog\\Saw\\Sample\\": "sample/"
     }
-  }
+  },
+  "bin": [
+    "bin/controller",
+    "bin/worker",
+    "bin/debug"
+  ]
 }

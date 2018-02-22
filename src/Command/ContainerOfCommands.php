@@ -17,7 +17,7 @@ class ContainerOfCommands implements \Countable
     public function add(int $cmdId, AbstractCommand $command): AbstractCommand
     {
         if ($this->count() > 50) {
-            $this->clean();
+            $this->clean(); // AHAH TODO REMOVE IT!
         }
         if (isset($this->commands[$cmdId])) {
             throw new \RuntimeException('The command has already added.');

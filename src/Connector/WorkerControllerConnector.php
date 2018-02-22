@@ -65,12 +65,6 @@ final class WorkerControllerConnector implements ControllerConnectorInterface
         return $this->commandDispatcher;
     }
 
-    /*public function work()
-    {
-//        $this->client->live();
-        $this->client->read(); // tmp crutch, costyle costyl
-    }*/
-
     public function send($data): bool
     {
         return $this->client->send($data);

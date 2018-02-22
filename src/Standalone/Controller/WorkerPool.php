@@ -51,9 +51,18 @@ class WorkerPool implements \Countable, \IteratorAggregate
         unset($this->workers[$workerId]);
     }
 
+    /**
+     * @return \ArrayIterator|\Traversable|Worker[]
+     */
     public function getIterator()
     {
-        return $this->workers->getIterator();
+        $workers = $this->workers->getArrayCopy();
+        // Это нужно чтобы потоки разлетались по разным воркерам,
+        // но это выглядит как грязный подход. TODO Придумать что-то получше,
+        // либо использовать планировщик выполнения потоков
+        // (как изначально и предполагалось).
+        shuffle($workers);
+        return new \ArrayIterator($workers);
     }
 
     public function count()

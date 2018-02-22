@@ -43,4 +43,14 @@ final class SawEnv
     {
         return $this->environment === self::WORKER;
     }
+
+    public function canChangeTo(SawEnv $env): bool
+    {
+        return $this->isWeb();
+    }
+
+    public function __toString(): string
+    {
+        return [self::WEB => 'web', self::CONTROLLER => 'controller', self::WORKER => 'worker'][$this->environment];
+    }
 }

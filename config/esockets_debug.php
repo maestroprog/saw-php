@@ -11,5 +11,6 @@ return [
         SocketFactory::SOCKET_DOMAIN => AF_INET,
         SocketFactory::SOCKET_PROTOCOL => SOL_UDP,
     ],
-    Configurator::PROTOCOL_CLASS => LoggingProtocol::class,
+    Configurator::PROTOCOL_CLASS => \Esockets\protocol\EasyDataGram::class,
+//    Configurator::PROTOCOL_CLASS => LoggingProtocol::withRealProtocolClass(\Esockets\protocol\EasyDataGram::class),
 ];

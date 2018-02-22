@@ -4,6 +4,7 @@ namespace Maestroprog\Saw\Service;
 
 use Maestroprog\Saw\Command\AbstractCommand;
 use Maestroprog\Saw\Command\ContainerOfCommands;
+use Maestroprog\Saw\Command\PacketCommand;
 use Maestroprog\Saw\Standalone\Controller\CycleInterface;
 
 final class Commander
@@ -24,15 +25,17 @@ final class Commander
      * т.е. дожидается результата выполнения команды.
      *
      * @param AbstractCommand $command
+     * @param int $timeout Время ожидания выполнения команды
      * @return AbstractCommand
      * @throws \RuntimeException
      */
-    public function runSync(AbstractCommand $command): AbstractCommand
+    public function runSync(AbstractCommand $command, int $timeout): AbstractCommand
     {
+        $started = microtime(true);
         $this->send($command);
         do {
             $this->workDispatcher->work();
-        } while (!$command->isAccomplished());
+        } while (!$command->isAccomplished() && (microtime(true) - $started) < $timeout);
         return $command;
     }
 
@@ -49,6 +52,20 @@ final class Commander
         $this->send($command);
     }
 
+    public function runPacket(AbstractCommand ...$commands)
+    {
+        if (empty($commands)) {
+            return;
+        }
+        $packet = [];
+        foreach ($commands as $command) {
+            $cmdId = $this->generateId();
+            $this->commands->add($cmdId, $command);
+            $packet[] = $this->serializeCommand($command, $cmdId);
+        }
+        $this->send(new PacketCommand($command->getClient(), $packet));
+    }
+
     /**
      * Отправляет клиенту команду на выполнение.
      *
@@ -59,13 +76,7 @@ final class Commander
     {
         $cmdId = $this->generateId();
         $this->commands->add($cmdId, $command);
-        if (!$command->getClient()->send([
-            'command' => $command->getCommandName(),
-            'state' => CommandDispatcher::STATE_RUN,
-            'id' => $cmdId,
-            'code' => CommandDispatcher::CODE_VOID,
-            'data' => $command->toArray()
-        ])) {
+        if (!$command->getClient()->send($this->serializeCommand($command, $cmdId))) {
             throw new \RuntimeException(sprintf('Fail run command "%s".', $command->getCommandName()));
         }
     }
@@ -74,5 +85,21 @@ final class Commander
     {
         static $id = 0;
         return ++$id;
+    }
+
+    /**
+     * @param AbstractCommand $command
+     * @param $cmdId
+     * @return array
+     */
+    private function serializeCommand(AbstractCommand $command, $cmdId): array
+    {
+        return [
+            'command' => $command->getCommandName(),
+            'state' => CommandDispatcher::STATE_RUN,
+            'id' => $cmdId,
+            'code' => CommandDispatcher::CODE_VOID,
+            'data' => $command->toArray()
+        ];
     }
 }

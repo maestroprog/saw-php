@@ -53,6 +53,16 @@ class Context implements ContextInterface
         // TODO: Implement canRemoved() method.
     }
 
+    public function list(string $prefix = null): array
+    {
+        return $this->sharedMemory->list($prefix);
+    }
+
+    public function free()
+    {
+        $this->sharedMemory->free();
+    }
+
     public function __sleep()
     {
         // TODO: Implement __sleep() method.
@@ -65,6 +75,11 @@ class Context implements ContextInterface
 
     protected function getKey(string $varName): string
     {
-        return 'context.' . $this->id . '.' . $varName;
+        return $this->getPrefix() . $varName;
+    }
+
+    private function getPrefix(): string
+    {
+        return 'context.' . $this->id . '.';
     }
 }

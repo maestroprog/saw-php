@@ -2,73 +2,120 @@
 
 namespace Maestroprog\Saw\Memory;
 
-use Maestroprog\Saw\Command\CommandHandler;
+use Esockets\Client;
 use Maestroprog\Saw\Command\MemoryFree;
-use Maestroprog\Saw\Command\MemoryRequest;
-use Maestroprog\Saw\Command\MemoryShare;
-use Maestroprog\Saw\Connector\ControllerConnectorInterface;
+use Maestroprog\Saw\Command\VariableFree;
+use Maestroprog\Saw\Command\VariableList;
+use Maestroprog\Saw\Command\VariableLock;
+use Maestroprog\Saw\Command\VariableRequest;
+use Maestroprog\Saw\Command\VariableShare;
+use Maestroprog\Saw\Service\Commander;
 
-class SharedMemoryOnSocket implements SharedMemoryInterface
+final class SharedMemoryOnSocket implements SharedMemoryInterface
 {
-    private $connector;
-    private $dispatcher;
+    private $commander;
+    private $client;
 
-    public function __construct(ControllerConnectorInterface $connector)
+    public function __construct(Commander $commander, Client $client)
     {
-        $this->connector = $connector;
-        $this->dispatcher = $connector->getCommandDispatcher();
-        $connector
-            ->getCommandDispatcher()
-            ->addHandlers([
-                new CommandHandler(MemoryRequest::class, function (MemoryRequest $context) {
-
-                }),
-                new CommandHandler(MemoryShare::class, function () {
-
-                }),
-                new CommandHandler(MemoryFree::class, function () {
-
-                }),
-            ]);
+        $this->commander = $commander;
+        $this->client = $client;
     }
 
     public function has(string $varName, bool $withLocking = false): bool
     {
+        $cmd = new VariableRequest($this->client, $varName, true, $withLocking);
+
         return $this
-            ->connector
-            ->getCommandDispatcher()
-            ->create(MemoryRequest::class)
-            ->on
-            ->run(['key' => $varName]);
-        // todo await end of running command! SERIOUSLY! THIS IS VERY IMPORTANT!
-
-    }
-
-    public function remove(string $varName)
-    {
-        $this
-            ->connector
-            ->getCommandDispatcher()
-            ->create(MemoryFree::class, $this->connector->getClient())
-            ->run(['key' => $varName]);
+            ->commander
+            ->runSync($cmd, self::READ_TIMEOUT)
+            ->getAccomplishedResult();
     }
 
     public function read(string $varName, bool $withLocking = true)
     {
+        $cmd = new VariableRequest($this->client, $varName, false, $withLocking);
+
+        return $this
+            ->commander
+            ->runSync($cmd, self::READ_TIMEOUT)
+            ->getAccomplishedResult();
     }
 
     public function write(string $varName, $variable, bool $unlock = true): bool
     {
-        // TODO: Implement write() method.
+        $cmd = new VariableShare($this->client, $varName, $variable, $unlock);
+
+        try {
+            //todo async! thinking -- really?
+            $cmd = $this->commander->runSync($cmd, self::WRITE_TIMEOUT);
+            if (!$cmd->isAccomplished() || !$cmd->isSuccessful()) {
+                return false;
+            }
+        } catch (\RuntimeException $e) {
+            return false;
+        }
+        return true;
+    }
+
+    public function remove(string $varName)
+    {
+        $cmd = new VariableFree($this->client, $varName);
+        $this->commander->runAsync($cmd);
     }
 
     public function lock(string $varName)
     {
-        // TODO: Implement lock() method.
+        $message = null;
+        $lockCommand = (new VariableLock($this->client, $varName, true))
+            ->onError(function (VariableLock $context) use (&$message) {
+                $message = $context->getAccomplishedResult();
+            });
+        $cmd = $this->commander->runSync($lockCommand, self::LOCK_TIMEOUT);
+        if (!$cmd->isAccomplished() || !$cmd->isSuccessful()) {
+            throw new MemoryLockException($message ?? 'Unknown MemoryLock error.');
+        }
     }
 
     public function unlock(string $varName)
     {
-        // TODO: Implement unlock() method.
+        //todo async! thinking -- really?
+        $message = null;
+        $unlockCommand = (new VariableLock($this->client, $varName, false))
+            ->onError(function (VariableLock $context) use (&$message) {
+                $message = $context->getAccomplishedResult();
+            });
+        $cmd = $this->commander->runSync($unlockCommand, self::LOCK_TIMEOUT);
+        if (!$cmd->isAccomplished() || !$cmd->isSuccessful()) {
+            throw new MemoryLockException($message ?? 'Unknown MemoryLock error.');
+        }
+    }
+
+    public function list(string $prefix = null): array
+    {
+        $message = null;
+        $listCommand = (new VariableList($this->client, $prefix))
+            ->onError(function (VariableList $context) use (&$message) {
+                $message = $context->getAccomplishedResult();
+            });
+        $cmd = $this->commander->runSync($listCommand, self::READ_TIMEOUT * 10);
+        if (!$cmd->isAccomplished() || !$cmd->isSuccessful()) {
+            throw new MemoryLockException($message ?? 'Unknown MemoryLock error.');
+        }
+
+        return $cmd->getAccomplishedResult();
+    }
+
+    public function free()
+    {
+        $message = null;
+        $freeCommand = (new MemoryFree($this->client))
+            ->onError(function (VariableList $context) use (&$message) {
+                $message = $context->getAccomplishedResult();
+            });
+        $cmd = $this->commander->runSync($freeCommand, self::WRITE_TIMEOUT);
+        if (!$cmd->isAccomplished() || !$cmd->isSuccessful()) {
+            throw new MemoryLockException($message ?? 'Unknown MemoryLock error.');
+        }
     }
 }

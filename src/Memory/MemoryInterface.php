@@ -20,6 +20,7 @@ interface MemoryInterface
      *
      * @param string $varName
      * @return mixed
+     * @throws \OutOfBoundsException Если переменная не существует
      */
     public function read(string $varName);
 
@@ -35,7 +36,27 @@ interface MemoryInterface
     /**
      * Удаляет переменную из памяти.
      *
-     * @param string void
+     * @param string
+     * @return void
+     * @throws \OutOfBoundsException Если переменная не существует
      */
     public function remove(string $varName);
+
+    /**
+     * Достаёт из памяти список всех ключей и значений,
+     * при этом для фильтрации ключей можно указать префикс.
+     * Ресурсоёмкая операция.
+     *
+     * @param string $prefix
+     * @return array
+     */
+    public function list(string $prefix = null): array;
+
+    /**
+     * Полная очистка памяти.
+     * Освобождение занятого пространства.
+     *
+     * @return void
+     */
+    public function free();
 }

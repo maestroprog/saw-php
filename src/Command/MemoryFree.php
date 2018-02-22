@@ -8,21 +8,18 @@ final class MemoryFree extends AbstractCommand
 {
     const NAME = 'fmem';
 
-    private $key;
-
-    public function __construct(Client $client, string $key)
+    public function __construct(Client $client)
     {
         parent::__construct($client);
-        $this->key = $key;
     }
 
     public function toArray(): array
     {
-        return ['key' => $this->key];
+        return [];
     }
 
     public static function fromArray(array $data, Client $client)
     {
-        return new self($client, $data['key']);
+        return new self($client);
     }
 }

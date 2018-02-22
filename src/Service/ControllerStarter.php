@@ -12,32 +12,21 @@ use Esockets\debug\Log;
  */
 final class ControllerStarter
 {
-    private $executor;
+    private $runner;
     private $client;
     private $connectAddress;
-    private $cmd;
     private $pidFile;
 
-    /**
-     * ControllerStarter constructor.
-     * @param Executor $executor
-     * @param Client $client
-     * @param AbstractAddress $connectAddress
-     * @param string $cmd
-     * @param string $pidFile
-     */
     public function __construct(
-        Executor $executor,
+        ControllerRunner $runner,
         Client $client,
         AbstractAddress $connectAddress,
-        string $cmd,
         string $pidFile
     )
     {
-        $this->executor = $executor;
+        $this->runner = $runner;
         $this->client = $client;
         $this->connectAddress = $connectAddress;
-        $this->cmd = $cmd;
         $this->pidFile = $pidFile;
     }
 
@@ -46,22 +35,22 @@ final class ControllerStarter
      */
     public function start()
     {
-        $before_run = microtime(true);
-        $pid = $this->executor->exec($this->cmd);
-        $after_run = microtime(true);
+        $beforeRun = microtime(true);
+        $pid = $this->runner->start();
+        $afterRun = microtime(true);
         usleep(10000); // await for run controller Saw
         $try = 0;
         while (true) {
-            $try_run = microtime(true);
+            $tryRun = microtime(true);
             try {
                 $this->client->connect($this->connectAddress);
                 Log::log(sprintf(
                     'run: %f, exec: %f, connected: %f',
-                    $before_run,
-                    $after_run - $before_run,
-                    $try_run - $after_run
+                    $beforeRun,
+                    $afterRun - $beforeRun,
+                    $tryRun - $afterRun
                 ));
-                Log::log('before run time: ' . $before_run);
+                Log::log('before run time: ' . $beforeRun);
                 break;
             } catch (ConnectionException $e) {
                 if ($try++ > 10) {

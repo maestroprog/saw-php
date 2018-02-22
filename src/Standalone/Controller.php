@@ -5,6 +5,8 @@ namespace Maestroprog\Saw\Standalone;
 use Esockets\Client;
 use Esockets\debug\Log;
 use Esockets\Server;
+use Maestroprog\Saw\Command\CommandHandler;
+use Maestroprog\Saw\Command\PacketCommand;
 use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Standalone\Controller\ControllerWorkCycle;
 
@@ -46,6 +48,14 @@ final class Controller
         $this->server = $server;
         $this->myPidFile = $myPidFile;
         $this->commandDispatcher = $commandDispatcher;
+
+        $this->commandDispatcher->addHandlers([
+            new CommandHandler(PacketCommand::class, function (PacketCommand $context) {
+                foreach ($context->getCommands() as $command) {
+                    $this->commandDispatcher->dispatch($command, $context->getClient());
+                }
+            })
+        ]);
     }
 
     /**
@@ -68,9 +78,9 @@ final class Controller
             throw new \Exception('Cannot start: not connected');
         }
         $this->server->onFound($this->onConnectPeer());
-        /*todo register_shutdown_function(function () {
+        register_shutdown_function(function () {
             $this->stop();
-        });*/
+        });
 //        $this->server->block();
         $this->work();
     }
@@ -88,18 +98,17 @@ final class Controller
 
     public function stop()
     {
+        $this->core->stop();
         $this->work = false;
+        unlink($this->myPidFile);
         $this->server->disconnect();
     }
 
     private function onConnectPeer()
     {
         return function (Client $peer) {
-            $peer->unblock();
             Log::log('peer connected ' . $peer->getPeerAddress());
             $peer->onReceive(function ($data) use ($peer) {
-//                Log::log('I RECEIVED  :) from ' . $peer->getConnectionResource()->getResource() . $peer->getPeerAddress());
-//                Log::log(var_export($data, true));
                 if (!is_array($data) || !$this->commandDispatcher->valid($data)) {
                     $peer->send('INVALID');
                 } else {
@@ -110,7 +119,6 @@ final class Controller
                 Log::log('peer disconnected');
             });
             if (!$peer->send('ACCEPT')) {
-                Log::log('HELLO FAIL SEND!');
                 $peer->disconnect(); // не нужен нам такой клиент
             }
         };

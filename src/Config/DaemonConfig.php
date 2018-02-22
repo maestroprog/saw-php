@@ -15,9 +15,15 @@ class DaemonConfig
         'controller_address' => 'controllerAddress',
     ];
 
+    /** @var string */
     private $controllerPath;
+    /** @var string */
     private $workerPath;
+    /** @var string */
+    private $configPath;
+    /** @var string */
     private $controllerPid = 'controller.pid';
+
     /**
      * @var AbstractAddress
      */
@@ -27,7 +33,7 @@ class DaemonConfig
      */
     private $controllerAddress;
 
-    public function __construct(array $config)
+    public function __construct(array $config, string $configPath)
     {
         foreach ($config as $key => $value) {
             if (!isset(self::CONFIG_MAP[$key])) {
@@ -38,6 +44,7 @@ class DaemonConfig
                 $this->{$mappedKey} = $value;
             }
         }
+        $this->configPath = $configPath;
     }
 
     public function hasControllerPath(): bool
@@ -68,6 +75,14 @@ class DaemonConfig
     public function getWorkerPath(): string
     {
         return $this->workerPath;
+    }
+
+    /**
+     * @return string
+     */
+    public function getConfigPath(): string
+    {
+        return $this->configPath;
     }
 
     /**

@@ -5,20 +5,18 @@ namespace Maestroprog\Saw\Di;
 use Esockets\base\Configurator;
 use Esockets\Client;
 use Esockets\Server;
+use Maestroprog\Container\AbstractBasicContainer;
+use Maestroprog\Saw\Application\ApplicationContainer;
 use Maestroprog\Saw\Command\ContainerOfCommands;
 use Maestroprog\Saw\Config\ControllerConfig;
 use Maestroprog\Saw\Config\DaemonConfig;
-use Maestroprog\Saw\Saw;
-use Maestroprog\Container\AbstractBasicContainer;
-use Maestroprog\Saw\Application\ApplicationContainer;
-use Maestroprog\Saw\Application\Context\ContextPool;
 use Maestroprog\Saw\Connector\ControllerConnectorInterface;
 use Maestroprog\Saw\Connector\WebControllerConnector;
 use Maestroprog\Saw\Connector\WorkerControllerConnector;
-use Maestroprog\Saw\Memory\SharedMemoryInterface;
-use Maestroprog\Saw\Memory\SharedMemoryOnSocket;
+use Maestroprog\Saw\Saw;
 use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\Commander;
+use Maestroprog\Saw\Service\ControllerRunner;
 use Maestroprog\Saw\Service\ControllerStarter;
 use Maestroprog\Saw\Service\Executor;
 use Maestroprog\Saw\Service\WorkerStarter;
@@ -66,18 +64,32 @@ class SawContainer extends AbstractBasicContainer
 
     public function setEnvironment(SawEnv $environment)
     {
+        if (!$this->environment->canChangeTo($environment)) {
+            throw new \LogicException(sprintf(
+                'Cannot change env "%s" to "%s".',
+                $this->environment,
+                $environment
+            ));
+        }
         $this->environment = $environment;
+    }
+
+    public function getControllerRunner(): ControllerRunner
+    {
+        return new ControllerRunner(
+            $this->get(Executor::class),
+            $this->daemonConfig->hasControllerPath()
+                ? '-f ' . $this->daemonConfig->getControllerPath() . ' ' . $this->daemonConfig->getConfigPath()
+                : $this->config['controller_starter']
+        );
     }
 
     public function getControllerStarter(): ControllerStarter
     {
         return new ControllerStarter(
-            $this->get(Executor::class),
+            $this->get(ControllerRunner::class),
             $this->get(Client::class),
             $this->daemonConfig->getControllerAddress(),
-            $this->daemonConfig->hasControllerPath()
-                ? '-f ' . $this->daemonConfig->getControllerPath()
-                : $this->config['controller_starter'],
             $this->daemonConfig->getControllerPid()
         );
     }
@@ -87,7 +99,7 @@ class SawContainer extends AbstractBasicContainer
         return new WorkerStarter(
             $this->get(Executor::class),
             $this->daemonConfig->hasWorkerPath()
-                ? '-f ' . $this->daemonConfig->getWorkerPath()
+                ? '-f ' . $this->daemonConfig->getWorkerPath() . ' ' . $this->daemonConfig->getConfigPath()
                 : $this->config['worker_starter']
         );
     }
@@ -99,11 +111,6 @@ class SawContainer extends AbstractBasicContainer
             $phpPath = $this->config['executor'];
         }
         return new Executor($phpPath);
-    }
-
-    public function getSharedMemory(): SharedMemoryInterface
-    {
-        return new SharedMemoryOnSocket($this->get(ControllerConnectorInterface::class));
     }
 
     public function getControllerConnector(): ControllerConnectorInterface
@@ -153,7 +160,8 @@ class SawContainer extends AbstractBasicContainer
             $this->get(CommandDispatcher::class),
             $this->get(Commander::class),
             $this->get(WorkerStarter::class),
-            $this->controllerConfig
+            $this->controllerConfig,
+            $this->get(ControllerRunner::class)
         );
     }
 
@@ -171,11 +179,6 @@ class SawContainer extends AbstractBasicContainer
             $this->get(ApplicationContainer::class),
             Saw::instance()->getApplicationLoader()
         );
-    }
-
-    public function getContextPool(): ContextPool
-    {
-        return new ContextPool();
     }
 
     public function getContainerOfUniqueThreadPools(): ContainerOfThreadPools

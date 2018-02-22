@@ -2,7 +2,7 @@
 
 namespace Maestroprog\Saw\Application;
 
-use Maestroprog\Saw\Application\ApplicationInterface as App;
+use Qwerty\Application\ApplicationInterface as App;
 use Maestroprog\Saw\Thread\Pool\ContainerOfThreadPools;
 use Maestroprog\Saw\Thread\Pool\PoolOfUniqueThreads;
 

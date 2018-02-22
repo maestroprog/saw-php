@@ -3,6 +3,7 @@
 namespace Maestroprog\Saw\Thread\Runner;
 
 use Maestroprog\Saw\Command\CommandHandler;
+use Maestroprog\Saw\Command\ThreadBroadcast;
 use Maestroprog\Saw\Command\ThreadResult;
 use Maestroprog\Saw\Command\ThreadRun;
 use Maestroprog\Saw\Connector\ControllerConnectorInterface;
@@ -28,13 +29,6 @@ class WebThreadRunner implements ThreadRunnerInterface
 
         $this->commandDispatcher
             ->addHandlers([
-                /*new CommandHandler(
-                    ThreadResult::NAME,
-                    ThreadResult::class,
-                    function (ThreadResult $context) {
-                        $this->setResultByRunId($context->getRunId(), $context->getResult());
-                    }
-                ),*/
                 new CommandHandler(ThreadResult::class, function (ThreadResult $context) {
                     $this
                         ->runThreads
@@ -50,10 +44,12 @@ class WebThreadRunner implements ThreadRunnerInterface
      */
     public function runThreads(array $threads): bool
     {
+//        $commands = [];
         foreach ($threads as $thread) {
             $this->runThreads->add($thread);
             try {
-                $this->commander
+                $this
+                    ->commander
                     ->runAsync(new ThreadRun(
                         $this->client,
                         $thread->getId(),
@@ -65,11 +61,48 @@ class WebThreadRunner implements ThreadRunnerInterface
                 $thread->run();
                 var_dump($e->getTraceAsString());
                 die($e->getMessage());
-            } finally {
-//                var_dump($thread->getResult(), $thread->hasResult());
             }
         }
+//        try {
+//            $this
+//                ->commander
+//                ->runPacket(...$commands);
+//        } catch (\Throwable $e) {
+////            $thread->run(); todo run really if not run into saw?
+//            die($e->getMessage());
+//        }
+
         return true;
+    }
+
+    public function broadcastThreads(AbstractThread ...$threads): bool
+    {
+        $result = false;
+
+        foreach ($threads as $thread) {
+            $this->runThreads->add($thread);
+            try {
+                $this
+                    ->commander
+                    ->runAsync(new ThreadBroadcast(
+                        $this->client,
+                        $thread->getId(),
+                        $thread->getApplicationId(),
+                        $thread->getUniqueId(),
+                        $thread->getArguments()
+                    ));
+                $result = true;
+            } catch (\Throwable $e) {
+                try {
+                    $thread->run();
+                    $result = true;
+                } catch (\Throwable $e) {
+                    var_dump($e->getTraceAsString());
+                }
+            }
+        }
+
+        return $result;
     }
 
     public function getThreadPool(): AbstractThreadPool

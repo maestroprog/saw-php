@@ -8,8 +8,14 @@ use Maestroprog\Saw\Memory\SharedMemoryInterface;
 use Maestroprog\Saw\Thread\AbstractThread;
 use Maestroprog\Saw\Thread\MultiThreadingInterface;
 use Maestroprog\Saw\Thread\MultiThreadingProvider;
+use Maestroprog\Saw\Thread\Pool\AbstractThreadPool;
+use Maestroprog\Saw\Thread\Runner\ThreadRunnerInterface;
+use Qwerty\Application\ApplicationInterface;
 
-abstract class BasicMultiThreaded implements ApplicationInterface, MultiThreadingInterface
+abstract class BasicMultiThreaded implements
+    ApplicationInterface,
+    ThreadRunnerInterface,
+    MultiThreadingInterface
 {
     private $id;
     private $multiThreadingProvider;
@@ -36,25 +42,24 @@ abstract class BasicMultiThreaded implements ApplicationInterface, MultiThreadin
 
     public function context(): ContextInterface
     {
-        return $this
-            ->contextPool
-            ->add();
+        return $this->contextPool;
     }
 
     /**
      * Описывает основной поток выполнения приложения.
      * Этот метод должен содержать запуск остальных потоков приложения.
      *
+     * @param mixed $prepared Результаты выполнения метода prepare()
      * @return void
      */
-    abstract protected function main();
+    abstract protected function main($prepared);
 
     final public function run()
     {
-        $this->init(); // todo check
-        $this->main();
+        $this->main($this->prepare());
 
-        $runningResult = $this->multiThreadingProvider
+        $runningResult = $this
+            ->multiThreadingProvider
             ->getThreadRunner()
             ->runThreads(
                 $this->multiThreadingProvider
@@ -77,6 +82,21 @@ abstract class BasicMultiThreaded implements ApplicationInterface, MultiThreadin
     final public function threadArguments(string $uniqueId, callable $code, array $arguments): AbstractThread
     {
         return $this->multiThreadingProvider->getThreadCreator()->threadArguments($uniqueId, $code, $arguments);
+    }
+
+    public function runThreads(array $threads): bool
+    {
+        return $this->multiThreadingProvider->getThreadRunner()->runThreads($threads);
+    }
+
+    public function broadcastThreads(AbstractThread ...$threads): bool
+    {
+        return $this->multiThreadingProvider->getThreadRunner()->broadcastThreads(...$threads);
+    }
+
+    public function getThreadPool(): AbstractThreadPool
+    {
+        return $this->multiThreadingProvider->getThreadRunner()->getThreadPool();
     }
 
     final public function synchronizeOne(AbstractThread $thread)

@@ -107,8 +107,6 @@ class ThreadDistributorTest extends TestCase
 
         $workerBalance->method('getLowLoadedWorker')->willReturn($worker);
 
-//        $workerClient->method('read')
-
         $threadDistributor = new ThreadDistributor(
             $commandDispatcher,
             $commander,
@@ -126,6 +124,7 @@ class ThreadDistributorTest extends TestCase
             ->willReturnCallback(
                 function ($data) use ($commandDispatcher, $controllerWebClient) {
                     $commandDispatcher->dispatch($data, $controllerWebClient);
+
                     return true;
                 }
             );
@@ -147,7 +146,6 @@ class ThreadDistributorTest extends TestCase
                             $this->assertEquals(3, $data['data']['result']);
 
                             // сообщим контроллеру, что результат успешно обработан
-//                            $command = ThreadResult::fromArray($data['data'], $webClient);
                             $webClient->send([
                                 'id' => $data['id'],
                                 'data' => [],
@@ -155,10 +153,9 @@ class ThreadDistributorTest extends TestCase
                                 'code' => CommandDispatcher::CODE_SUCCESS,
                                 'state' => CommandDispatcher::STATE_RES,
                             ]);
-//                            $command->handle($data);
-//                            $command->success();
                             break;
                     }
+
                     return true;
                 }
             );
@@ -180,9 +177,6 @@ class ThreadDistributorTest extends TestCase
                                 $data['data']['unique_id']
                             );
                             // сообщим контроллеру об успешном запуске потока
-//                            $command = ThreadRun::fromArray($data['data'], $workerClient);
-//                            $command->handle($data);
-//                            $command->success();
                             $workerClient->send([
                                 'id' => $data['id'],
                                 'data' => [],
@@ -219,6 +213,7 @@ class ThreadDistributorTest extends TestCase
                             $this->assertEquals(CommandDispatcher::CODE_SUCCESS, $data['code']);
                             break;
                     }
+
                     return true;
                 }
             );
@@ -228,6 +223,7 @@ class ThreadDistributorTest extends TestCase
             ->willReturnCallback(
                 function ($data) use ($commandDispatcher, $controllerClient) {
                     $commandDispatcher->dispatch($data, $controllerClient);
+
                     return true;
                 }
             );

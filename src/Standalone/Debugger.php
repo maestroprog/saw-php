@@ -57,7 +57,6 @@ class Debugger
             }
         }
 
-//        $this->connector->getClient()->block();
         $pcntl = false;
         if (extension_loaded('pcntl')) {
             $pcntl = true;

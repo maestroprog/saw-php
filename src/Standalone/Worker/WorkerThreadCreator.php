@@ -45,6 +45,7 @@ final class WorkerThreadCreator extends ThreadCreator
         } else {
             $thread = $threadPool->getThreadById($uniqueId);
         }
+
         return $thread;
     }
 }

@@ -17,6 +17,7 @@ use Maestroprog\Saw\Standalone\Controller\CycleInterface;
 use Maestroprog\Saw\Thread\AbstractThread;
 use Maestroprog\Saw\Thread\Pool\RunnableThreadPool;
 use Maestroprog\Saw\Thread\StubThread;
+use Maestroprog\Saw\Thread\ThreadWithCode;
 
 /**
  * Ядро воркера.
@@ -59,6 +60,17 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
                     $context->getUniqueId()
                 ))->setArguments($context->getArguments());
                 $this->threadPool->add($thread);
+                /*
+                 * При получении новой задачи, находясь во вложенном блоке синхронизации потоков,
+                 * здесь нужно начать запуск нового потока, т.к. новый поток
+                 * может быть зависимым для текущго синхронизируемого потока.
+                 * Т.е. допустим мы запустили поток 1, внутри него запустили поток 2,
+                 * и начали процесс синхронизации с ним. При этом выполнение потока 2
+                 * было назначено этому же воркеру (в котором в данный момент синхронизируется поток 1),
+                 * и это приводит к тому, что мы должны по сути внутри потока 1 выполнить поток 2.
+                 * Для этого просто запустим обработчик новых запущенных потоков.
+                 */
+                $this->work();
             }),
             new CommandHandler(DebugCommand::class, function (DebugCommand $context) {
                 $this->commander->runAsync(new DebugData(
@@ -86,32 +98,33 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
              */
             if ($thread->getCurrentState() === AbstractThread::STATE_NEW) {
                 $this->applicationContainer->switchTo($this->applicationContainer->get($thread->getApplicationId()));
-                $thread->run()->setResult(
-                    $this->applicationContainer
-                        ->getThreadPools()
-                        ->getCurrentPool()
-                        ->getThreadById($thread->getUniqueId())
-                        ->setArguments($thread->getArguments())
-                        ->run()
-                        ->getResult()
+                /** @var ThreadWithCode $realThread */
+                $thread->run(); // Запомним, что этот поток находится в стадии запуска, чтобы его запуск не зациклился.
+                $realThread = $this->applicationContainer
+                    ->getThreadPools()
+                    ->getCurrentPool()
+                    ->getThreadById($thread->getUniqueId())
+                    ->setArguments($thread->getArguments());
+                $result = $realThread->run()->getResult();
+
+                $thread->run()->setResult($result);
+                $resultCommand = new ThreadResult(
+                    $this->client,
+                    $thread->getId(),
+                    $thread->getApplicationId(),
+                    $thread->getUniqueId(),
+                    $thread->getResult()
                 );
-                $this->commander->runAsync(
-                    (new ThreadResult(
-                        $this->client,
-                        $thread->getId(),
-                        $thread->getApplicationId(),
-                        $thread->getUniqueId(),
-                        $thread->getResult()
-                    ))
-                        ->onSuccess(function () use ($thread) {
-                            // $this->threadPool->getThreadById($thread->getId());
-                            $this->threadPool->remove($thread);
-                        })
-                        ->onError(function () {
-                            // todo
-                            throw new \RuntimeException('Cannot run tres command.');
-                        })
-                );
+                $resultCommand
+                    ->onSuccess(function () use ($thread) {
+                        // $this->threadPool->getThreadById($thread->getId());
+                        $this->threadPool->remove($thread);
+                    })
+                    ->onError(function () {
+                        // todo
+                        throw new \RuntimeException('Cannot run tres command.');
+                    });
+                $this->commander->runAsync($resultCommand);
             }
         }
     }

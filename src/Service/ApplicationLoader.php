@@ -2,10 +2,9 @@
 
 namespace Maestroprog\Saw\Service;
 
-use Maestroprog\Saw\Application\ApplicationInterface;
+use Qwerty\Application\ApplicationFactory;
+use Qwerty\Application\ApplicationInterface;
 use Maestroprog\Saw\Config\ApplicationConfig;
-use Maestroprog\Saw\Saw;
-use Maestroprog\Saw\SawFactory;
 
 /**
  * Загрузчик приложений.
@@ -16,7 +15,7 @@ final class ApplicationLoader
     private $applicationConfig;
     private $factory;
 
-    public function __construct(ApplicationConfig $config, Saw $factory)
+    public function __construct(ApplicationConfig $config, ApplicationFactory $factory)
     {
         $this->applicationConfig = $config;
         $this->factory = $factory;
@@ -42,10 +41,13 @@ final class ApplicationLoader
             $arguments = [];
         }
 
-        $class = new \ReflectionClass($applicationClass);
         $appId = $this->applicationConfig->getApplicationIdByClass($applicationClass);
-        $arguments = $this->factory->instanceArguments($arguments, ['appId' => $appId]);
-        return $class->newInstanceArgs($arguments);
+
+        return $this->instanceAppWith(
+            $applicationClass,
+            $arguments,
+            ['appId' => $appId]
+        );
     }
 
     public function instanceAppById(string $applicationId): ApplicationInterface
@@ -59,9 +61,11 @@ final class ApplicationLoader
             $arguments = [];
         }
 
-        $class = new \ReflectionClass($this->applicationConfig->getApplicationClassById($applicationId));
-        $arguments = $this->factory->instanceArguments($arguments, ['appId' => $applicationId]);
-        return $class->newInstanceArgs($arguments);
+        return $this->instanceAppWith(
+            $this->applicationConfig->getApplicationClassById($applicationId),
+            $arguments,
+            ['appId' => $applicationId]
+        );
     }
 
     /**
@@ -76,5 +80,15 @@ final class ApplicationLoader
         return array_map(function (string $id) {
             return $this->instanceAppById($id);
         }, $allAppIds);
+    }
+
+    private function instanceAppWith(string $class, array $arguments, array $variables = []): ApplicationInterface
+    {
+        $class = new \ReflectionClass($class);
+
+        $arguments = $this->factory->instanceArguments($arguments, $variables);
+        /** @var ApplicationInterface $app */
+        $app = $class->newInstanceArgs($arguments);
+        return $app;
     }
 }

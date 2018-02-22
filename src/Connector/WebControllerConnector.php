@@ -5,7 +5,6 @@ namespace Maestroprog\Saw\Connector;
 use Esockets\base\AbstractAddress;
 use Esockets\base\exception\ConnectionException;
 use Esockets\Client;
-use Esockets\debug\Log;
 use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\ControllerStarter;
 
@@ -53,7 +52,7 @@ final class WebControllerConnector implements ControllerConnectorInterface
         } catch (ConnectionException $e) {
             $this->controllerStarter->start();
         }
-        $this->client->block();
+//        $this->client->block();
     }
 
     /**
@@ -72,11 +71,6 @@ final class WebControllerConnector implements ControllerConnectorInterface
         return $this->commandDispatcher;
     }
 
-    /*public function work()
-    {
-//        $this->client->live();
-    }*/
-
     public function send($data): bool
     {
         return $this->client->send($data);
@@ -84,9 +78,7 @@ final class WebControllerConnector implements ControllerConnectorInterface
 
     protected function onRead(): callable
     {
-        return function ($data) {/*
-            Log::log('I RECEIVED  :)');
-            Log::log(var_export($data, true));*/
+        return function ($data) {
 
             switch ($data) {
                 case 'ACCEPT':

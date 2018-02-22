@@ -8,14 +8,16 @@ namespace Maestroprog\Saw\ValueObject;
 class ProcessStatus
 {
     private $resource;
+    private $pipes;
     private $status;
 
-    public function __construct($processResource)
+    public function __construct($processResource, array $pipes)
     {
         if (!is_resource($processResource) || 'process' !== get_resource_type($processResource)) {
             throw new \InvalidArgumentException('Invalid process status resource.');
         }
         $this->resource = $processResource;
+        $this->pipes = $pipes;
         $this->update();
     }
 
@@ -49,6 +51,18 @@ class ProcessStatus
     {
         $this->update(); // обновляем инфу
         return (bool)$this->status['running'];
+    }
+
+    public function input(string $data)
+    {
+        if (false === fwrite($this->pipes[1], $data)) {
+            throw new \RuntimeException('Cannot write to process pipe.');
+        }
+    }
+
+    public function output(int $length = 1024): string
+    {
+        return fread($this->pipes[1], $length);
     }
 
     /**

@@ -3,7 +3,6 @@
 namespace Maestroprog\Saw\Command;
 
 use Esockets\Client;
-use Maestroprog\Saw\Thread\AbstractThread;
 
 /**
  * Общая команда "Результат выполнения потока".
@@ -21,7 +20,13 @@ final class ThreadResult extends AbstractCommand
     private $uniqueId;
     private $result;
 
-    public function __construct(Client $client, int $runId, string $appId, string $uniqueId, $result)
+    public function __construct(
+        Client $client,
+        int $runId,
+        string $appId,
+        string $uniqueId,
+        $result
+    )
     {
         parent::__construct($client);
         $this->runId = $runId;
@@ -55,18 +60,6 @@ final class ThreadResult extends AbstractCommand
         return $this->result;
     }
 
-    /**
-     * Команда сама знает, что ей нужно знать о задаче
-     * - поэтому дадим ей задачу, пускай возьмёт все, что ей нужно.
-     *
-     * @param AbstractThread $thread
-     * @return array
-     * @deprecated
-     */
-    public static function serializeTask(AbstractThread $thread): array
-    {
-    }
-
     public function toArray(): array
     {
         return [
@@ -79,6 +72,12 @@ final class ThreadResult extends AbstractCommand
 
     public static function fromArray(array $data, Client $client)
     {
-        return new self($client, $data['run_id'], $data['application_id'], $data['unique_id'], $data['result']);
+        return new self(
+            $client,
+            $data['run_id'],
+            $data['application_id'],
+            $data['unique_id'],
+            $data['result']
+        );
     }
 }

@@ -3,8 +3,10 @@
 namespace Maestroprog\Saw\Standalone\Worker;
 
 use Esockets\Client;
+use Esockets\debug\Log;
 use Maestroprog\Saw\Application\ApplicationContainer;
 use Maestroprog\Saw\Command\CommandHandler;
+use Maestroprog\Saw\Command\ThreadBroadcast;
 use Maestroprog\Saw\Command\ThreadResult;
 use Maestroprog\Saw\Command\ThreadRun;
 use Maestroprog\Saw\Service\CommandDispatcher;
@@ -12,6 +14,7 @@ use Maestroprog\Saw\Service\Commander;
 use Maestroprog\Saw\Thread\AbstractThread;
 use Maestroprog\Saw\Thread\Pool\AbstractThreadPool;
 use Maestroprog\Saw\Thread\Pool\PoolOfUniqueThreads;
+use Maestroprog\Saw\Thread\Pool\RunnableThreadPool;
 use Maestroprog\Saw\Thread\Runner\ThreadRunnerDisablingSupportInterface;
 
 final class WorkerThreadRunner implements ThreadRunnerDisablingSupportInterface
@@ -38,7 +41,7 @@ final class WorkerThreadRunner implements ThreadRunnerDisablingSupportInterface
         $this->applicationContainer = $applicationContainer;
 
         $this->threadPool = new PoolOfUniqueThreads();
-        $this->runThreadPool = new PoolOfUniqueThreads();
+        $this->runThreadPool = new RunnableThreadPool(); // пул именно "работающих" потоков
 
         $this->commandDispatcher
             ->addHandlers([
@@ -48,29 +51,7 @@ final class WorkerThreadRunner implements ThreadRunnerDisablingSupportInterface
                         ->setResult($context->getResult());
                 }),
             ]);
-    }/*
-
-    public function thread(string $uniqueId, callable $code): AbstractThread
-    {
-        static $threadId = 0;
-        if (!$this->threadPool->existsThreadByUniqueId($uniqueId)) {
-            $thread = new ThreadWithCode(++$threadId, $uniqueId, $code);
-            $this->threadPool->add($thread);
-            $this->commandDispatcher->create(ThreadKnow::NAME, $this->client)
-                ->onError(function () {
-                    throw new \RuntimeException('Cannot notify controller.');
-                })
-                ->run(['unique_id' => $thread->getUniqueId()]);
-        } else {
-            $thread = $this->threadPool->getThreadByUniqueId($uniqueId);
-        }
-        return $thread;
     }
-
-    public function threadArguments(string $uniqueId, callable $code, array $arguments): AbstractThread
-    {
-        return $this->thread($uniqueId, $code)->setArguments($arguments);
-    }*/
 
     /**
      * Воркер не должен запускать потоки из приложения.
@@ -94,16 +75,44 @@ final class WorkerThreadRunner implements ThreadRunnerDisablingSupportInterface
                     ));
                 } catch (\Throwable $e) {
                     $thread->run();
-                    var_dump($e->getTraceAsString());
-                    die($e->getMessage());
-                } finally {
-                    var_dump($thread->getResult(), $thread->hasResult());
+                    Log::log($e->getMessage());
                 }
             }
         } else {
             $this->enable();
         }
+
         return true;
+    }
+
+    public function broadcastThreads(AbstractThread ...$threads): bool
+    {
+        $result = false;
+
+        foreach ($threads as $thread) {
+            $this->runThreadPool->add($thread);
+            try {
+                $this
+                    ->commander
+                    ->runAsync(new ThreadBroadcast(
+                        $this->client,
+                        $thread->getId(),
+                        $thread->getApplicationId(),
+                        $thread->getUniqueId(),
+                        $thread->getArguments()
+                    ));
+                $result = true;
+            } catch (\Throwable $e) {
+                try {
+                    $thread->run();
+                    $result = true;
+                } catch (\Throwable $e) {
+                    Log::log($e->getMessage());
+                }
+            }
+        }
+
+        return $result;
     }
 
     public function getThreadPool(): AbstractThreadPool

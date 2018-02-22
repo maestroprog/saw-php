@@ -10,7 +10,7 @@ final class Executor
     /**
      * @var string path to php binaries
      */
-    public $phpBinaryPath = 'php';
+    public $phpBinaryPath = '/usr/bin/php';
 
     public function __construct(string $phpBinaryPath = null)
     {
@@ -27,23 +27,24 @@ final class Executor
      */
     public function exec($cmd): ProcessStatus
     {
-        $cmd = sprintf('%s %s', $this->phpBinaryPath, $cmd);
+        $cmd = sprintf('%s %s', $this->phpBinaryPath, $cmd . ' &');
         if (PHP_OS === 'WINNT') {
             $cmd = str_replace('/', '\\', $cmd);
             $cmd = str_replace('\\', '\\\\', $cmd);
         }
         if (PHP_SAPI !== 'cli') {
-            define('STDIN', fopen('php://stdin', 'r'));
+//            define('STDIN', fopen('php://stdin', 'r'));
             define('STDOUT', fopen('php://stdout', 'w'));
             define('STDERR', fopen('php://stderr', 'w'));
         }
-        $pipes = [STDIN, STDOUT, STDERR];
+        $pipes = [['pipe', 'r'], STDOUT, STDERR];
+        $pipesOpened = [];
         Log::log($cmd);
-        $resource = proc_open($cmd, [], $pipes, null, null, null);
+        $resource = proc_open($cmd, $pipes, $pipesOpened, null, null, ['bypass_shell' => true]);
         if (false === $resource) {
             throw new \RuntimeException('Cannot be run ' . $cmd);
         }
-        return new ProcessStatus($resource);
+        return new ProcessStatus($resource, $pipesOpened);
     }
 
     /**

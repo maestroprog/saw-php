@@ -73,7 +73,7 @@ namespace tests\Standalone\Controller {
             $commandDispatcher = new CommandDispatcher($cmdContainer = new ContainerOfCommands());
             $commander = new Commander(self::$connector, $cmdContainer);
             $workerPool = new WorkerPool();
-            $balancer = new WorkerBalance($workerStarter, $commandDispatcher, $commander, $workerPool, 1);
+            $balancer = new WorkerBalance($workerStarter, $commandDispatcher, $commander, $workerPool, 1, 1);
 
             /**
              * @var $client Client|\PHPUnit_Framework_MockObject_MockObject
@@ -101,6 +101,7 @@ namespace tests\Standalone\Controller {
                 ->willReturnCallback(
                     function ($data) use ($commandDispatcher, $workerClient) {
                         $commandDispatcher->dispatch($data, $workerClient);
+
                         return true;
                     }
                 );
@@ -122,6 +123,7 @@ namespace tests\Standalone\Controller {
                                 $this->assertEquals(CommandDispatcher::CODE_SUCCESS, $data['code']);
                                 break;
                         }
+
                         return true;
                     }
                 );
@@ -135,7 +137,7 @@ namespace tests\Standalone\Controller {
 
             // 3. Эмулируем успешное подключение воркера к контроллеру, подтверждение работы в балансировщике
 
-            $commander->runAsync(new WorkerAdd($client, 1));
+            $commander->runAsync(new WorkerAdd($client, 2));
 
             $this->assertTrue($workerPool->isExistsById(0), 'Worker with id = 0 must be exists!');
             $this->assertEquals(1, $workerPool->getById(0)->getProcessResource()->getPid());
@@ -158,7 +160,7 @@ namespace tests\Standalone\Controller {
             $commandDispatcher = new CommandDispatcher($cmds = new ContainerOfCommands());
             $commander = new Commander(self::$connector, $cmds);
             $workerPool = new WorkerPool();
-            $balancer = new WorkerBalance($workerStarter, $commandDispatcher, $commander, $workerPool, 1);
+            $balancer = new WorkerBalance($workerStarter, $commandDispatcher, $commander, $workerPool, 1, 1);
 
             /** @var ProcessStatus|\PHPUnit_Framework_MockObject_MockObject $processStatus */
             $processStatus = $this
@@ -213,7 +215,7 @@ namespace tests\Standalone\Controller {
             $commandDispatcher = new CommandDispatcher($cmds = new ContainerOfCommands());
             $commander = new Commander(self::$connector, $cmds);
             $workerPool = new WorkerPool();
-            $balancer = new WorkerBalance($workerStarter, $commandDispatcher, $commander, $workerPool, 1);
+            $balancer = new WorkerBalance($workerStarter, $commandDispatcher, $commander, $workerPool, 1,1);
 
             $balancer->work();
             $runningProperty = (new \ReflectionObject($balancer))->getProperty('running');

@@ -4,9 +4,9 @@ namespace Maestroprog\Saw\Command;
 
 use Esockets\Client;
 
-final class MemoryRequest extends AbstractCommand
+final class VariableLink extends AbstractCommand
 {
-    const NAME = 'rmem';
+    const NAME = 'vlnk';
 
     private $key;
 
@@ -14,6 +14,11 @@ final class MemoryRequest extends AbstractCommand
     {
         parent::__construct($client);
         $this->key = $key;
+    }
+
+    public function getKey(): string
+    {
+        return $this->key;
     }
 
     public function toArray(): array

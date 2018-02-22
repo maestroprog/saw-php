@@ -4,18 +4,21 @@ namespace Maestroprog\Saw\Command;
 
 use Esockets\Client;
 
-final class MemoryShare extends AbstractCommand
+final class VariableUnlink extends AbstractCommand
 {
-    const NAME = 'smem';
+    const NAME = 'vunl';
 
     private $key;
-    private $data;
 
-    public function __construct(Client $client, string $key, $data)
+    public function __construct(Client $client, string $key)
     {
         parent::__construct($client);
         $this->key = $key;
-        $this->data = $data;
+    }
+
+    public function getKey(): string
+    {
+        return $this->key;
     }
 
     public function toArray(): array
@@ -25,6 +28,6 @@ final class MemoryShare extends AbstractCommand
 
     public static function fromArray(array $data, Client $client)
     {
-        return new self($client, $data['key'], $data);
+        return new self($client, $data['key']);
     }
 }
