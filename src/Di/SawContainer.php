@@ -24,18 +24,16 @@ use Maestroprog\Saw\Standalone\Controller\ControllerWorkCycle;
 use Maestroprog\Saw\Standalone\Controller\CycleInterface;
 use Maestroprog\Saw\Standalone\ControllerCore;
 use Maestroprog\Saw\Standalone\Worker\WorkerThreadCreator;
-use Maestroprog\Saw\Standalone\Worker\WorkerThreadRunner;
 use Maestroprog\Saw\Standalone\WorkerCore;
 use Maestroprog\Saw\Thread\Creator\ThreadCreator;
 use Maestroprog\Saw\Thread\Creator\ThreadCreatorInterface;
 use Maestroprog\Saw\Thread\MultiThreadingProvider;
 use Maestroprog\Saw\Thread\Pool\ContainerOfThreadPools;
-use Maestroprog\Saw\Thread\Runner\DummyThreadRunner;
+use Maestroprog\Saw\Thread\Runner\AsyncRemoteThreadRunner;
+use Maestroprog\Saw\Thread\Runner\AsyncThreadRunner;
 use Maestroprog\Saw\Thread\Runner\ThreadRunnerInterface;
-use Maestroprog\Saw\Thread\Runner\WebThreadRunner;
-use Maestroprog\Saw\Thread\Synchronizer\DummySynchronizer;
+use Maestroprog\Saw\Thread\Synchronizer\AsyncSynchronizer;
 use Maestroprog\Saw\Thread\Synchronizer\SynchronizerInterface;
-use Maestroprog\Saw\Thread\Synchronizer\WebThreadSynchronizer;
 use Maestroprog\Saw\ValueObject\SawEnv;
 
 class SawContainer extends AbstractBasicContainer
@@ -172,35 +170,36 @@ class SawContainer extends AbstractBasicContainer
     public function getThreadRunner(): ThreadRunnerInterface
     {
         return $this->environment->isWorker()
-            ? $this->getWorkerThreadRunner() // use internal
+            ? $this->getRemoteThreadRunner() // use internal
             : (
                 $this->config['multiThreading']['disabled'] ?? false
-                    ? new DummyThreadRunner()
-                    : $this->getWebThreadRunner() // use internal
+                    ? $this->getAsyncThreadRunner()
+                    : $this->getRemoteThreadRunner() // use internal
             );
     }
 
     /**
      * @internal
-     * @return WorkerThreadRunner
+     * @return AsyncThreadRunner
      */
-    private function getWorkerThreadRunner(): WorkerThreadRunner
+    private function getAsyncThreadRunner(): AsyncThreadRunner
     {
-        return new WorkerThreadRunner(
-            $this->get('ControllerClient'),
-            $this->get(CommandDispatcher::class),
-            $this->get(Commander::class),
-            $this->get(ApplicationContainer::class)
-        );
+        return new AsyncThreadRunner();
     }
 
     /**
      * @internal
-     * @return WebThreadRunner
+     * @return AsyncRemoteThreadRunner
      */
-    private function getWebThreadRunner(): WebThreadRunner
+    private function getRemoteThreadRunner(): AsyncRemoteThreadRunner
     {
-        return new WebThreadRunner($this->get(ControllerConnectorInterface::class), $this->get(Commander::class));
+        return new AsyncRemoteThreadRunner(
+            $this->get(ControllerConnectorInterface::class),
+            $this->get(CommandDispatcher::class),
+            $this->get(Commander::class),
+            $this->get(ApplicationContainer::class),
+            $this->environment
+        );
     }
 
     public function getControllerCore(): ControllerCore
@@ -267,12 +266,12 @@ class SawContainer extends AbstractBasicContainer
 
     public function getThreadSynchronizer(): SynchronizerInterface
     {
-        return $this->config['multiThreading']['disabled'] ?? false
-                ? new DummySynchronizer($this->get(ThreadRunnerInterface::class))
-                : new WebThreadSynchronizer(
-                    $this->get(ThreadRunnerInterface::class),
-                    $this->get(ControllerConnectorInterface::class)
-                );
+        return new AsyncSynchronizer(
+            $this->get(ThreadRunnerInterface::class),
+            $this->environment->isWeb()
+                ? $this->get(ThreadRunnerInterface::class)->work()
+                : $this->get(ControllerConnectorInterface::class)->work()
+        );
     }
 
     public function getMultiThreadingProvider(): MultiThreadingProvider

@@ -93,7 +93,7 @@ abstract class BasicMultiThreaded implements
      */
     final public function synchronizeThreads(SynchronizationThreadInterface ...$threads): \Generator
     {
-        yield $this->multiThreadingProvider->getSynchronizer()->synchronizeThreads(...$threads);
+        yield from $this->multiThreadingProvider->getSynchronizer()->synchronizeThreads(...$threads);
     }
 
     /**
@@ -101,6 +101,6 @@ abstract class BasicMultiThreaded implements
      */
     final public function synchronizeAll(): \Generator
     {
-        yield $this->multiThreadingProvider->getSynchronizer()->synchronizeAll();
+        yield from $this->multiThreadingProvider->getSynchronizer()->synchronizeAll();
     }
 }

@@ -4,6 +4,7 @@ namespace Maestroprog\Saw\Sample;
 
 use Maestroprog\Saw\Application\BasicMultiThreaded;
 use Maestroprog\Saw\Thread\AbstractThread;
+use function Maestroprog\Saw\iterateGenerator;
 
 class MyApplication extends BasicMultiThreaded
 {
@@ -49,7 +50,7 @@ class MyApplication extends BasicMultiThreaded
         $this->header = $this->thread('FOR1', function () {
             $t1 = $this->thread('SUB_THREAD_1', function () {
                 for ($i = 0; $i < 3; $i++) {
-                    echo 'WORK SUB_THREAD_1' . PHP_EOL;
+                    $this->time('WORK SUB_THREAD_1');
                     yield;
                 }
 
@@ -57,27 +58,31 @@ class MyApplication extends BasicMultiThreaded
             });
             $t2 = $this->thread('SUB_THREAD_2', function () {
                 for ($i = 0; $i < 5; $i++) {
-                    echo 'WORK SUB_THREAD_2' . PHP_EOL;
+                    $this->time('WORK SUB_THREAD_2');
                     yield;
                 }
 
                 return 2;
             });
 
+            $this->time('WORK FOR1');
+
             if (!$this->runThreads($t1, $t2)) {
                 throw new \RuntimeException('Cannot run threads.');
             }
 
-            echo 'WORK FOR1' . PHP_EOL;
+            $this->time('RUN FOR1');
 
             yield from $this->synchronizeThreads($t1, $t2);
+
+            $this->time('SYNC FOR1');
 
             return $t1->getResult() + $t2->getResult();
         });
         $header = ($article = microtime(true)) - $header;
         $this->article = $this->thread('FOR2', function () {
-            for ($i = 0; $i < 2; $i++) {
-                echo 'WORK FOR2' . PHP_EOL;
+            for ($i = 0; $i < 4; $i++) {
+                $this->time('WORK FOR2');
                 yield;
             }
             return 4;
@@ -85,7 +90,7 @@ class MyApplication extends BasicMultiThreaded
         $article = ($footer = microtime(true)) - $article;
         $this->footer = $this->thread('FOR3', function () {
             for ($i = 0; $i < 10; $i++) {
-                echo 'WORK FOR3' . PHP_EOL;
+                $this->time('WORK FOR3');
                 yield;
             }
 //            $for3 = $this->context()->read('FOR3');
@@ -99,6 +104,8 @@ class MyApplication extends BasicMultiThreaded
         $this->times = $this->threadArguments(
             'TIMESTAMPS',
             function (float $header, float $article, float $footer) {
+                $this->time('TIMESTAMPS');
+
                 return $this->view->build(compact('header', 'article', 'footer'));
             },
             [$header, $article, $footer]
@@ -108,17 +115,17 @@ class MyApplication extends BasicMultiThreaded
     public function end()
     {
         $time = microtime(true);
-        $synchronizer = $this->synchronizeAll();
-        $synchronizer->rewind();
-        while ($synchronizer->valid()) {
-            $synchronizer->current();
-            $synchronizer->next();
-        }
+        iterateGenerator($this->synchronizeAll());
         var_dump('ended', microtime(true) - $time);
         var_dump(microtime(true) - $this->t);
         echo $this->header->getResult(),
         $this->article->getResult(),
         $this->footer->getResult(),
         $this->times->getResult();
+    }
+
+    private function time(string $log): void
+    {
+        echo sprintf('%f %s<br>' . PHP_EOL, microtime(true), $log);
     }
 }

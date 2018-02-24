@@ -123,7 +123,6 @@ final class Controller
         $generators = new \MultipleIterator();
         $generators->attachIterator($this->workCycle->work());
         $generators->attachIterator($this->core->work());
-        $generators->rewind();
 
         while ($this->work && $generators->valid()) {
             $generators->current();

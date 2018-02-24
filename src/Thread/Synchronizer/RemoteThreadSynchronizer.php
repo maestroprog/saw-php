@@ -2,23 +2,24 @@
 
 namespace Maestroprog\Saw\Thread\Synchronizer;
 
-use Maestroprog\Saw\Connector\ControllerConnectorInterface;
 use Maestroprog\Saw\Thread\Runner\ThreadRunnerInterface;
 
-class WebThreadSynchronizer implements SynchronizerInterface
+/**
+ * @deprecated
+ */
+class RemoteThreadSynchronizer implements SynchronizerInterface
 {
     private $threadRunner;
-    private $connector;
+    private $syncGenerator;
 
-    public function __construct(ThreadRunnerInterface $threadRunner, ControllerConnectorInterface $connector)
+    public function __construct(ThreadRunnerInterface $threadRunner, \Generator $syncGenerator)
     {
         $this->threadRunner = $threadRunner;
-        $this->connector = $connector;
+        $this->syncGenerator = $syncGenerator;
     }
 
     public function synchronizeThreads(SynchronizationThreadInterface ...$threads): \Generator
     {
-        $generator = $this->connector->work();
         do {
             $synchronized = true;
             foreach ($threads as $thread) {
@@ -27,14 +28,15 @@ class WebThreadSynchronizer implements SynchronizerInterface
                     break;
                 }
             }
-            if (!$synchronized) {
-                yield from $generator;
+            if (!$synchronized && $this->syncGenerator->valid()) {
+                yield $this->syncGenerator->current();
+                $this->syncGenerator->next();
             }
         } while (!$synchronized);
     }
 
     public function synchronizeAll(): \Generator
     {
-        yield from $this->synchronizeThreads($this->threadRunner->getThreadPool()->getThreads());
+        yield from $this->synchronizeThreads(...$this->threadRunner->getThreadPool()->getThreads());
     }
 }

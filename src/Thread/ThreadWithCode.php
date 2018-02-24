@@ -35,22 +35,27 @@ class ThreadWithCode extends AbstractThread implements SynchronizationThreadInte
                 $this->generator = call_user_func_array($this->code, $this->arguments);
             }
             if ($this->generator instanceof \Generator) {
-                $this->generator->rewind();
-                while ($this->generator->valid()) {
-                    yield $this->generator->current();
-                    $this->generator->next();
-                }
+                /* Генератор выполняет функцию асинхронной работы кода,
+                 * в т.ч. асинхронная синхрониация вложенных потоков. */
+                yield from $this->generator;
+//                $this->generator->rewind();
+//                while ($this->generator->valid()) {
+//                    yield $this->generator->current();
+//                    $this->generator->next();
+//                }
                 $result = $this->generator->getReturn();
             } else {
                 $result = $this->generator;
             }
-        } catch (\Throwable $throwable) {
-            $result = null;
-
-            throw new ThreadRunningException($throwable->getMessage(), $throwable->getCode(), $throwable);
+        } catch (\Throwable $e) {
+            $result = new ThreadRunningException($e->getMessage(), $e->getCode(), $e);
         } finally {
             $this->generator = null;
             $this->synchronized();
+
+            if ($result instanceof ThreadRunningException) {
+                throw $result;
+            }
 
             return $result;
         }

@@ -11,8 +11,6 @@ interface SynchronizerInterface
      *
      * @return \Generator
      * @throws SynchronizeException
-     * @throws \InvalidArgumentException Если указан несуществующий поток,
-     *          или элемент массива - вовсе не @see Thread
      */
     public function synchronizeThreads(SynchronizationThreadInterface ...$threads): \Generator;
 

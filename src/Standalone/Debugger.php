@@ -75,7 +75,6 @@ class Debugger
         echo 'Please, type command', PHP_EOL;
         stream_set_blocking(STDIN, 0);
         $workGenerator = $this->connector->work();
-        $workGenerator->rewind();
         while (true) {
             if ($pcntl) {
                 pcntl_signal_dispatch();

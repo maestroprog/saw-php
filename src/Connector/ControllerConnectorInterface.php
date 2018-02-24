@@ -23,4 +23,11 @@ interface ControllerConnectorInterface extends SenderInterface, CycleInterface, 
      * @return Client
      */
     public function getClient(): Client;
+
+    /**
+     * Выполняет полезную работу по взаимодействию между контроллерами и воркерами.
+     *
+     * @return \Generator
+     */
+    public function work(): \Generator;
 }

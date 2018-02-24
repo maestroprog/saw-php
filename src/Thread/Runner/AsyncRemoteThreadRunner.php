@@ -1,58 +1,62 @@
 <?php
 
-namespace Maestroprog\Saw\Standalone\Worker;
+namespace Maestroprog\Saw\Thread\Runner;
 
-use Esockets\Client;
 use Esockets\Debug\Log;
 use Maestroprog\Saw\Application\ApplicationContainer;
 use Maestroprog\Saw\Command\CommandHandler;
 use Maestroprog\Saw\Command\ThreadBroadcast;
 use Maestroprog\Saw\Command\ThreadResult;
 use Maestroprog\Saw\Command\ThreadRun;
-use function Maestroprog\Saw\iterateGenerator;
+use Maestroprog\Saw\Connector\ControllerConnectorInterface;
 use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\Commander;
+use Maestroprog\Saw\Standalone\Controller\CycleInterface;
 use Maestroprog\Saw\Thread\AbstractThread;
 use Maestroprog\Saw\Thread\BroadcastThread;
 use Maestroprog\Saw\Thread\Pool\AbstractThreadPool;
-use Maestroprog\Saw\Thread\Pool\PoolOfUniqueThreads;
 use Maestroprog\Saw\Thread\Pool\RunnableThreadPool;
-use Maestroprog\Saw\Thread\Runner\ThreadRunnerDisablingSupportInterface;
+use Maestroprog\Saw\ValueObject\SawEnv;
 
-final class WorkerThreadRunner implements ThreadRunnerDisablingSupportInterface
+final class AsyncRemoteThreadRunner implements ThreadRunnerDisablingSupportInterface, CycleInterface
 {
+    private $connector;
     private $client;
     private $commandDispatcher;
     private $commander;
-    private $applicationContainer;
 
+    private $applicationContainer;
     private $threadPool;
-    private $runThreadPool;
-    private $disabled = true;
+    private $disabled;
 
     public function __construct(
-        Client $client,
+        ControllerConnectorInterface $connector,
         CommandDispatcher $commandDispatcher,
         Commander $commander,
-        ApplicationContainer $applicationContainer
+        ApplicationContainer $applicationContainer,
+        SawEnv $env
     )
     {
-        $this->client = $client;
+        $this->connector = $connector;
+        $this->client = $connector->getClient();
         $this->commandDispatcher = $commandDispatcher;
         $this->commander = $commander;
         $this->applicationContainer = $applicationContainer;
+        if ($env->isWorker()) {
+            $this->disable();
+        }
 
-        $this->threadPool = new PoolOfUniqueThreads();
-        $this->runThreadPool = new RunnableThreadPool(); // пул именно "работающих" потоков
+        $this->threadPool = new RunnableThreadPool();
 
         $this->commandDispatcher
             ->addHandlers([
                 new CommandHandler(ThreadResult::class, function (ThreadResult $context) {
-                    $this->runThreadPool
+                    $this->threadPool
                         ->getThreadById($context->getRunId())
                         ->setResult($context->getResult());
                 }),
             ]);
+
     }
 
     /**
@@ -66,20 +70,23 @@ final class WorkerThreadRunner implements ThreadRunnerDisablingSupportInterface
     public function runThreads(AbstractThread ...$threads): bool
     {
         if (!$this->disabled) {
+            $commands = [];
             foreach ($threads as $thread) {
-                $this->runThreadPool->add($thread);
-                try {
-                    $this->commander->runAsync(new ThreadRun(
-                        $this->client,
-                        $thread->getId(),
-                        $thread->getApplicationId(),
-                        $thread->getUniqueId(),
-                        $thread->getArguments()
-                    ));
-                } catch (\Throwable $e) {
-                    $thread->run();
-                    Log::log($e->getMessage());
-                }
+                $this->threadPool->add($thread);
+                $commands[] = new ThreadRun(
+                    $this->client,
+                    $thread->getId(),
+                    $thread->getApplicationId(),
+                    $thread->getUniqueId(),
+                    $thread->getArguments()
+                );
+            }
+            try {
+                $this
+                    ->commander
+                    ->runPacket(...$commands);
+            } catch (\Throwable $e) {
+                die($e->getMessage());
             }
         } else {
             $this->enable();
@@ -98,7 +105,7 @@ final class WorkerThreadRunner implements ThreadRunnerDisablingSupportInterface
         $result = false;
 
         foreach ($threads as $thread) {
-            $this->runThreadPool->add($thread);
+            $this->threadPool->add($thread);
             try {
                 $this
                     ->commander
@@ -125,11 +132,16 @@ final class WorkerThreadRunner implements ThreadRunnerDisablingSupportInterface
 
     public function getThreadPool(): AbstractThreadPool
     {
-        return $this->runThreadPool;
+        return $this->threadPool;
     }
 
     public function disable(): void
     {
         $this->disabled = true;
+    }
+
+    public function work(): \Generator
+    {
+        yield from $this->connector->work();
     }
 }

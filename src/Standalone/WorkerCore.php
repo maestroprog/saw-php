@@ -30,6 +30,7 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
     private $applicationContainer;
 
     private $threadPool;
+    private $generatorList;
 
     public function __construct(
         Client $peer,
@@ -49,6 +50,7 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
         }
 
         $this->threadPool = new RunnableThreadPool();
+        $this->generatorList = new \SplObjectStorage();
 
         $commandDispatcher->addHandlers([
             new CommandHandler(
@@ -118,12 +120,17 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
                     ->getThreadById($thread->getUniqueId())
                     ->setArguments($thread->getArguments());
 
-                $generator = $realThread->run();
+                if (!$this->generatorList->contains($thread)) {
+                    $generator = $realThread->run();
+                    $this->generatorList->attach($thread, $generator);
+                } else {
+                    $generator = $this->generatorList[$thread];
+                }
 
-                $generator->rewind();
                 if ($generator->valid()) {
 
                     yield $generator->current();
+                    $generator->next();
 
                 } else {
                     $result = $generator->getReturn();
@@ -141,6 +148,7 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
                     $resultCommand
                         ->onSuccess(function () use ($thread) {
                             // $this->threadPool->getThreadById($thread->getId());
+                            $this->generatorList->detach($thread);
                             $this->threadPool->remove($thread);
                         })
                         ->onError(function () {
