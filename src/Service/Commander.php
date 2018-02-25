@@ -6,6 +6,7 @@ use Maestroprog\Saw\Command\AbstractCommand;
 use Maestroprog\Saw\Command\ContainerOfCommands;
 use Maestroprog\Saw\Command\PacketCommand;
 use Maestroprog\Saw\Standalone\Controller\CycleInterface;
+use function Maestroprog\Saw\iterateGenerator;
 
 final class Commander
 {
@@ -35,7 +36,7 @@ final class Commander
         $started = microtime(true);
         $this->send($command);
         do {
-            $this->workDispatcher->work();
+            iterateGenerator($this->workDispatcher->work());
         } while (!$command->isAccomplished() && (microtime(true) - $started) < $timeout);
 
         return $command;

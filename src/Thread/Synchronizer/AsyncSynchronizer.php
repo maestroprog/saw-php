@@ -8,7 +8,8 @@ class AsyncSynchronizer implements SynchronizerInterface
 {
     private $threadRunner;
     private $syncGenerator;
-    private $generatorExec = false;
+    private $generatorExec;
+    private $init = false;
 
     public function __construct(ThreadRunnerInterface $threadRunner, \Generator $syncGenerator)
     {
@@ -21,21 +22,34 @@ class AsyncSynchronizer implements SynchronizerInterface
         do {
             /* Генератор ThreadRunner-а
              * Выполняет асинхронный код потоков и рекурсивных синхронизаторов. */
-            if ($this->syncGenerator->valid()) {
-                if (!$this->generatorExec) {
-                    $this->generatorExec = true;
-                    yield __METHOD__ . '.' . $this->syncGenerator->current();
-                    $this->syncGenerator->next();
-                    $this->generatorExec = false;
-                } else {
-                    yield __METHOD__ . '.endless';
-                }
-            }
+
             $synchronized = true;
             foreach ($threads as $thread) {
                 $synchronized = $synchronized && $thread->isSynchronized();
                 if (!$synchronized) {
                     break;
+                }
+            }
+            if (!$synchronized) {
+
+                if (!$this->init) {
+                    var_dump('rewind');
+                    $this->init = true;
+                    $this->generatorExec = true;
+                    $this->syncGenerator->rewind();
+                    $this->generatorExec = false;
+                }
+                if (!$this->generatorExec) {
+                    if (!$this->syncGenerator->valid()) {
+                        throw new \LogicException('Logic invalid.');
+                    }
+                    $this->generatorExec = true;
+                    yield $this->syncGenerator->current();
+                    $this->syncGenerator->next();
+                    $this->generatorExec = false;
+
+                } else {
+                    yield;
                 }
             }
         } while (!$synchronized);

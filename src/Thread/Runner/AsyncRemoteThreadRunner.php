@@ -9,6 +9,7 @@ use Maestroprog\Saw\Command\ThreadBroadcast;
 use Maestroprog\Saw\Command\ThreadResult;
 use Maestroprog\Saw\Command\ThreadRun;
 use Maestroprog\Saw\Connector\ControllerConnectorInterface;
+use Maestroprog\Saw\Service\AsyncBus;
 use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\Commander;
 use Maestroprog\Saw\Standalone\Controller\CycleInterface;
@@ -28,6 +29,10 @@ final class AsyncRemoteThreadRunner implements ThreadRunnerDisablingSupportInter
     private $applicationContainer;
     private $threadPool;
     private $disabled;
+    /**
+     * @var SawEnv
+     */
+    private $env;
 
     public function __construct(
         ControllerConnectorInterface $connector,
@@ -42,6 +47,7 @@ final class AsyncRemoteThreadRunner implements ThreadRunnerDisablingSupportInter
         $this->commandDispatcher = $commandDispatcher;
         $this->commander = $commander;
         $this->applicationContainer = $applicationContainer;
+        $this->env = $env;
         if ($env->isWorker()) {
             $this->disable();
         }
@@ -56,7 +62,6 @@ final class AsyncRemoteThreadRunner implements ThreadRunnerDisablingSupportInter
                         ->setResult($context->getResult());
                 }),
             ]);
-
     }
 
     /**
@@ -142,6 +147,12 @@ final class AsyncRemoteThreadRunner implements ThreadRunnerDisablingSupportInter
 
     public function work(): \Generator
     {
-        yield from $this->connector->work();
+        if ($this->env->isWeb()) {
+            yield from $this->connector->work();
+        } else {
+            while (true) {
+                yield AsyncBus::SIGNAL_PAUSE; // прерывания для воркера
+            }
+        }
     }
 }

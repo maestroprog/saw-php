@@ -13,7 +13,7 @@ class AsyncBus implements \Iterator
 
     public function attachGenerator(\Generator $generator): void
     {
-        if (!$generator->valid()) {
+        if (!$generator->valid()) { // valid() выполнит rewind() если генератор новый.
             throw new \InvalidArgumentException('Invalid generator given.');
         }
 

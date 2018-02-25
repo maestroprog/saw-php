@@ -43,6 +43,7 @@ class MyApplication extends BasicMultiThreaded
     {
         $this->header = $this->thread('FOR1', function () {
             $this->time('WORK FOR1');
+
             $t1 = $this->thread('SUB_THREAD_1', function () {
                 for ($i = 0; $i < 3; $i++) {
                     $this->time('WORK SUB_THREAD_1 ' . $i);
@@ -54,15 +55,13 @@ class MyApplication extends BasicMultiThreaded
             });
             $t2 = $this->thread('SUB_THREAD_2', function () {
                 for ($i = 0; $i < 5; $i++) {
-                    $this->time('WORK SUB_THREAD_2' . $i);
+                    $this->time('WORK SUB_THREAD_2 ' . $i);
                     yield;
                 }
                 $this->time('COMPLETE SUB_THREAD_2');
 
                 return 2;
             });
-
-            $this->time('WORK FOR1');
 
             if (!$this->runThreads($t1, $t2)) {
                 throw new \RuntimeException('Cannot run threads.');

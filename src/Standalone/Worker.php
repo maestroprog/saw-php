@@ -32,6 +32,8 @@ final class Worker
      */
     private $dispatchSignals = false;
 
+    private $bus;
+
     public function __construct(
         WorkerCore $core,
         ControllerConnectorInterface $connector,
@@ -49,6 +51,10 @@ final class Worker
                 $this->stop();
             })
         ]);
+
+        $this->bus = new AsyncBus();
+        $this->bus->attachGenerator($this->core->work());
+        $this->bus->attachGenerator($this->connector->work());
     }
 
     /**
@@ -131,16 +137,12 @@ final class Worker
 
     public function work(): void
     {
-        $bus = new AsyncBus();
-        $bus->attachGenerator($this->core->work());
-        $bus->attachGenerator($this->connector->work());
-
-        while ($this->work && $bus->valid()) {
+        while ($this->work && $this->bus->valid()) {
             if ($this->dispatchSignals) {
                 pcntl_signal_dispatch();
             }
-            $bus->current(); // не обязательно
-            $bus->next();
+            $this->bus->current(); // не обязательно
+            $this->bus->next();
 
             if (!$this->client->live()) {
                 throw new \RuntimeException('Connection died!');

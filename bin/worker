@@ -1,6 +1,6 @@
 #!/usr/bin/php
 <?php
-define('ENV', 'WORKER_' . getmygid());
+define('ENV', 'WORKER_' . getmypid());
 
 $configFile = require 'cli.php';
 

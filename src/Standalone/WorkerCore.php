@@ -88,7 +88,7 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
             $active = false;
             /** @var $thread StatefulThread */
             foreach ($this->threadPool as $thread) {
-                if ($thread->hasResult()) {
+                if ($thread->isSynchronized()) {
                     continue;
                 }
                 $this->applicationContainer->switchTo($this->applicationContainer->get($thread->getApplicationId()));
@@ -118,27 +118,23 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
                     $generator->rewind();
                     $rewound = true;
                     $this->generators->attach($thread, $generator);
-                    $active = true;
                 } else {
                     $generator = $this->generators[$thread];
                 }
-                $signal = $generator->current();
-                if ($signal !== AsyncBus::SIGNAL_PAUSE) {
-                    $active = true;
-                    yield __METHOD__ . '.' . $signal;
-                } else {
-                    yield __METHOD__ . '.' . 'BEFORE_PAUSE';
-                }
                 if ($generator->valid()) {
+                    $signal = $generator->current();
+                    if ($signal !== AsyncBus::SIGNAL_PAUSE) {
+                        $active = true;
+                        yield __METHOD__ . '.' . $signal;
+                    } else {
+                        yield __METHOD__ . '.' . 'BEFORE_PAUSE'; // todo сделать нормальные сигналы
+                    }
                     if (!$rewound) {
                         $generator->next();
-                        $active = true;
                     }
                 }
                 if (!$generator->valid()) {
                     $thread->setResult($generator->getReturn());
-                    $this->threadPool->remove($thread);
-                    $this->generators->detach($thread);
 
                     $resultCommand = new ThreadResult(
                         $this->client,
