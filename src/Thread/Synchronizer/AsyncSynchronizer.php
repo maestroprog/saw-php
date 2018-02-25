@@ -14,7 +14,6 @@ class AsyncSynchronizer implements SynchronizerInterface
     {
         $this->threadRunner = $threadRunner;
         $this->syncGenerator = $syncGenerator;
-        $syncGenerator->rewind();
     }
 
     public function synchronizeThreads(SynchronizationThreadInterface ...$threads): \Generator
@@ -23,11 +22,13 @@ class AsyncSynchronizer implements SynchronizerInterface
             /* Генератор ThreadRunner-а
              * Выполняет асинхронный код потоков и рекурсивных синхронизаторов. */
             if ($this->syncGenerator->valid()) {
-                yield $this->syncGenerator->current();
                 if (!$this->generatorExec) {
                     $this->generatorExec = true;
+                    yield __METHOD__ . '.' . $this->syncGenerator->current();
                     $this->syncGenerator->next();
                     $this->generatorExec = false;
+                } else {
+                    yield __METHOD__ . '.endless';
                 }
             }
             $synchronized = true;

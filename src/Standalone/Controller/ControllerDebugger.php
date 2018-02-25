@@ -6,6 +6,7 @@ use Esockets\Client;
 use Maestroprog\Saw\Command\CommandHandler;
 use Maestroprog\Saw\Command\DebugCommand;
 use Maestroprog\Saw\Command\DebugData;
+use Maestroprog\Saw\Command\ThreadRun;
 use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\Commander;
 use Maestroprog\Saw\Service\ControllerRunner;
@@ -47,6 +48,25 @@ class ControllerDebugger
     {
         $result = ['type' => DebugData::TYPE_VALUE];
         switch ($query->getQuery()) {
+            case 'trun':
+                $run = (new ThreadRun(
+                    $query->getClient(),
+                    ...$query->getArguments()
+                ));
+                $commandData = [
+                    'command' => $run->getCommandName(),
+                    'state' => CommandDispatcher::STATE_RUN,
+                    'id' => 0,
+                    'code' => CommandDispatcher::CODE_VOID,
+                    'data' => $run->toArray()
+                ];
+                try {
+                    $this->commandDispatcher->dispatch($commandData, $query->getClient());
+                    $result['result'] = 'Ok';
+                } catch (\Exception | \Throwable $e) {
+                    $result['result'] = $e->getMessage();
+                }
+                break;
             case 'killall':
                 $result['result']['Killed'] = $this->killAll();
                 break;
@@ -62,7 +82,7 @@ class ControllerDebugger
                 $result['result'] = $this->fullStat($query);
                 break;
             case 'help':
-                $result['result'] = 'List of commands: killall, fullstat, help, restart, stop';
+                $result['result'] = 'List of commands: killall, fullstat, help, restart, stop, run 0 saw.sample.www FOR1';
                 break;
             /** @noinspection PhpMissingBreakStatementInspection */
             case 'restart':
@@ -71,7 +91,6 @@ class ControllerDebugger
                 });
             // no break
             case 'stop':
-                $this->killAll();
                 exit;
             // no break
             default:

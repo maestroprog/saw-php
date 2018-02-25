@@ -7,6 +7,8 @@ use Esockets\Debug\Log;
 use Maestroprog\Saw\Command\CommandHandler;
 use Maestroprog\Saw\Command\DebugCommand;
 use Maestroprog\Saw\Command\DebugData;
+use Maestroprog\Saw\Command\ThreadResult;
+use Maestroprog\Saw\Command\ThreadRun;
 use Maestroprog\Saw\Connector\ControllerConnectorInterface;
 use Maestroprog\Saw\Service\Commander;
 
@@ -25,6 +27,9 @@ class Debugger
         $connector->getCommandDispatcher()->addHandlers([
             new CommandHandler(DebugData::class, function (DebugData $context) {
                 $this->output($context);
+            }),
+            new CommandHandler(ThreadResult::class, function (ThreadResult $context) {
+                echo $context->getResult(), PHP_EOL;
             }),
         ]);
     }
@@ -65,6 +70,8 @@ class Debugger
             }
         }
 
+        $this->connector->getClient()->unblock();
+
         $pcntl = false;
         if (extension_loaded('pcntl')) {
             $pcntl = true;
@@ -74,7 +81,19 @@ class Debugger
         }
         echo 'Please, type command', PHP_EOL;
         stream_set_blocking(STDIN, 0);
-        $workGenerator = $this->connector->work();
+        /** @var \Generator $workGenerator */
+        $workGenerator = (function (): \Generator {
+            while (true) {
+                $socket = $this->connector->getClient()->getConnectionResource()->getResource();
+                $read = [$socket];
+                $write = $except = [];
+                if (socket_select($read, $write, $except, 0, 100000)) {
+                    $this->connector->getClient()->read();
+                }
+
+                yield;
+            }
+        })();
         while (true) {
             if ($pcntl) {
                 pcntl_signal_dispatch();
@@ -82,14 +101,31 @@ class Debugger
             $workGenerator->current();
             $workGenerator->next();
             if ($cmd = fgets(STDIN)) {
-                $this->commander->runAsync(
-                    (new DebugCommand($this->connector->getClient(), trim($cmd)))
-                        ->onError(function () use ($cmd) {
-                            throw new \RuntimeException('Cannot exec cmd: ' . $cmd);
-                        })
-                );
+                $cmd = trim($cmd);
+                $row = explode(' ', $cmd, 2);
+                if (count($row) > 1) {
+                    [$cmd, $args] = $row;
+                }
+                switch ($cmd) {
+                    case 'trun':
+                        $command = (new ThreadRun($this->connector->getClient(), ...explode(' ', $args)))
+                            ->onSuccess(function () {
+                                echo 'Executed!' . PHP_EOL;
+                            })->onError(function () {
+                                echo 'Error!!' . PHP_EOL;
+                            });
+                        $this->commander->runSync($command, 1);
+                        break;
+
+                    default:
+                        $this->commander->runAsync(
+                            (new DebugCommand($this->connector->getClient(), $cmd))
+                                ->onError(function () use ($cmd) {
+                                    throw new \RuntimeException('Cannot exec cmd: ' . $cmd);
+                                })
+                        );
+                }
             }
-            usleep(100000);
         }
     }
 }

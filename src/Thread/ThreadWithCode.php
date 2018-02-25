@@ -2,6 +2,7 @@
 
 namespace Maestroprog\Saw\Thread;
 
+use Esockets\Debug\Log;
 use Maestroprog\Saw\Thread\Synchronizer\SynchronizationThreadInterface;
 use Maestroprog\Saw\Thread\Synchronizer\SynchronizationTrait;
 
@@ -48,10 +49,13 @@ class ThreadWithCode extends AbstractThread implements SynchronizationThreadInte
                 $result = $this->generator;
             }
         } catch (\Throwable $e) {
+            Log::log($e->getMessage());
             $result = new ThreadRunningException($e->getMessage(), $e->getCode(), $e);
         } finally {
             $this->generator = null;
             $this->synchronized();
+
+            $result = $result ?? null;
 
             if ($result instanceof ThreadRunningException) {
                 throw $result;
@@ -59,5 +63,12 @@ class ThreadWithCode extends AbstractThread implements SynchronizationThreadInte
 
             return $result;
         }
+    }
+
+    public function setResult($data): void
+    {
+        parent::setResult($data);
+
+        $this->synchronized();
     }
 }

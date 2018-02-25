@@ -11,6 +11,7 @@ use Maestroprog\Saw\Command\ThreadResult;
 use Maestroprog\Saw\Command\ThreadRun;
 use Maestroprog\Saw\Heading\ReportSupportInterface;
 use Maestroprog\Saw\Service\ApplicationLoader;
+use Maestroprog\Saw\Service\AsyncBus;
 use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\Commander;
 use Maestroprog\Saw\Standalone\Controller\CycleInterface;
@@ -30,7 +31,7 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
     private $applicationContainer;
 
     private $threadPool;
-    private $generatorList;
+    private $generators;
 
     public function __construct(
         Client $peer,
@@ -50,7 +51,7 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
         }
 
         $this->threadPool = new RunnableThreadPool();
-        $this->generatorList = new \SplObjectStorage();
+        $this->generators = new \SplObjectStorage();
 
         $commandDispatcher->addHandlers([
             new CommandHandler(
@@ -73,16 +74,6 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
         ]);
     }
 
-    public function getFullReport(): array
-    {
-        return [
-            'AppsCount' => count($this->applicationContainer),
-            'ThreadPoolsCount' => count($this->applicationContainer->getThreadPools()),
-            'ThreadsCount' => $this->applicationContainer->getThreadPools()->threadsCount(),
-            'WorkCount' => count($this->threadPool),
-        ];
-    }
-
     /**
      * Метод служит для запуска всех приложений внутри воркера.
      */
@@ -94,14 +85,13 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
     public function work(): \Generator
     {
         while (true) {
+            $active = false;
             /** @var $thread StatefulThread */
             foreach ($this->threadPool as $thread) {
                 if ($thread->hasResult()) {
                     continue;
                 }
                 $this->applicationContainer->switchTo($this->applicationContainer->get($thread->getApplicationId()));
-
-                $thread->run(); // Запомним, что этот поток находится в стадии запуска, чтобы его запуск не зациклился.
 
                 /** @var ThreadWithCode $realThread */
                 $realThread = $this->applicationContainer
@@ -111,6 +101,8 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
 
                 if ($thread->getCurrentState() === StatefulThread::STATE_NEW) {
                     $realThread->setArguments($thread->getArguments());
+                    $thread->run(); // Запомним, что этот поток находится в стадии запуска, чтобы его запуск не зациклился.
+                    $active = true;
                 }
 
                 /** @var ThreadWithCode $realThread */
@@ -120,22 +112,33 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
                     ->getThreadById($thread->getUniqueId())
                     ->setArguments($thread->getArguments());
 
-                if (!$this->generatorList->contains($thread)) {
+                $rewound = false;
+                if (!$this->generators->contains($thread)) {
                     $generator = $realThread->run();
-                    $this->generatorList->attach($thread, $generator);
+                    $generator->rewind();
+                    $rewound = true;
+                    $this->generators->attach($thread, $generator);
+                    $active = true;
                 } else {
-                    $generator = $this->generatorList[$thread];
+                    $generator = $this->generators[$thread];
                 }
-
-                if ($generator->valid()) {
-
-                    yield $generator->current();
-                    $generator->next();
-
+                $signal = $generator->current();
+                if ($signal !== AsyncBus::SIGNAL_PAUSE) {
+                    $active = true;
+                    yield __METHOD__ . '.' . $signal;
                 } else {
-                    $result = $generator->getReturn();
-
-                    $thread->setResult($result);
+                    yield __METHOD__ . '.' . 'BEFORE_PAUSE';
+                }
+                if ($generator->valid()) {
+                    if (!$rewound) {
+                        $generator->next();
+                        $active = true;
+                    }
+                }
+                if (!$generator->valid()) {
+                    $thread->setResult($generator->getReturn());
+                    $this->threadPool->remove($thread);
+                    $this->generators->detach($thread);
 
                     $resultCommand = new ThreadResult(
                         $this->client,
@@ -148,7 +151,7 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
                     $resultCommand
                         ->onSuccess(function () use ($thread) {
                             // $this->threadPool->getThreadById($thread->getId());
-                            $this->generatorList->detach($thread);
+                            $this->generators->detach($thread);
                             $this->threadPool->remove($thread);
                         })
                         ->onError(function () {
@@ -158,7 +161,21 @@ final class WorkerCore implements CycleInterface, ReportSupportInterface
                 }
             }
 
-            yield;
+            if ($active) {
+                yield 'WORKER_CORE';
+            } else {
+                yield 'WORKER_CORE' => AsyncBus::SIGNAL_PAUSE;
+            }
         }
+    }
+
+    public function getFullReport(): array
+    {
+        return [
+            'AppsCount' => count($this->applicationContainer),
+            'ThreadPoolsCount' => count($this->applicationContainer->getThreadPools()),
+            'ThreadsCount' => $this->applicationContainer->getThreadPools()->threadsCount(),
+            'WorkCount' => count($this->threadPool),
+        ];
     }
 }

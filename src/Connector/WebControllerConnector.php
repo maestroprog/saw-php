@@ -38,7 +38,7 @@ final class WebControllerConnector implements ControllerConnectorInterface
 
     protected function onRead(): callable
     {
-        return function ($data) {
+        return function ($data): void {
 
             switch ($data) {
                 case 'ACCEPT':
@@ -69,10 +69,16 @@ final class WebControllerConnector implements ControllerConnectorInterface
     public function connect(): void
     {
         try {
-            if (!$this->controllerStarter->isExistsPidFile()) {
-                throw new ConnectionException('Pid file is not exists.');
-            }
+//            if (!$this->controllerStarter->isExistsPidFile()) {
+//                throw new ConnectionException('Pid file is not exists.');
+//            }
             $this->client->connect($this->connectAddress);
+//            $this->client->block();
+//            $read = $this->client->returnRead();
+//            $this->client->unblock();
+//            if ($read !== 'ACCEPT') {
+//                throw new ConnectionException('Cannot connect.');
+//            }
         } catch (ConnectionException $e) {
             $this->controllerStarter->start();
         }

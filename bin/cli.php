@@ -28,5 +28,6 @@ foreach ($autoloadFiles as $autoloadFile) {
     }
 }
 
+\Esockets\Debug\Log::setEnv(ENV);
 
 return $configFile;

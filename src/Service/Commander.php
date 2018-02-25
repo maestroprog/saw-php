@@ -37,7 +37,37 @@ final class Commander
         do {
             $this->workDispatcher->work();
         } while (!$command->isAccomplished() && (microtime(true) - $started) < $timeout);
+
         return $command;
+    }
+
+    /**
+     * Выполняет асинхронный запуск команды,
+     * т.е. возвращает управление сразу же после отправки команды.
+     *
+     * @param AbstractCommand $command
+     *
+     * @return void
+     * @throws \RuntimeException
+     */
+    public function runAsync(AbstractCommand $command): void
+    {
+        $this->send($command);
+    }
+
+    public function runPacket(AbstractCommand ...$commands): void
+    {
+        if (empty($commands)) {
+            return;
+        }
+        $packet = [];
+        foreach ($commands as $command) {
+            $cmdId = $this->generateId();
+            $this->commands->add($cmdId, $command);
+            $packet[] = $this->serializeCommand($command, $cmdId);
+        }
+        assert(isset($command) && $command instanceof AbstractCommand);
+        $this->send(new PacketCommand($command->getClient(), $packet));
     }
 
     /**
@@ -78,33 +108,5 @@ final class Commander
             'code' => CommandDispatcher::CODE_VOID,
             'data' => $command->toArray()
         ];
-    }
-
-    /**
-     * Выполняет асинхронный запуск команды,
-     * т.е. возвращает управление сразу же после отправки команды.
-     *
-     * @param AbstractCommand $command
-     *
-     * @return void
-     * @throws \RuntimeException
-     */
-    public function runAsync(AbstractCommand $command): void
-    {
-        $this->send($command);
-    }
-
-    public function runPacket(AbstractCommand ...$commands): void
-    {
-        if (empty($commands)) {
-            return;
-        }
-        $packet = [];
-        foreach ($commands as $command) {
-            $cmdId = $this->generateId();
-            $this->commands->add($cmdId, $command);
-            $packet[] = $this->serializeCommand($command, $cmdId);
-        }
-        $this->send(new PacketCommand($command->getClient(), $packet));
     }
 }

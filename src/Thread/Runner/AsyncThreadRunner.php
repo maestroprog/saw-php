@@ -11,6 +11,9 @@ use Maestroprog\Saw\Thread\ThreadWithCode;
 
 class AsyncThreadRunner implements ThreadRunnerInterface, CycleInterface
 {
+    /**
+     * @var RunnableThreadPool|AbstractThread[]
+     */
     protected $threadPool;
     protected $generators;
     protected $queue;
@@ -34,9 +37,6 @@ class AsyncThreadRunner implements ThreadRunnerInterface, CycleInterface
             }
 
             $this->threadPool->add($thread);
-
-            $generator = $thread->run();
-            $this->generators->attach($thread, $generator);
         }
 
         return true;
@@ -57,25 +57,33 @@ class AsyncThreadRunner implements ThreadRunnerInterface, CycleInterface
                     if ($thread->hasResult()) {
                         continue;
                     }
+                    $rewound = false;
                     /** @var \Generator $generator */
-                    $generator = $this->generators[$thread];
-                    /* Генератор, выполняющий асинхронный код потока. */
+                    if (!$this->generators->contains($thread)) {
+                        $generator = $thread->run();
+                        $generator->rewind();
+                        $rewound = true;
+                        $this->generators->attach($thread, $generator);
+                    } else {
+                        $generator = $this->generators[$thread];
+                    }
+                    yield __METHOD__ . '.' . $generator->current();
                     if ($generator->valid()) {
-                        yield $generator->current();
-                        $generator->next();
-                        if ($generator->valid()) {
-                            $workThreads++;
-                        } else {
-                            $thread->setResult($generator->getReturn());
-                            $this->threadPool->remove($thread);
-                            $this->generators->detach($thread);
+                        if (!$rewound) {
+                            $generator->next();
                         }
+                        $workThreads++;
+                    }
+                    if (!$generator->valid()) {
+                        $thread->setResult($generator->getReturn());
+                        $this->generators->detach($thread);
+                        $this->threadPool->remove($thread);
                     }
                 }
 
             } while ($workThreads > 0);
 
-            yield __CLASS__ . '::' . __FUNCTION__;
+            yield __METHOD__;
         }
     }
 }

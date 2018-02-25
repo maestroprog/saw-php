@@ -59,6 +59,11 @@ class SawContainer extends AbstractBasicContainer
         $this->environment = $env;
     }
 
+    public function getEnvironment(): SawEnv
+    {
+        return $this->environment ?? SawEnv::web();
+    }
+
     public function setEnvironment(SawEnv $environment)
     {
         if (!$this->environment->canChangeTo($environment)) {

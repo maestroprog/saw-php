@@ -9,6 +9,7 @@ use Maestroprog\Saw\Command\CommandHandler;
 use Maestroprog\Saw\Command\WorkerAdd;
 use Maestroprog\Saw\Command\WorkerDelete;
 use Maestroprog\Saw\Connector\ControllerConnectorInterface;
+use Maestroprog\Saw\Service\AsyncBus;
 use Maestroprog\Saw\Service\Commander;
 
 /**
@@ -50,12 +51,6 @@ final class Worker
         ]);
     }
 
-    public function stop()
-    {
-        $this->work = false;
-        $this->client->disconnect();
-    }
-
     /**
      * @throws \Exception
      */
@@ -69,14 +64,6 @@ final class Worker
                 if ($tryCount > 3) {
                     $this->stop();
                 }
-                $deleteCommand = (new WorkerDelete($this->client))
-                    ->onSuccess(function () {
-                        $this->stop();
-                    })
-                    ->onError(function () {
-                        throw new \RuntimeException('Cannot delete this worker from controller.');
-                    });
-                $this->commander->runAsync($deleteCommand);
             });
             $this->dispatchSignals = true;
         }
@@ -96,6 +83,20 @@ final class Worker
             }
         }
         $this->work();
+    }
+
+    public function stop()
+    {
+        $this->work = false;
+        $deleteCommand = (new WorkerDelete($this->client))
+            ->onSuccess(function () {
+                $this->stop();
+            })
+            ->onError(function () {
+                throw new \RuntimeException('Cannot delete this worker from controller.');
+            });
+        $this->commander->runAsync($deleteCommand);
+        $this->client->disconnect();
     }
 
     protected function onRead(): callable
@@ -128,24 +129,21 @@ final class Worker
         };
     }
 
-    public function work()
+    public function work(): void
     {
-        $generators = new \MultipleIterator();
-        $generators->attachIterator($this->connector->work());
-        $generators->attachIterator($this->core->work());
+        $bus = new AsyncBus();
+        $bus->attachGenerator($this->core->work());
+        $bus->attachGenerator($this->connector->work());
 
-        $liveTick = 0;
-        while ($this->work && $generators->valid()) {
+        while ($this->work && $bus->valid()) {
             if ($this->dispatchSignals) {
                 pcntl_signal_dispatch();
             }
-            $generators->current();
-            $generators->next();
+            $bus->current(); // не обязательно
+            $bus->next();
 
-            if (++$liveTick % 100 === 0) {
-                if (!$this->client->live()) {
-                    throw new \RuntimeException('Connection died!');
-                }
+            if (!$this->client->live()) {
+                throw new \RuntimeException('Connection died!');
             }
         }
     }

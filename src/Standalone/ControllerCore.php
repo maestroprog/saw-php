@@ -4,6 +4,7 @@ namespace Maestroprog\Saw\Standalone;
 
 use Esockets\Server;
 use Maestroprog\Saw\Config\ControllerConfig;
+use Maestroprog\Saw\Service\AsyncBus;
 use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\Commander;
 use Maestroprog\Saw\Service\ControllerRunner;
@@ -72,8 +73,11 @@ final class ControllerCore implements CycleInterface
      */
     public function work(): \Generator
     {
-        yield from $this->workerBalance->work();
-        yield from $this->threadDistributor->work();
+        $bus = new AsyncBus();
+        $bus->attachGenerator($this->workerBalance->work());
+        $bus->attachGenerator($this->threadDistributor->work());
+
+        yield from $bus;
     }
 
     public function stop(): void

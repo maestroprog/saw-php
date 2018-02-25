@@ -17,8 +17,9 @@ return [
         'worker_multiplier' => 1,
         'worker_max_count' => 1,
     ],
+//    'sockets' => require __DIR__ . '/../config/esockets.php',
     'sockets' => require __DIR__ . '/../config/esockets_debug.php',
     'multiThreading' => [
-        'disabled' => true,
+//        'disabled' => true,
     ],
 ];

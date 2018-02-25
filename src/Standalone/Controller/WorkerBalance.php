@@ -7,6 +7,7 @@ use Maestroprog\Saw\Command\CommandHandler;
 use Maestroprog\Saw\Command\WorkerAdd;
 use Maestroprog\Saw\Command\WorkerDelete;
 use Maestroprog\Saw\Entity\Worker;
+use Maestroprog\Saw\Service\AsyncBus;
 use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\Commander;
 use Maestroprog\Saw\Service\WorkerStarter;
@@ -98,8 +99,11 @@ class WorkerBalance implements CycleInterface
      */
     public function removeWorker(Worker $worker)
     {
-        $this->commander->runSync(new WorkerDelete($worker->getClient()), 5);
-        $this->workerPool->remove($worker);
+        try {
+            $this->commander->runAsync(new WorkerDelete($worker->getClient()));
+        } finally {
+            $this->workerPool->remove($worker);
+        }
         // TODO
         // нужно запилить механизм перехвата невыполненных задач
         /*foreach ($this->tasks as $name => $workers) {
@@ -126,6 +130,7 @@ class WorkerBalance implements CycleInterface
                 // run new worker
                 $this->workerRun = $this->workerStarter->start();
                 $this->running = time();
+                yield 'WORKER_BALANCE';
             } elseif ($this->running && $this->running < time() - 10) {
                 // timeout 10 sec - не удалось запустить воркер
                 $this->running = 0;
@@ -133,9 +138,10 @@ class WorkerBalance implements CycleInterface
                     // убиваем запущенный процесс, если он ещё работает
                     $this->workerRun->kill();
                 }
+                yield 'WORKER_BALANCE';
+            } else {
+                yield 'WORKER_BALANCE' => AsyncBus::SIGNAL_PAUSE;
             }
-
-            yield;
         }
     }
 

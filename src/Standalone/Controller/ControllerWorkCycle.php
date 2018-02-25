@@ -3,6 +3,7 @@
 namespace Maestroprog\Saw\Standalone\Controller;
 
 use Esockets\Server;
+use Maestroprog\Saw\Service\AsyncBus;
 
 class ControllerWorkCycle implements CycleInterface
 {
@@ -33,7 +34,7 @@ class ControllerWorkCycle implements CycleInterface
                 throw $e;
             }
 
-            yield;
+            yield 'CYCLE' => AsyncBus::SIGNAL_PAUSE;
         }
     }
 }

@@ -7,6 +7,7 @@ use Esockets\Debug\Log;
 use Esockets\Server;
 use Maestroprog\Saw\Command\CommandHandler;
 use Maestroprog\Saw\Command\PacketCommand;
+use Maestroprog\Saw\Service\AsyncBus;
 use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Standalone\Controller\ControllerWorkCycle;
 
@@ -87,8 +88,8 @@ final class Controller
 
     public function stop()
     {
-        $this->core->stop();
         $this->work = false;
+        $this->core->stop();
         unlink($this->myPidFile);
         $this->server->disconnect();
     }
@@ -120,13 +121,13 @@ final class Controller
      */
     public function work()
     {
-        $generators = new \MultipleIterator();
-        $generators->attachIterator($this->workCycle->work());
-        $generators->attachIterator($this->core->work());
+        $bus = new AsyncBus();
+        $bus->attachGenerator($this->core->work());
+        $bus->attachGenerator($this->workCycle->work());
 
-        while ($this->work && $generators->valid()) {
-            $generators->current();
-            $generators->next();
+        while ($this->work && $bus->valid()) {
+            $bus->current();
+            $bus->next();
         }
     }
 }

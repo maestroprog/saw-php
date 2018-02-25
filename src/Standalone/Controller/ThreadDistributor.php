@@ -9,6 +9,7 @@ use Maestroprog\Saw\Command\ThreadKnow;
 use Maestroprog\Saw\Command\ThreadResult;
 use Maestroprog\Saw\Command\ThreadRun;
 use Maestroprog\Saw\Entity\Worker;
+use Maestroprog\Saw\Service\AsyncBus;
 use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\Commander;
 use Maestroprog\Saw\Thread\AbstractThread;
@@ -226,9 +227,10 @@ final class ThreadDistributor implements CycleInterface
                 } catch (\Throwable $e) {
                     throw new \Exception('Cannot balance thread ' . $thread->getUniqueId(), 0, $e);
                 }
+                yield 'THREAD_DISTRIBUTOR';
+            } else {
+                yield 'THREAD_DISTRIBUTOR' => AsyncBus::SIGNAL_PAUSE;
             }
-
-            yield;
         }
     }
 

@@ -3,6 +3,7 @@
 namespace Maestroprog\Saw\Connector;
 
 use Esockets\Client;
+use Maestroprog\Saw\Service\AsyncBus;
 
 /**
  * @property Client $client
@@ -20,7 +21,7 @@ trait ControllerConnectorTrait
                 $this->client->read();
             }
 
-            yield;
+            yield 'CONNECTOR' => AsyncBus::SIGNAL_PAUSE;
         }
     }
 }
