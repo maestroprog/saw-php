@@ -58,9 +58,25 @@ class MyApplication extends BasicMultiThreaded
                     $this->time('WORK SUB_THREAD_2 ' . $i);
                     yield;
                 }
+
+                $addition = $this->threadArguments('ADDITION', function (int $i, int $j): \Generator {
+                    $this->time('WORK ADDITION ' . $i);
+
+                    yield;
+                    $result = $i + $j;
+
+                    $this->time('COMPLETE ADDITION ' . $i);
+
+                    return $result;
+                }, [$i, 2]);
+
+                $this->runThreads($addition);
+
+                yield from $this->synchronizeThreads($addition);
+
                 $this->time('COMPLETE SUB_THREAD_2');
 
-                return 2;
+                return $addition->getResult();
             });
 
             if (!$this->runThreads($t1, $t2)) {

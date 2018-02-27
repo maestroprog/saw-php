@@ -81,11 +81,13 @@ final class Saw extends Singleton
     {
         defined('INTERVAL') or define('INTERVAL', 10000);
         defined('SAW_DIR') or define('SAW_DIR', __DIR__);
-        $config = array_merge(
-            require __DIR__ . '/../config/saw.php',
-            require $configPath
-        );
-        foreach (['saw', 'factory', 'daemon', 'sockets', 'application', 'controller'] as $check) {
+        $config = require __DIR__ . '/../config/saw.php';
+        array_walk($config, function (&$value, $key, $customConfig) {
+            if (isset($customConfig[$key]) && is_array($value)) {
+                $value = $customConfig[$key] + $value;
+            }
+        }, require $configPath);
+        foreach (['saw', 'daemon', 'sockets', 'application', 'controller'] as $check) {
             if (!isset($config[$check]) || !is_array($config[$check])) {
                 $config[$check] = [];
             }

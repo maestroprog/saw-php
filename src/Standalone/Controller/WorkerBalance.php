@@ -65,6 +65,11 @@ class WorkerBalance implements CycleInterface
                 if (!$this->addWorker($newWorker)) {
                     $this->removeWorker($newWorker);
                     Log::log('Не удалось добавить воркера!');
+                } else {
+                    $context->getClient()->onDisconnect(function () use ($newWorker) {
+                        Log::log('Воркер отключился!');
+                        $this->removeWorker($newWorker);
+                    });
                 }
             }),
             new CommandHandler(WorkerDelete::class, function (WorkerDelete $context) {
@@ -96,11 +101,15 @@ class WorkerBalance implements CycleInterface
      * Удаляет воркер из балансировщика.
      *
      * @param Worker $worker
+     *
+     * @return void
      */
-    public function removeWorker(Worker $worker)
+    public function removeWorker(Worker $worker): void
     {
         try {
             $this->commander->runAsync(new WorkerDelete($worker->getClient()));
+        } catch (\RuntimeException $e) {
+            Log::log($e->getMessage());
         } finally {
             $this->workerPool->remove($worker);
         }

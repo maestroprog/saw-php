@@ -81,7 +81,7 @@ class SawContainer extends AbstractBasicContainer
         return new ControllerRunner(
             $this->get(Executor::class),
             $this->daemonConfig->hasControllerPath()
-                ? '-f ' . $this->daemonConfig->getControllerPath() . ' ' . $this->daemonConfig->getConfigPath()
+                ? $this->daemonConfig->getControllerPath() . ' ' . $this->daemonConfig->getConfigPath()
                 : $this->config['controller_starter']
         );
     }
@@ -101,18 +101,14 @@ class SawContainer extends AbstractBasicContainer
         return new WorkerStarter(
             $this->get(Executor::class),
             $this->daemonConfig->hasWorkerPath()
-                ? '-f ' . $this->daemonConfig->getWorkerPath() . ' ' . $this->daemonConfig->getConfigPath()
+                ? $this->daemonConfig->getWorkerPath() . ' ' . $this->daemonConfig->getConfigPath()
                 : $this->config['worker_starter']
         );
     }
 
     public function getExecutor(): Executor
     {
-        $phpPath = null;
-        if (isset($this->config['executor'])) {
-            $phpPath = $this->config['executor'];
-        }
-        return new Executor($phpPath);
+        return new Executor();
     }
 
     public function getControllerConnector(): ControllerConnectorInterface

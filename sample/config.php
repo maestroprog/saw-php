@@ -13,6 +13,9 @@ return [
             ],
         ],
     ],
+    'daemon' => [
+        'controller_pid' => __DIR__ . '/../../controller.pid',
+    ],
     'controller' => [
         'worker_multiplier' => 1,
         'worker_max_count' => 1,

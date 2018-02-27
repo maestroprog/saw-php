@@ -8,18 +8,6 @@ use Maestroprog\Saw\ValueObject\ProcessStatus;
 final class Executor
 {
     /**
-     * @var string path to php binaries
-     */
-    public $phpBinaryPath = '/usr/bin/php';
-
-    public function __construct(string $phpBinaryPath = null)
-    {
-        if (!is_null($phpBinaryPath)) {
-            $this->phpBinaryPath = $phpBinaryPath;
-        }
-    }
-
-    /**
      * Выполняет команду, и возвращает ID запущенного процесса.
      *
      * @param $cmd
@@ -28,7 +16,7 @@ final class Executor
      */
     public function exec($cmd): ProcessStatus
     {
-        $cmd = sprintf('%s %s', $this->phpBinaryPath, $cmd . ' &');
+        $cmd .= ' &';
         if (PHP_OS === 'WINNT') {
             $cmd = str_replace('/', '\\', $cmd);
             $cmd = str_replace('\\', '\\\\', $cmd);

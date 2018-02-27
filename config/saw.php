@@ -22,7 +22,6 @@ return [
         ],*/
     ],
     'application' => [],
-    'factory' => require __DIR__ . '/factory.php',
     'sockets' => require __DIR__ . '/esockets.php',
     'multiThreading' => [
 //        'disabled' => true,
