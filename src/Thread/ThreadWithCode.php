@@ -53,7 +53,6 @@ class ThreadWithCode extends AbstractThread implements SynchronizationThreadInte
             $result = new ThreadRunningException($e->getMessage(), $e->getCode(), $e);
         } finally {
             $this->generator = null;
-            $this->synchronized();
 
             $result = $result ?? null;
 

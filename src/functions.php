@@ -2,6 +2,8 @@
 
 namespace Maestroprog\Saw;
 
+use Esockets\Debug\Log;
+
 /**
  * @param \Generator $generator
  * @param int $timeout
@@ -15,6 +17,10 @@ function iterateGenerator(\Generator $generator, int $timeout = 0)
     $timeoutTime = $time + $timeout;
 
     foreach ($generator as $key => $value) {
+        if (Saw::isDebugEnabled()) {
+            Log::log($key, $value);
+        }
+
         if ($timeout && time() >= $timeoutTime) {
             throw new \RuntimeException('Iteration timeout.');
         }

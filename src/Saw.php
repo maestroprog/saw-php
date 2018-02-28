@@ -208,4 +208,9 @@ CMD;
             $this->container->get(Commander::class)
         );
     }
+
+    public static function isDebugEnabled(): bool
+    {
+        return self::$debug;
+    }
 }

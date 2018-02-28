@@ -33,7 +33,6 @@ class AsyncSynchronizer implements SynchronizerInterface
             if (!$synchronized) {
 
                 if (!$this->init) {
-                    var_dump('rewind');
                     $this->init = true;
                     $this->generatorExec = true;
                     $this->syncGenerator->rewind();
@@ -47,9 +46,8 @@ class AsyncSynchronizer implements SynchronizerInterface
                     yield $this->syncGenerator->current();
                     $this->syncGenerator->next();
                     $this->generatorExec = false;
-
                 } else {
-                    yield;
+                    yield;// AsyncBus::SIGNAL_PAUSE;
                 }
             }
         } while (!$synchronized);

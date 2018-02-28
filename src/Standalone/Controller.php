@@ -86,12 +86,14 @@ final class Controller
         $this->work();
     }
 
-    public function stop()
+    public function stop(): void
     {
-        $this->work = false;
-        $this->core->stop();
-        unlink($this->myPidFile);
-        $this->server->disconnect();
+        if ($this->work) {
+            $this->work = false;
+            $this->core->stop();
+            unlink($this->myPidFile);
+            $this->server->disconnect();
+        }
     }
 
     private function onConnectPeer()

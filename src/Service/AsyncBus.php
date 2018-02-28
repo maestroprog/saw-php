@@ -2,6 +2,9 @@
 
 namespace Maestroprog\Saw\Service;
 
+use Esockets\Debug\Log;
+use Maestroprog\Saw\Saw;
+
 class AsyncBus implements \Iterator
 {
     public const SIGNAL_PAUSE = 'pause';
@@ -32,6 +35,12 @@ class AsyncBus implements \Iterator
             $generator = $this->generators[$i];
 
             do {
+
+                if (Saw::isDebugEnabled()) {
+                    Log::log($generator->key(), $generator->current());
+                    usleep(50000);
+                }
+
                 if (!$generator->valid()) {
                     break;
                 }
