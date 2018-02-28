@@ -269,7 +269,8 @@ class SawContainer extends AbstractBasicContainer
     {
         return new AsyncSynchronizer(
             $this->get(ThreadRunnerInterface::class),
-            $this->get(ThreadRunnerInterface::class)->work()
+            $this->get(ThreadRunnerInterface::class)->work(),
+            $this->environment
         );
     }
 

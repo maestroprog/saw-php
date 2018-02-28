@@ -2,13 +2,13 @@
 
 return [
     'saw' => [
-        'debug' => true,
+        'debug' => false,
     ],
     'daemon' => [
-        'controller_path' => str_replace(getcwd() . '/', '', realpath(__DIR__ . '/../bin/controller')),
+        'controller_path' => str_replace(getcwd() . '/', '', dirname(__DIR__) . '/bin/controller'),
         'controller_pid' => (getcwd() ?: '.') . '/controller.pid',
 //        'mediator_path' => __DIR__ . '/../../daemon/mediator.php',
-        'worker_path' => str_replace(getcwd() . '/', '', realpath(__DIR__ . '/../bin/worker')),
+        'worker_path' => str_replace(getcwd() . '/', '', dirname(__DIR__) . '/bin/worker'),
         'listen_address' => new \Esockets\Socket\Ipv4Address('0.0.0.0', 59090),
         'controller_address' => new \Esockets\Socket\Ipv4Address('127.0.0.1', 59090),
     ],
@@ -24,6 +24,6 @@ return [
     'application' => [],
     'sockets' => require __DIR__ . '/esockets.php',
     'multiThreading' => [
-//        'disabled' => true,
+        'disabled' => false,
     ]
 ];

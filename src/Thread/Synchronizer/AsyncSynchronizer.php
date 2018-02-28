@@ -3,6 +3,7 @@
 namespace Maestroprog\Saw\Thread\Synchronizer;
 
 use Maestroprog\Saw\Thread\Runner\ThreadRunnerInterface;
+use Maestroprog\Saw\ValueObject\SawEnv;
 
 class AsyncSynchronizer implements SynchronizerInterface
 {
@@ -10,11 +11,13 @@ class AsyncSynchronizer implements SynchronizerInterface
     private $syncGenerator;
     private $generatorExec;
     private $init = false;
+    private $env;
 
-    public function __construct(ThreadRunnerInterface $threadRunner, \Generator $syncGenerator)
+    public function __construct(ThreadRunnerInterface $threadRunner, \Generator $syncGenerator, SawEnv $env)
     {
         $this->threadRunner = $threadRunner;
         $this->syncGenerator = $syncGenerator;
+        $this->env = $env;
     }
 
     public function synchronizeThreads(SynchronizationThreadInterface ...$threads): \Generator
@@ -38,7 +41,7 @@ class AsyncSynchronizer implements SynchronizerInterface
                     $this->syncGenerator->rewind();
                     $this->generatorExec = false;
                 }
-                if (!$this->generatorExec) {
+                if (!$this->generatorExec || $this->env->isWorker()) {
                     if (!$this->syncGenerator->valid()) {
                         throw new \LogicException('Logic invalid.');
                     }

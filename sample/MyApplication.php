@@ -45,16 +45,32 @@ class MyApplication extends BasicMultiThreaded
             $this->time('WORK FOR1');
 
             $t1 = $this->thread('SUB_THREAD_1', function () {
-                for ($i = 0; $i < 3; $i++) {
+                for ($i = 0; $i < 300; $i++) {
                     $this->time('WORK SUB_THREAD_1 ' . $i);
                     yield;
                 }
                 $this->time('COMPLETE SUB_THREAD_1');
 
-                return 1;
+                $inner = $this->threadArguments('SUBSUBINNER1', function ($i): \Generator {
+                    $this->time('WORK SUBSUBINNER1');
+                    yield 1;
+                    $this->time('WORK SUBSUBINNER1 1');
+                    yield 2;
+                    $this->time('WORK SUBSUBINNER1 2');
+                    yield 3;
+                    $this->time('WORK SUBSUBINNER1 3');
+                    $this->time('COMPLETE SUBSUBINNER1');
+                    return $i + 2;
+                }, [$i]);
+
+                $this->runThreads($inner);
+
+                yield from $this->synchronizeThreads($inner);
+
+                return $inner->getResult();
             });
             $t2 = $this->thread('SUB_THREAD_2', function () {
-                for ($i = 0; $i < 5; $i++) {
+                for ($i = 0; $i < 500; $i++) {
                     $this->time('WORK SUB_THREAD_2 ' . $i);
                     yield;
                 }
@@ -88,11 +104,11 @@ class MyApplication extends BasicMultiThreaded
             yield from $this->synchronizeThreads($t1, $t2);
 
             $this->time('COMPLETE SYNC FOR1');
-//
+
             return $t1->getResult() + $t2->getResult();
         });
         $this->article = $this->thread('FOR2', function () {
-            for ($i = 0; $i < 2; $i++) {
+            for ($i = 0; $i < 200; $i++) {
                 $this->time('WORK FOR2 ' . $i);
                 yield;
             }
@@ -100,7 +116,7 @@ class MyApplication extends BasicMultiThreaded
             return $i;
         });
         $this->footer = $this->thread('FOR3', function () {
-            for ($i = 0; $i < 3; $i++) {
+            for ($i = 0; $i < 300; $i++) {
                 $this->time('WORK FOR3 ' . $i);
                 yield;
             }
@@ -112,7 +128,7 @@ class MyApplication extends BasicMultiThreaded
             return $i;
         });
         $this->end = $this->thread('FOR4', function () {
-            for ($i = 0; $i < 2; $i++) {
+            for ($i = 0; $i < 200; $i++) {
                 $this->time('WORK FOR4 ' . $i);
                 yield;
             }
