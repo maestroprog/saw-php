@@ -4,6 +4,9 @@ use Maestroprog\Saw\Sample\MyApplication;
 use Maestroprog\Saw\Thread\MultiThreadingProvider;
 
 return [
+    'saw' => [
+//        'debug' => true,
+    ],
     'application' => [
         MyApplication::ID => [
             'class' => MyApplication::class,
@@ -17,11 +20,11 @@ return [
         'controller_pid' => __DIR__ . '/../../controller.pid',
     ],
     'controller' => [
-        'worker_multiplier' => 1,
-        'worker_max_count' => 1,
+        'worker_multiplier' => 2,
+        'worker_max_count' => 6,
     ],
-//    'sockets' => require __DIR__ . '/../config/esockets.php',
-    'sockets' => require __DIR__ . '/../config/esockets_debug.php',
+    'sockets' => require __DIR__ . '/../config/esockets.php',
+//    'sockets' => require __DIR__ . '/../config/esockets_debug.php',
     'multiThreading' => [
 //        'disabled' => true,
     ],

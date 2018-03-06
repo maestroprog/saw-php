@@ -56,22 +56,22 @@ class WorkerPool implements \Countable, \IteratorAggregate
      */
     public function getIterator(): \Generator
     {
-        static $start = 0;
+//        static $start = 0;
 
-        $other = [];
+//        $other = [];
 
-        $i = 0;
+//        $i = 0;
         foreach ($this->workers as $worker) {
-            if ($i >= $start) {
+//            if ($i >= $start) {
                 yield $worker;
-            } else {
-                $other[] = $worker;
-            }
+//            } else {
+//                $other[] = $worker;
+//            }
         }
 
-        $start++;
+//        $start++;
 
-        yield from $other;
+//        yield from $other;
     }
 
     public function count(): int

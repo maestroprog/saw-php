@@ -2,10 +2,10 @@
 
 namespace Maestroprog\Saw\Service;
 
-use Esockets\Base\AbstractAddress;
 use Esockets\Base\Exception\ConnectionException;
 use Esockets\Client;
 use Esockets\Debug\Log;
+use Maestroprog\Saw\Config\DaemonConfig;
 
 /**
  * Сервис, организующий запуск контроллера.
@@ -20,14 +20,13 @@ final class ControllerStarter
     public function __construct(
         ControllerRunner $runner,
         Client $client,
-        AbstractAddress $connectAddress,
-        string $pidFile
+        DaemonConfig $config
     )
     {
         $this->runner = $runner;
         $this->client = $client;
-        $this->connectAddress = $connectAddress;
-        $this->pidFile = $pidFile;
+        $this->connectAddress = $config->getControllerAddress();
+        $this->pidFile = $config->getControllerPid();
     }
 
     /**

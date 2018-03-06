@@ -1,11 +1,13 @@
 #!/usr/bin/php
 <?php
 
+use Maestroprog\Saw\SawInfrastructure;
+use Maestroprog\Saw\ValueObject\SawEnv;
+
 define('ENV', 'DEBUG');
 
 $configFile = require 'cli.php';
 
-\Maestroprog\Saw\Saw::instance()
-    ->init($configFile)
-    ->instanceDebugger()
+(new SawInfrastructure($configFile, SawEnv::web()))
+    ->debugger()
     ->start();

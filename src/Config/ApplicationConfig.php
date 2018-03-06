@@ -2,7 +2,6 @@
 
 namespace Maestroprog\Saw\Config;
 
-use Maestroprog\Saw\Saw;
 use Qwerty\Application\ApplicationInterface;
 
 final class ApplicationConfig
@@ -17,10 +16,7 @@ final class ApplicationConfig
                 throw new \UnexpectedValueException('Unexpected application config, app id: ' . $appId);
             }
             if (!$this->isApplicationClassValid($appConfig['class'])) {
-                throw new \InvalidArgumentException(
-                    'Invalid application class: ' . $appConfig['class'],
-                    Saw::ERROR_WRONG_APPLICATION_CLASS
-                );
+                throw new \InvalidArgumentException('Invalid application class: ' . $appConfig['class']);
             }
             $this->applications[$appId] = $appConfig;
         }
@@ -66,7 +62,7 @@ final class ApplicationConfig
                 return $appId;
             }
         }
-        throw new \RuntimeException('Application id not found.', Saw::ERROR_APPLICATION_CLASS_NOT_EXISTS);
+        throw new \RuntimeException('Application id not found.');
     }
 
     /**

@@ -20,6 +20,9 @@ abstract class BasicMultiThreaded implements
     private $id;
     private $multiThreadingProvider;
 
+    /** @var AbstractThread */
+    protected $mainThread;
+
     public function __construct(string $id, MultiThreadingProvider $multiThreadingProvider)
     {
         $this->id = $id;
@@ -35,21 +38,23 @@ abstract class BasicMultiThreaded implements
     {
         $this->init();
 
-        $this->main($this->prepare());
+        $this->mainThread = $this->threadArguments('main(' . $this->id . ')', function (...$argv) {
+            return $this->main($argv);
+        }, (array)$this->prepare());
 
-        $runningResult = $this
+        $run = $this
             ->multiThreadingProvider
             ->getThreadRunner()
             ->runThreads(
-                ...$this->multiThreadingProvider
-                ->getThreadPools()
-                ->getCurrentPool()
-                ->getThreads()
+                ...
+                $this->multiThreadingProvider
+                    ->getThreadPools()
+                    ->getCurrentPool()
+                    ->getThreads()
             );
-        if (!$runningResult) {
+        if (!$run) {
             throw new \RuntimeException('Cannot run the threads.');
         }
-
         $this->end();
     }
 
@@ -59,7 +64,7 @@ abstract class BasicMultiThreaded implements
      *
      * @param mixed $prepared Результаты выполнения метода prepare()
      *
-     * @return void
+     * @return mixed
      */
     abstract protected function main($prepared);
 

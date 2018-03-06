@@ -18,10 +18,10 @@ final class ThreadKnow extends AbstractCommand
     private $applicationId;
     private $uniqueId;
 
-    public function __construct(Client $client, string $appId, string $uniqueId)
+    public function __construct(Client $client, string $applicationId, string $uniqueId)
     {
         parent::__construct($client);
-        $this->applicationId = $appId;
+        $this->applicationId = $applicationId;
         $this->uniqueId = $uniqueId;
     }
 

@@ -2,7 +2,7 @@
 
 namespace Maestroprog\Saw\Thread\Creator;
 
-use Maestroprog\Saw\Saw;
+use Maestroprog\Saw\Application\ApplicationContainer;
 use Maestroprog\Saw\Thread\Pool\AbstractThreadPool;
 use Maestroprog\Saw\Thread\Pool\ContainerOfThreadPools;
 use Maestroprog\Saw\Thread\ThreadWithCode;
@@ -10,10 +10,12 @@ use Maestroprog\Saw\Thread\ThreadWithCode;
 class ThreadCreator implements ThreadCreatorInterface
 {
     protected $pools;
+    protected $container;
 
-    public function __construct(ContainerOfThreadPools $pools)
+    public function __construct(ContainerOfThreadPools $pools, ApplicationContainer $container)
     {
         $this->pools = $pools;
+        $this->container = $container;
     }
 
     public function getThreadPool(): AbstractThreadPool
@@ -29,7 +31,7 @@ class ThreadCreator implements ThreadCreatorInterface
         if ($pool->exists($uniqueId)) {
             throw new \RuntimeException('It is not possible to create multiple threads with the same identifier.');
         }
-        $thread = new ThreadWithCode(++$threadId, Saw::getCurrentApp()->getId(), $uniqueId, $code);
+        $thread = new ThreadWithCode(++$threadId, $this->container->getCurrentApp()->getId(), $uniqueId, $code);
         $pool->add($thread);
 
         return $thread;

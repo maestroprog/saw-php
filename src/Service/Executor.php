@@ -16,7 +16,6 @@ final class Executor
      */
     public function exec($cmd): ProcessStatus
     {
-        $cmd .= ' &';
         if (PHP_OS === 'WINNT') {
             $cmd = str_replace('/', '\\', $cmd);
             $cmd = str_replace('\\', '\\\\', $cmd);

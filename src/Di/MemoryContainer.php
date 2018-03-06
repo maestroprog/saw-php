@@ -2,7 +2,7 @@
 
 namespace Maestroprog\Saw\Di;
 
-use Maestroprog\Container\AbstractBasicContainer;
+use Maestroprog\Container\HasContainerLinkInterface;
 use Maestroprog\Saw\Application\Context\ContextPool;
 use Maestroprog\Saw\Memory\LocalizedShareableMemory;
 use Maestroprog\Saw\Memory\LocalMemory;
@@ -15,9 +15,29 @@ use Maestroprog\Saw\Memory\ShortTermMemory;
 use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\Commander;
 use Maestroprog\Saw\Standalone\Controller\SharedMemoryServer;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\ContainerInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
-class MemoryContainer extends AbstractBasicContainer
+class MemoryContainer implements HasContainerLinkInterface
 {
+    /** @var ContainerInterface */
+    protected $container;
+
+    public function setContainer(ContainerInterface $container): void
+    {
+        $this->container = $container;
+    }
+
+    public function get(string $id)
+    {
+        try {
+            return $this->container->get($id);
+        } catch (NotFoundExceptionInterface | ContainerExceptionInterface $e) {
+            return null;
+        }
+    }
+
     public function getLocalMemory(): MemoryInterface
     {
         return new LocalMemory();
@@ -26,15 +46,15 @@ class MemoryContainer extends AbstractBasicContainer
     public function getLocalShareableMemory(): LocalizedShareableMemory
     {
         return new LocalizedShareableMemory(
-            $this->get(LocalMemory::class),
-            $this->get(SharedMemoryOnSocket::class)
+            $this->container->get(LocalMemory::class),
+            $this->container->get(SharedMemoryOnSocket::class)
         );
     }
 
     public function getShortTermMemory(): ShortTermMemory
     {
         return new ShortTermMemory(
-            $this->get(LocalizedShareableMemory::class),
+            $this->container->get(LocalizedShareableMemory::class),
             'global'
         );
     }
@@ -42,31 +62,31 @@ class MemoryContainer extends AbstractBasicContainer
     public function getSharedMemoryServer(): SharedMemoryServer
     {
         return new SharedMemoryServer(
-            $this->get(LocalMemory::class),
-            $this->get(CommandDispatcher::class),
-            $this->get(Commander::class)
+            $this->container->get(LocalMemory::class),
+            $this->container->get(CommandDispatcher::class),
+            $this->container->get(Commander::class)
         );
     }
 
     public function getSharedMemoryClient(): SharedMemoryInterface
     {
         return new SharedMemoryOnSocket(
-            $this->get(Commander::class),
-            $this->get('ControllerClient') // todo connector
+            $this->container->get(Commander::class),
+            $this->container->get('ControllerClient') // todo connector
         );
     }
 
     public function getPersistentMemory(): PersistentMemory
     {
         return new PersistentMemory(
-            $this->get(SharedMemoryOnSocket::class),
-            $this->get(LongTermMemory::class),
-            $this->get(ShortTermMemory::class)
+            $this->container->get(SharedMemoryOnSocket::class),
+            $this->container->get(LongTermMemory::class),
+            $this->container->get(ShortTermMemory::class)
         );
     }
 
     public function getContextPool(): ContextPool
     {
-        return new ContextPool($this->get(MemoryInterface::class));
+        return new ContextPool($this->container->get(MemoryInterface::class));
     }
 }

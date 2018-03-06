@@ -139,7 +139,7 @@ class WorkerBalance implements CycleInterface
                 // run new worker
                 $this->workerRun = $this->workerStarter->start();
                 $this->running = time();
-                yield 'WORKER_BALANCE';
+                yield 'WORKER_BALANCE_RUN' => AsyncBus::SIGNAL_PAUSE;
             } elseif ($this->running && $this->running < time() - 10) {
                 // timeout 10 sec - не удалось запустить воркер
                 $this->running = 0;
@@ -147,7 +147,7 @@ class WorkerBalance implements CycleInterface
                     // убиваем запущенный процесс, если он ещё работает
                     $this->workerRun->kill();
                 }
-                yield 'WORKER_BALANCE';
+                yield 'WORKER_BALANCE_TIMEOUT';
             } else {
                 yield 'WORKER_BALANCE' => AsyncBus::SIGNAL_PAUSE;
             }

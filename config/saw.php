@@ -25,5 +25,5 @@ return [
     'sockets' => require __DIR__ . '/esockets.php',
     'multiThreading' => [
         'disabled' => false,
-    ]
+    ],
 ];

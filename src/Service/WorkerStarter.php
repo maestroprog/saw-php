@@ -2,6 +2,7 @@
 
 namespace Maestroprog\Saw\Service;
 
+use Maestroprog\Saw\Config\DaemonConfig;
 use Maestroprog\Saw\ValueObject\ProcessStatus;
 
 /**
@@ -12,18 +13,19 @@ class WorkerStarter
     private $executor;
     private $cmd;
 
-    /**
-     * ControllerStarter constructor.
-     *
-     * @param Executor $executor
-     * @param string $cmd
-     *
-     * @internal param Client $client
-     */
-    public function __construct(Executor $executor, string $cmd)
+    public function __construct(Executor $executor, DaemonConfig $config)
     {
         $this->executor = $executor;
-        $this->cmd = $cmd;
+
+        if ($config->hasWorkerPath()) {
+            $this->cmd = $config->getWorkerPath() . ' ' . $config->getConfigPath();
+        } else {
+            throw new \LogicException('Auto-configuration of the worker path is not supported.');
+            /*$this->cmd = <<<CMD
+-r "require_once '{$config->getInitScriptPath()}';
+\Maestroprog\Saw\Saw::instance()->init('{$config->getConfigPath()}')->instanceWorker()->start();"
+CMD;*/
+        }
     }
 
     /**

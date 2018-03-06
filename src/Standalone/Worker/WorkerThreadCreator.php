@@ -3,6 +3,7 @@
 namespace Maestroprog\Saw\Standalone\Worker;
 
 use Esockets\Client;
+use Maestroprog\Saw\Application\ApplicationContainer;
 use Maestroprog\Saw\Command\ThreadKnow;
 use Maestroprog\Saw\Service\Commander;
 use Maestroprog\Saw\Thread\Creator\ThreadCreator;
@@ -16,11 +17,13 @@ final class WorkerThreadCreator extends ThreadCreator
 
     public function __construct(
         ContainerOfThreadPools $pools,
+        ApplicationContainer $container,
         Commander $commander,
         Client $client
     )
     {
-        parent::__construct($pools);
+        parent::__construct($pools, $container);
+
         $this->commander = $commander;
         $this->client = $client;
     }

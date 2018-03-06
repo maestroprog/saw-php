@@ -1,14 +1,18 @@
 #!/usr/bin/php
 <?php
 
+use Maestroprog\Saw\Helper\Debug;
+use Maestroprog\Saw\SawInfrastructure;
+use Maestroprog\Saw\ValueObject\SawEnv;
+
 define('ENV', 'CONTROLLER');
 
 $configFile = require 'cli.php';
 
+//Debug::enable();
 try {
-    \Maestroprog\Saw\Saw::instance()
-        ->init($configFile)
-        ->instanceController()
+    (new SawInfrastructure($configFile, SawEnv::controller()))
+        ->controller()
         ->start();
 } catch (Exception $e) {
     echo "\e[1;31m{$e->getMessage()}\033[0m" . PHP_EOL;

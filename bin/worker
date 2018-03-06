@@ -1,15 +1,19 @@
 #!/usr/bin/php
 <?php
+
+use Maestroprog\Saw\SawInfrastructure;
+use Maestroprog\Saw\ValueObject\SawEnv;
+
 define('ENV', 'WORKER_' . getmypid());
 
 $configFile = require 'cli.php';
 
 try {
-    \Maestroprog\Saw\Saw::instance()
-        ->init($configFile)
-        ->instanceWorker()
+    (new SawInfrastructure($configFile, SawEnv::worker()))
+        ->worker()
         ->start();
 } catch (Exception $e) {
     echo "\e[1;31m{$e->getMessage()}\033[0m" . PHP_EOL;
+    echo $e->getTraceAsString();
     exit(127);
 }

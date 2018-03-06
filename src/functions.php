@@ -3,6 +3,7 @@
 namespace Maestroprog\Saw;
 
 use Esockets\Debug\Log;
+use Maestroprog\Saw\Helper\Debug;
 
 /**
  * @param \Generator $generator
@@ -17,7 +18,7 @@ function iterateGenerator(\Generator $generator, int $timeout = 0)
     $timeoutTime = $time + $timeout;
 
     foreach ($generator as $key => $value) {
-        if (Saw::isDebugEnabled()) {
+        if (Debug::is()) {
             Log::log($key, $value);
         }
 

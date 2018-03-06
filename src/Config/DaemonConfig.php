@@ -3,11 +3,10 @@
 namespace Maestroprog\Saw\Config;
 
 use Esockets\Base\AbstractAddress;
-use Maestroprog\Saw\Saw;
 
 class DaemonConfig
 {
-    const CONFIG_MAP = [
+    private const CONFIG_MAP = [
         'controller_path' => 'controllerPath',
         'worker_path' => 'workerPath',
         'controller_pid' => 'controllerPid',
@@ -23,14 +22,9 @@ class DaemonConfig
     private $configPath;
     /** @var string */
     private $controllerPid = 'controller.pid';
-
-    /**
-     * @var AbstractAddress
-     */
+    /** @var AbstractAddress */
     private $listenAddress;
-    /**
-     * @var AbstractAddress
-     */
+    /** @var AbstractAddress */
     private $controllerAddress;
 
     public function __construct(array $config, string $configPath)
@@ -59,8 +53,6 @@ class DaemonConfig
 
     /**
      * Вернёт путь к исполнимому скрипту контроллера.
-     *
-     * @return string
      */
     public function getControllerPath(): string
     {
@@ -69,26 +61,24 @@ class DaemonConfig
 
     /**
      * Вернёт путь к исполнимому скрипту воркера.
-     *
-     * @return string
      */
     public function getWorkerPath(): string
     {
         return $this->workerPath;
     }
 
-    /**
-     * @return string
-     */
     public function getConfigPath(): string
     {
         return $this->configPath;
     }
 
+    public function getInitScriptPath(): string
+    {
+        return __DIR__ . '/../../bin/cli.php';
+    }
+
     /**
      * Вернёт путь к pid файлу контроллера.
-     *
-     * @return string
      */
     public function getControllerPid(): string
     {
@@ -98,7 +88,7 @@ class DaemonConfig
     public function getListenAddress(): AbstractAddress
     {
         if (!$this->listenAddress instanceof AbstractAddress) {
-            throw new \RuntimeException('Listen address is not configured.', Saw::ERROR_WRONG_CONFIG);
+            throw new \RuntimeException('Listen address is not configured.');
         }
         return $this->listenAddress;
     }
@@ -106,7 +96,7 @@ class DaemonConfig
     public function getControllerAddress(): AbstractAddress
     {
         if (!$this->controllerAddress instanceof AbstractAddress) {
-            throw new \RuntimeException('Controller address is not configured.', Saw::ERROR_WRONG_CONFIG);
+            throw new \RuntimeException('Controller address is not configured.');
         }
         return $this->controllerAddress;
     }

@@ -11,11 +11,10 @@ final class SawEnv
 
     private $environment;
 
+    protected const ENV_MAP = [self::WEB => 'web', self::CONTROLLER => 'controller', self::WORKER => 'worker'];
+
     private function __construct(int $environment)
     {
-        if (!in_array($environment, [self::WEB, self::CONTROLLER, self::WORKER])) {
-            throw new \InvalidArgumentException('Invalid environment value.');
-        }
         $this->environment = $environment;
     }
 
@@ -39,11 +38,6 @@ final class SawEnv
         return $this->environment === self::WORKER;
     }
 
-    public function canChangeTo(SawEnv $env): bool
-    {
-        return $this->isWeb();
-    }
-
     public function isWeb(): bool
     {
         return $this->environment === self::WEB;
@@ -51,6 +45,6 @@ final class SawEnv
 
     public function __toString(): string
     {
-        return [self::WEB => 'web', self::CONTROLLER => 'controller', self::WORKER => 'worker'][$this->environment];
+        return self::ENV_MAP[$this->environment];
     }
 }

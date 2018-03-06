@@ -17,10 +17,6 @@ class ThreadWithCode extends AbstractThread implements SynchronizationThreadInte
      * @var callable Содержит код потока.
      */
     private $code;
-    /**
-     * @var \Generator|null
-     */
-    private $generator;
 
     public function __construct(int $id, string $applicationId, string $uniqueId, callable $code)
     {
@@ -32,28 +28,20 @@ class ThreadWithCode extends AbstractThread implements SynchronizationThreadInte
     public function run(): \Generator
     {
         try {
-            if (null === $this->generator) {
-                $this->generator = call_user_func_array($this->code, $this->arguments);
-            }
-            if ($this->generator instanceof \Generator) {
+            $generator = call_user_func_array($this->code, $this->arguments);
+            if ($generator instanceof \Generator) {
                 /* Генератор выполняет функцию асинхронной работы кода,
                  * в т.ч. асинхронная синхрониация вложенных потоков. */
-                yield from $this->generator;
-//                $this->generator->rewind();
-//                while ($this->generator->valid()) {
-//                    yield $this->generator->current();
-//                    $this->generator->next();
-//                }
-                $result = $this->generator->getReturn();
+                yield from $generator;
+
+                $result = $generator->getReturn();
             } else {
-                $result = $this->generator;
+                $result = $generator;
             }
         } catch (\Throwable $e) {
             Log::log($e->getMessage());
             $result = new ThreadRunningException($e->getMessage(), $e->getCode(), $e);
         } finally {
-            $this->generator = null;
-
             $result = $result ?? null;
 
             if ($result instanceof ThreadRunningException) {

@@ -2,24 +2,24 @@
 
 namespace Maestroprog\Saw\Di;
 
-use Esockets\Base\Configurator;
 use Esockets\Client;
 use Esockets\Server;
-use Maestroprog\Container\AbstractBasicContainer;
+use Maestroprog\Container\HasContainerLinkInterface;
 use Maestroprog\Saw\Application\ApplicationContainer;
 use Maestroprog\Saw\Command\ContainerOfCommands;
-use Maestroprog\Saw\Config\ControllerConfig;
-use Maestroprog\Saw\Config\DaemonConfig;
+use Maestroprog\Saw\Config\ApplicationConfig;
+use Maestroprog\Saw\Config\SawConfig;
 use Maestroprog\Saw\Connector\ControllerConnectorInterface;
 use Maestroprog\Saw\Connector\WebControllerConnector;
 use Maestroprog\Saw\Connector\WorkerControllerConnector;
-use Maestroprog\Saw\Saw;
+use Maestroprog\Saw\Service\ApplicationLoader;
 use Maestroprog\Saw\Service\CommandDispatcher;
 use Maestroprog\Saw\Service\Commander;
 use Maestroprog\Saw\Service\ControllerRunner;
 use Maestroprog\Saw\Service\ControllerStarter;
 use Maestroprog\Saw\Service\Executor;
 use Maestroprog\Saw\Service\WorkerStarter;
+use Maestroprog\Saw\Standalone\Controller;
 use Maestroprog\Saw\Standalone\Controller\ControllerWorkCycle;
 use Maestroprog\Saw\Standalone\Controller\CycleInterface;
 use Maestroprog\Saw\Standalone\ControllerCore;
@@ -35,9 +35,15 @@ use Maestroprog\Saw\Thread\Runner\ThreadRunnerInterface;
 use Maestroprog\Saw\Thread\Synchronizer\AsyncSynchronizer;
 use Maestroprog\Saw\Thread\Synchronizer\SynchronizerInterface;
 use Maestroprog\Saw\ValueObject\SawEnv;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\ContainerInterface;
+use Psr\Container\NotFoundExceptionInterface;
+use Qwerty\Application\ApplicationFactory;
 
-class SawContainer extends AbstractBasicContainer
+class SawContainer implements HasContainerLinkInterface
 {
+    /** @var ContainerInterface */
+    protected $container;
     private $config;
     private $daemonConfig;
     private $socketConfigurator;
@@ -45,18 +51,29 @@ class SawContainer extends AbstractBasicContainer
     private $environment;
 
     public function __construct(
-        array $config,
-        DaemonConfig $daemonConfig,
-        Configurator $socketConfigurator,
-        ControllerConfig $controllerConfig,
+        SawConfig $sawConfig,
         SawEnv $env
     )
     {
-        $this->config = $config;
-        $this->daemonConfig = $daemonConfig;
-        $this->socketConfigurator = $socketConfigurator;
-        $this->controllerConfig = $controllerConfig;
+        $this->config = $sawConfig->getConfig();
+        $this->daemonConfig = $sawConfig->getDaemonConfig();
+        $this->socketConfigurator = $sawConfig->getSocketConfigurator();
+        $this->controllerConfig = $sawConfig->getControllerConfig();
         $this->environment = $env;
+    }
+
+    public function setContainer(ContainerInterface $container): void
+    {
+        $this->container = $container;
+    }
+
+    public function get(string $id)
+    {
+        try {
+            return $this->container->get($id);
+        } catch (NotFoundExceptionInterface | ContainerExceptionInterface $e) {
+            return null;
+        }
     }
 
     public function getEnvironment(): SawEnv
@@ -64,25 +81,11 @@ class SawContainer extends AbstractBasicContainer
         return $this->environment ?? SawEnv::web();
     }
 
-    public function setEnvironment(SawEnv $environment)
-    {
-        if (!$this->environment->canChangeTo($environment)) {
-            throw new \LogicException(sprintf(
-                'Cannot change env "%s" to "%s".',
-                $this->environment,
-                $environment
-            ));
-        }
-        $this->environment = $environment;
-    }
-
     public function getControllerRunner(): ControllerRunner
     {
         return new ControllerRunner(
             $this->get(Executor::class),
-            $this->daemonConfig->hasControllerPath()
-                ? $this->daemonConfig->getControllerPath() . ' ' . $this->daemonConfig->getConfigPath()
-                : $this->config['controller_starter']
+            $this->daemonConfig
         );
     }
 
@@ -91,8 +94,7 @@ class SawContainer extends AbstractBasicContainer
         return new ControllerStarter(
             $this->get(ControllerRunner::class),
             $this->get(Client::class),
-            $this->daemonConfig->getControllerAddress(),
-            $this->daemonConfig->getControllerPid()
+            $this->daemonConfig
         );
     }
 
@@ -100,9 +102,7 @@ class SawContainer extends AbstractBasicContainer
     {
         return new WorkerStarter(
             $this->get(Executor::class),
-            $this->daemonConfig->hasWorkerPath()
-                ? $this->daemonConfig->getWorkerPath() . ' ' . $this->daemonConfig->getConfigPath()
-                : $this->config['worker_starter']
+            $this->daemonConfig
         );
     }
 
@@ -122,10 +122,10 @@ class SawContainer extends AbstractBasicContainer
     }
 
     /**
-     * @internal
+     *
      * @return WebControllerConnector
      */
-    private function getWebControllerConnector(): WebControllerConnector
+    public function getWebControllerConnector(): WebControllerConnector
     {
         return new WebControllerConnector(
             $this->get('ControllerClient'),
@@ -136,10 +136,10 @@ class SawContainer extends AbstractBasicContainer
     }
 
     /**
-     * @internal
+     *
      * @return WorkerControllerConnector
      */
-    private function getWorkerControllerConnector(): WorkerControllerConnector
+    public function getWorkerControllerConnector(): WorkerControllerConnector
     {
         return new WorkerControllerConnector(
             $this->get('ControllerClient'),
@@ -180,19 +180,19 @@ class SawContainer extends AbstractBasicContainer
     }
 
     /**
-     * @internal
+     *
      * @return AsyncThreadRunner
      */
-    private function getAsyncThreadRunner(): AsyncThreadRunner
+    public function getAsyncThreadRunner(): AsyncThreadRunner
     {
         return new AsyncThreadRunner();
     }
 
     /**
-     * @internal
+     *
      * @return AsyncRemoteThreadRunner
      */
-    private function getRemoteThreadRunner(): AsyncRemoteThreadRunner
+    public function getRemoteThreadRunner(): AsyncRemoteThreadRunner
     {
         return new AsyncRemoteThreadRunner(
             $this->get(ControllerConnectorInterface::class),
@@ -227,7 +227,15 @@ class SawContainer extends AbstractBasicContainer
             $this->get(CommandDispatcher::class),
             $this->get(Commander::class),
             $this->get(ApplicationContainer::class),
-            Saw::instance()->getApplicationLoader()
+            $this->get(ApplicationLoader::class)
+        );
+    }
+
+    public function getApplicationLoader(): ApplicationLoader
+    {
+        return new ApplicationLoader(
+            new ApplicationConfig($this->config['application']),
+            new ApplicationFactory($this->container)
         );
     }
 
@@ -244,25 +252,29 @@ class SawContainer extends AbstractBasicContainer
     }
 
     /**
-     * @internal
+     *
      * @return WorkerThreadCreator
      */
-    private function getWorkerThreadCreator(): WorkerThreadCreator
+    public function getWorkerThreadCreator(): WorkerThreadCreator
     {
         return new WorkerThreadCreator(
             $this->get(ContainerOfThreadPools::class),
+            $this->get(ApplicationContainer::class),
             $this->get(Commander::class),
             $this->get('ControllerClient')
         );
     }
 
     /**
-     * @internal
+     *
      * @return ThreadCreator
      */
-    private function getWebThreadCreator(): ThreadCreator
+    public function getWebThreadCreator(): ThreadCreator
     {
-        return new ThreadCreator($this->get(ContainerOfThreadPools::class));
+        return new ThreadCreator(
+            $this->get(ContainerOfThreadPools::class),
+            $this->get(ApplicationContainer::class)
+        );
     }
 
     public function getThreadSynchronizer(): SynchronizerInterface
@@ -309,28 +321,39 @@ class SawContainer extends AbstractBasicContainer
 
     /**
      * @return CycleInterface
-     * @internal
+     *
      */
-    private function getWebWorkCycle(): CycleInterface
+    public function getWebWorkCycle(): CycleInterface
     {
         return $this->get(ControllerConnectorInterface::class);
     }
 
     /**
      * @return CycleInterface
-     * @internal
+     *
      */
-    private function getWorkerWorkCycle(): CycleInterface
+    public function getWorkerWorkCycle(): CycleInterface
     {
         return $this->get(ControllerConnectorInterface::class);
     }
 
     /**
      * @return CycleInterface
-     * @internal
+     *
      */
-    private function getControllerWorkCycle(): CycleInterface
+    public function getControllerWorkCycle(): CycleInterface
     {
         return new ControllerWorkCycle($this->get('ControllerServer'));
+    }
+
+    public function getController(): Controller
+    {
+        return new Controller(
+            $this->container->get('WorkCycle'),
+            $this->container->get(ControllerCore::class),
+            $this->container->get('ControllerServer'),
+            $this->container->get(CommandDispatcher::class),
+            $this->daemonConfig->getControllerPid()
+        );
     }
 }

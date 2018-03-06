@@ -16,15 +16,6 @@ use Maestroprog\Saw\Standalone\Controller\ControllerWorkCycle;
  */
 final class Controller
 {
-    /**
-     * Константы возможных типов подключающихся клиентов.
-     */
-    const CLIENT_INPUT = 1; // input-клиент, передающий запрос
-    const CLIENT_WS_INPUT = 2; // WS input-клиент, передающий запрос (зарезервировано)
-    const CLIENT_WORKER = 3; // воркер
-    const CLIENT_CONTROLLER = 4; // контроллер. (зарезервировано)
-    const CLIENT_DEBUG = 5; // отладчик
-
     private $workCycle;
     private $core;
     private $server;
@@ -82,7 +73,7 @@ final class Controller
         register_shutdown_function(function () {
             $this->stop();
         });
-//        $this->server->block();
+        $this->server->unblock();
         $this->work();
     }
 
@@ -99,8 +90,13 @@ final class Controller
     private function onConnectPeer()
     {
         return function (Client $peer) {
-            Log::log('peer connected ' . $peer->getPeerAddress());
+//            Log::log('peer connected ' . $peer->getPeerAddress());
             $peer->onReceive(function ($data) use ($peer) {
+                if ($data === 'BYE') {
+                    $peer->disconnect();
+
+                    return;
+                }
                 if (!is_array($data) || !$this->commandDispatcher->valid($data)) {
                     $peer->send('INVALID');
                 } else {
@@ -108,7 +104,7 @@ final class Controller
                 }
             });
             $peer->onDisconnect(function () use ($peer) {
-                Log::log('peer disconnected');
+//                Log::log('peer disconnected');
             });
             if (!$peer->send('ACCEPT')) {
                 $peer->disconnect(); // не нужен нам такой клиент

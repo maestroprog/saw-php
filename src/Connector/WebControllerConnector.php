@@ -69,19 +69,22 @@ final class WebControllerConnector implements ControllerConnectorInterface
     public function connect(): void
     {
         try {
-//            if (!$this->controllerStarter->isExistsPidFile()) {
-//                throw new ConnectionException('Pid file is not exists.');
-//            }
+            if (!$this->controllerStarter->isExistsPidFile()) {
+                throw new ConnectionException('Pid file is not exists.');
+            }
             $this->client->connect($this->connectAddress);
-//            $this->client->block();
-//            $read = $this->client->returnRead();
-//            $this->client->unblock();
-//            if ($read !== 'ACCEPT') {
-//                throw new ConnectionException('Cannot connect.');
-//            }
+            $this->client->block();
+            $read = $this->client->returnRead();
+            $this->client->unblock();
+            if ($read !== 'ACCEPT') {
+                throw new ConnectionException('Cannot connect.');
+            }
         } catch (ConnectionException $e) {
             $this->controllerStarter->start();
         }
+        register_shutdown_function(function () {
+            $this->client->send('BYE');
+        });
 //        $this->client->block();
     }
 

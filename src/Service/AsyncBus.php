@@ -3,7 +3,7 @@
 namespace Maestroprog\Saw\Service;
 
 use Esockets\Debug\Log;
-use Maestroprog\Saw\Saw;
+use Maestroprog\Saw\Helper\Debug;
 
 class AsyncBus implements \Iterator
 {
@@ -35,10 +35,9 @@ class AsyncBus implements \Iterator
             $generator = $this->generators[$i];
 
             do {
-
-                if (Saw::isDebugEnabled()) {
-                    Log::log($generator->key(), $generator->current());
-                    usleep(50000);
+                if (Debug::is()) {
+                    Log::log('...', $generator->key(), $generator->current());
+//                    usleep(50000);
                 }
 
                 if (!$generator->valid()) {
@@ -46,6 +45,11 @@ class AsyncBus implements \Iterator
                 }
                 $generator->next();
             } while ($generator->current() !== self::SIGNAL_PAUSE);
+
+            if (Debug::is()) {
+                Log::log($generator->key(), $generator->current(), '...');
+//                    usleep(50000);
+            }
         }
     }
 
