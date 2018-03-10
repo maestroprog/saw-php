@@ -21,7 +21,7 @@ class SawConfig
             }
         }, require $configPath);
 
-        foreach (['saw', 'daemon', 'sockets', 'application', 'controller'] as $check) {
+        foreach (['saw', 'daemon', 'sockets', 'application', 'controller', 'di'] as $check) {
             if (!isset($config[$check]) || !is_array($config[$check])) {
                 $config[$check] = [];
             }

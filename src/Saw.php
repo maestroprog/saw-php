@@ -31,6 +31,14 @@ class Saw
             ));
             $this->container->register(new MemoryContainer());
 
+            foreach ($this->config->getConfig()['di'] as $customContainer) {
+                if (is_object($customContainer)) {
+                    $this->container->register($customContainer);
+                } elseif (is_string($customContainer) && class_exists($customContainer)) {
+                    $this->container->register(new $customContainer());
+                }
+            }
+
             return $this->container;
         };
         if (static::CONTAINER_AUTOLOAD) {

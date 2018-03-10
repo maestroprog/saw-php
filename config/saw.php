@@ -26,4 +26,5 @@ return [
     'multiThreading' => [
         'disabled' => false,
     ],
+    'di' => []
 ];
