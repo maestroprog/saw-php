@@ -4,6 +4,7 @@ namespace Maestroprog\Saw\Application;
 
 use Maestroprog\Saw\Thread\MultiThreadingProvider;
 use Qwerty\Application\ApplicationInterface;
+use function Maestroprog\Saw\iterateGenerator;
 
 class ApplicationConnector implements ApplicationInterface
 {
@@ -32,11 +33,38 @@ class ApplicationConnector implements ApplicationInterface
 
     public function run()
     {
+        $thread = $this
+            ->provider
+            ->getThreadCreator()
+            ->threadArguments(
+                'main(' . $this->id . ')', function (...$argv) {
+            },
+                (array)$this->prepare()
+            );
 
+        $run = $this
+            ->provider
+            ->getThreadRunner()
+            ->runThreads(
+                ...
+                $this->provider
+                    ->getThreadPools()
+                    ->getCurrentPool()
+                    ->getThreads()
+            );
+        if (!$run) {
+            throw new \RuntimeException('Cannot run the threads.');
+        }
+        try {
+            iterateGenerator($this->provider->getSynchronizer()->synchronizeAll(), 5);
+        } catch (\RuntimeException $e) {
+            echo $e->getMessage();
+        }
+
+        echo $thread->getResult();
     }
 
     public function end()
     {
-
     }
 }

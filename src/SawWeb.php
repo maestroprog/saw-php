@@ -56,15 +56,10 @@ class SawWeb extends Saw
             return $this->applicationContainer->add($this->applicationLoader->instanceApp($applicationClass));
         }
 
-        return $this->applicationContainer->add(new $applicationClass(
+        return $this->applicationContainer->add(new ApplicationConnector(
             $this->applicationConfig->getApplicationIdByClass($applicationClass),
             $this->getMultiThreadingProvider()
         ));
-
-        return new ApplicationConnector(
-            $applicationConfig->getApplicationIdByClass($applicationClass),
-            $this->getMultiThreadingProvider()
-        );
     }
 
     public function thread(): MultiThreadingInterface
